@@ -52,6 +52,7 @@ class GestorProduccion extends Module
 
         return Db::getInstance()->execute($sql);
     }
+    
 
     private function uninstallDB()
     {
