@@ -22,20 +22,45 @@ class GestorProduccion extends Module
     }
 
     public function install()
+{
+    if (!parent::install() || !$this->installDB() || !$this->installTab() || !$this->registerHook('displayBackOfficeHeader')) {
+        return false;
+    }
+    return true;
+}
+
+    public function uninstall()
     {
-        if (!parent::install() || !$this->installDB()) {
+        if (!parent::uninstall() || !$this->uninstallDB() || !$this->uninstallTab()) {
             return false;
         }
         return true;
     }
 
-    public function uninstall()
+    private function installTab()
+        {
+            $tab = new Tab();
+            $tab->class_name = 'AdminGestorProduccion';
+            $tab->id_parent = (int) Tab::getIdFromClassName('AdminParentOrders');
+            $tab->module = $this->name;
+            $tab->name = [];
+
+            foreach (Language::getlanguages() as $lang) {
+                $tab->name[$lang['id_lang']] = 'Gestor de Producción';
+            }
+
+            return $tab->add();
+        }
+    private function uninstallTab()
     {
-        if (!parent::uninstall() || !$this->uninstallDB()) {
-            return false;
+        $id_tab = (int) tab::getIdFromClassName('AdminGestorProduccion');
+        if ($id_tab) {
+            $tab = new Tab($id_tab);
+            return $tab->delete();
         }
         return true;
     }
+    
 
     private function installDB()
     {
@@ -52,12 +77,18 @@ class GestorProduccion extends Module
 
         return Db::getInstance()->execute($sql);
     }
-    
+
 
     private function uninstallDB()
     {
         $sql = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'product_reservations`';
         return Db::getInstance()->execute($sql);
+    }
+
+    public function hookDisplayBackOfficeHeader()
+    {
+        $this->context->controller->addCSS($this->_path.'views/css/gestorproduccionadmin.css');
+        $this->context->controller->addJS($this->_path.'views/js/adminGestorProduccion.js');     
     }
 }
 ?>
