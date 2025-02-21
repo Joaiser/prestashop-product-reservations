@@ -45,3 +45,9 @@ Gestionar Reservas de Clientes:
 
 Los clientes podrán reservar productos cuando estén en producción o con fecha de llegada.
 Al llegar el producto, el stock reservado será añadido al carrito del cliente, y un modal notificará al cliente de que su producto está disponible
+
+
+
+CAMBIOS, LOS CLIENTES SOLO PODRÁN RESERVAR CUANDO HAYA UNA FECHA FIJA
+
+AÑADIDO CAMPOS DE MÁXIMO Y MÍNIMOS PARA RESERVAR PRODUCTOS, SE VA A GESTIONAR DESDE EL ADMIN ESTO

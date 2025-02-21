@@ -2,6 +2,7 @@
     display: grid;
     gap: 40px;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    padding: 50px 0 50px 0;
 }
 
 .producto {
@@ -13,6 +14,7 @@
     align-items: center;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
 }
 
 .producto-id {
@@ -42,3 +44,24 @@
     color: #333;
 }
 
+.producto-checkbox{
+    position: relative;
+    left: 55px;
+    width: 24px;
+    height: 19px;
+}
+
+#button-container{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0 0 0;
+}
+
+#btn-aplicar{
+    width: 40%;
+    height: 40px;
+    background-color: black;
+    color: white;
+}

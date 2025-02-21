@@ -10,30 +10,34 @@ class AdminGestorProduccionController extends ModuleAdminController
     }
 
     public function initContent()
-{
-    parent::initContent();
-
-    // Obtener productos sin stock y sin fecha
-    $productos_sin_stock_y_fecha = $this->getProductosSinStockYFecha();
-
-    // Asignar los productos a la plantilla
-    $this->context->smarty->assign([
-        'productos_sin_stock_y_fecha' => $productos_sin_stock_y_fecha,
-    ]);
-
-    // Asigna la plantilla al backoffice
-    $this->setTemplate('gestorproduccion.tpl');
-}
-
+    {
+        parent::initContent();
+    
+        // Obtener productos sin stock y sin fecha
+        $productos_sin_stock_y_fecha = $this->getProductosSinStockYFecha();
+    
+        // Obtener productos sin stock pero con fecha de llegada
+        $productos_con_fecha = $this->getProductosConFecha();
+    
+        // Asignar los productos a la plantilla
+        $this->context->smarty->assign([
+            'productos_sin_stock_y_fecha' => $productos_sin_stock_y_fecha,
+            'productos_con_fecha' => $productos_con_fecha,
+        ]);
+    
+        // Asigna la plantilla al backoffice
+        $this->setTemplate('gestorproduccion.tpl');
+    }
+    
 
     private function getProductosSinStockYFecha()
 {
     $sql = 'SELECT p.id_product, pl.name, 
                    IFNULL(pa.reference, p.reference) AS reference
-            FROM `'._DB_PREFIX_.'product` p
-            INNER JOIN `'._DB_PREFIX_.'product_lang` pl ON p.id_product = pl.id_product
-            LEFT JOIN `'._DB_PREFIX_.'product_attribute` pa ON p.id_product = pa.id_product
-            LEFT JOIN `'._DB_PREFIX_.'stock_available` sa 
+            FROM '._DB_PREFIX_.'product p
+            INNER JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product
+            LEFT JOIN '._DB_PREFIX_.'product_attribute pa ON p.id_product = pa.id_product
+            LEFT JOIN '._DB_PREFIX_.'stock_available sa 
                 ON (p.id_product = sa.id_product AND (pa.id_product_attribute = sa.id_product_attribute OR pa.id_product_attribute IS NULL))
             WHERE pl.id_lang = '.(int)$this->context->language->id.'
             AND (sa.quantity <= 0 OR sa.quantity IS NULL)
@@ -41,6 +45,24 @@ class AdminGestorProduccionController extends ModuleAdminController
 
     return Db::getInstance()->executeS($sql);
 }
+
+private function getProductosConFecha()
+{
+    $sql = 'SELECT p.id_product, pl.name, 
+                   IFNULL(pa.reference, p.reference) AS reference,
+                   p.available_date
+            FROM '._DB_PREFIX_.'product p
+            INNER JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product
+            LEFT JOIN '._DB_PREFIX_.'product_attribute pa ON p.id_product = pa.id_product
+            LEFT JOIN '._DB_PREFIX_.'stock_available sa 
+                ON (p.id_product = sa.id_product AND (pa.id_product_attribute = sa.id_product_attribute OR pa.id_product_attribute IS NULL))
+            WHERE pl.id_lang = '.(int)$this->context->language->id.'
+            AND (sa.quantity <= 0 OR sa.quantity IS NULL)
+            AND (p.available_date IS NOT NULL AND p.available_date != "0000-00-00")';
+
+    return Db::getInstance()->executeS($sql);
+}
+
 
 
 public function postProcess()
@@ -76,7 +98,7 @@ public function postProcess()
 
 private function habilitarReservas($product_id)
 {
-    $sql = 'UPDATE `'._DB_PREFIX_.'product` 
+    $sql = 'UPDATE '._DB_PREFIX_.'product 
             SET available_for_order = 1 
             WHERE id_product = '.(int)$product_id;
 

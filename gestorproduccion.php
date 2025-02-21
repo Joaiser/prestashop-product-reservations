@@ -8,7 +8,7 @@ class GestorProduccion extends Module
     public function __construct()
     {
         $this->name = 'gestorproduccion';
-        $this->tab = 'administration';
+        $this->tab = 'AdminCatalog';
         $this->version = '1.0.0';
         $this->author = 'Aitor';
         $this->need_instance = 0;
@@ -41,7 +41,7 @@ class GestorProduccion extends Module
         {
             $tab = new Tab();
             $tab->class_name = 'AdminGestorProduccion';
-            $tab->id_parent = (int) Tab::getIdFromClassName('AdminParentOrders');
+            $tab->id_parent = (int) Tab::getIdFromClassName('AdminCatalog');
             $tab->module = $this->name;
             $tab->name = [];
 
@@ -53,7 +53,7 @@ class GestorProduccion extends Module
         }
     private function uninstallTab()
     {
-        $id_tab = (int) tab::getIdFromClassName('AdminGestorProduccion');
+        $id_tab = (int) tab::getIdFromClassName('GestorProduccion');
         if ($id_tab) {
             $tab = new Tab($id_tab);
             return $tab->delete();
@@ -64,15 +64,15 @@ class GestorProduccion extends Module
 
     private function installDB()
     {
-        $sql = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'product_reservations` (
-                `id_product` INT(10) UNSIGNED NOT NULL,
-                `id_product_attribute` INT(10) UNSIGNED DEFAULT NULL,
-                `status` VARCHAR(255) NOT NULL,
-                `reservation_expiry` DATETIME DEFAULT NULL,
-                `reserved_stock` INT(10) UNSIGNED DEFAULT 0,
-                `customer_id` INT(10) UNSIGNED DEFAULT NULL,
-                `date_added` DATETIME NOT NULL,
-                PRIMARY KEY (`id_product`, `id_product_attribute`)
+        $sql = 'CREATE TABLE IF NOT EXISTS '._DB_PREFIX_.'product_reservations (
+                id_product INT(10) UNSIGNED NOT NULL,
+                id_product_attribute INT(10) UNSIGNED DEFAULT NULL,
+                status VARCHAR(255) NOT NULL,
+                reservation_expiry DATETIME DEFAULT NULL,
+                reserved_stock INT(10) UNSIGNED DEFAULT 0,
+                customer_id INT(10) UNSIGNED DEFAULT NULL,
+                date_added DATETIME NOT NULL,
+                PRIMARY KEY (id_product, id_product_attribute)
             ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
         return Db::getInstance()->execute($sql);
@@ -81,7 +81,7 @@ class GestorProduccion extends Module
 
     private function uninstallDB()
     {
-        $sql = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'product_reservations`';
+        $sql = 'DROP TABLE IF EXISTS '._DB_PREFIX_.'product_reservations';
         return Db::getInstance()->execute($sql);
     }
 
