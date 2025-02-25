@@ -16,7 +16,8 @@ document.addEventListener("DOMContentLoaded", function() {
     document.querySelectorAll(".btn-individual").forEach(button => {
         button.addEventListener("click", function() {
             const productId = this.dataset.id;
-            habilitarReserva([productId]); // Llamamos a la función con un solo ID
+            const reference = this.dataset.reference || null;
+            habilitarReserva([{ id_product: productId, reference: reference }]);
         });
     });
 
@@ -25,7 +26,10 @@ document.addEventListener("DOMContentLoaded", function() {
         e.preventDefault();
         const selectedProducts = Array.from(checkboxes)
             .filter(c => c.checked)
-            .map(c => c.value);
+            .map(c => ({
+                id_product: c.value,
+                reference: c.dataset.reference || null
+            }));
 
         if (selectedProducts.length > 0) {
             habilitarReserva(selectedProducts);
@@ -35,15 +39,23 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     // Función para habilitar reservas
-    function habilitarReserva(productIds) {
-        const token = getAdminToken(); // Aquí obtienes el token correctamente
-        fetch("index.php?controller=AdminGestorProduccion&token=" + token, {
+    function habilitarReserva(products) {
+        const urlWithToken = `${ajaxUrl}&token=${csrfToken}`; // Incluye el token en la URL
+
+        // Verificar si hay productos válidos
+        if (products.length === 0) {
+            alert("No se encontraron productos válidos para habilitar reservas.");
+            return;
+        }
+
+        fetch(urlWithToken, {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded"
             },
             body: new URLSearchParams({
-                products: JSON.stringify(productIds) // Convierte el array de productos a JSON dentro del cuerpo
+                products: JSON.stringify(products), // Convierte el array de productos a JSON
+                submit: true // Indica que es una solicitud de envío
             })
         })
         .then(response => {
@@ -55,22 +67,14 @@ document.addEventListener("DOMContentLoaded", function() {
         .then(data => {
             if (data.success) {
                 alert("Reservas habilitadas correctamente");
+                location.reload(); // Recarga la página para ver los cambios
             } else {
                 alert("Hubo un error al habilitar las reservas: " + (data.error_message || "Desconocido"));
             }
         })
-        .catch(error => console.error("Error:", error));
-                
-    }
-
-    // Obtén el token desde el HTML o desde el contexto si no está disponible en JS
-    function getAdminToken() {
-        const tokenMetaTag = document.querySelector('meta[name="csrf-token"]');
-        if (tokenMetaTag) {
-            return tokenMetaTag.getAttribute('content');
-        } else {
-            console.error('No se pudo obtener el token CSRF.');
-            return ''; // Retorna un valor vacío o muestra un error según sea necesario
-        }
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Hubo un error al procesar la solicitud. Por favor, revisa la consola para más detalles.");
+        });
     }
 });
