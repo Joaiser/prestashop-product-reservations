@@ -67,7 +67,6 @@ private function getProductosConFecha()
 
 public function postProcess()
 {
-    // Asegúrate de que la solicitud sea de tipo POST
     if (Tools::isSubmit('submit')) {
         try {
             // Obtenemos los datos de la petición
@@ -77,11 +76,11 @@ public function postProcess()
                 $products = json_decode($json_data, true); 
 
                 if (is_array($products)) {
-                    foreach ($products as $productId) {
+                    foreach ($products as $product) {
                         // Lógica para habilitar reservas
-                        $this->habilitarReservas($productId);
+                        $this->habilitarReservas($product['id_product'], $product['reference']);
                     }
-                    echo json_encode(['success' => true]);
+                    die(json_encode(['success' => true])); // Devuelve un JSON
                 } else {
                     throw new Exception("Los datos del producto no son válidos.");
                 }
@@ -89,20 +88,37 @@ public function postProcess()
                 throw new Exception("No se recibieron datos de productos.");
             }
         } catch (Exception $e) {
-            echo json_encode(['success' => false, 'error_message' => $e->getMessage()]);
+            die(json_encode(['success' => false, 'error_message' => $e->getMessage()])); // Devuelve un JSON
         }
-        exit;
     }
 }
 
-
-private function habilitarReservas($product_id)
+private function habilitarReservas($product_id, $reference)
 {
-    $sql = 'UPDATE '._DB_PREFIX_.'product 
-            SET available_for_order = 1 
-            WHERE id_product = '.(int)$product_id;
+    // Obtener la instancia de PDO
+    $pdo = Db::getInstance()->getLink();
 
-    Db::getInstance()->execute($sql);
+    try {
+        // Iniciar una transacción
+        $pdo->beginTransaction();
+
+        // Insertar o actualizar la tabla `product_reservation_enabled`
+        $sqlReservationEnabled = 'INSERT INTO '._DB_PREFIX_.'product_reservation_enabled 
+                                  (id_product, reference, is_enabled, date_enabled) 
+                                  VALUES ('.(int)$product_id.', "'.pSQL($reference).'", 1, NOW()) 
+                                  ON DUPLICATE KEY UPDATE 
+                                  is_enabled = 1, date_enabled = NOW()';
+        Db::getInstance()->execute($sqlReservationEnabled);
+
+        // Confirmar la transacción
+        $pdo->commit();
+    } catch (Exception $e) {
+        // Revertir la transacción en caso de error
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw new Exception("Error al habilitar las reservas: " . $e->getMessage());
+    }
 }
- 
+
 }
