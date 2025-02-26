@@ -23,7 +23,7 @@ class GestorProduccion extends Module
 
     public function install()
     {
-        if (!parent::install() || !$this->installDB() || !$this->installTab() || !$this->registerHook('displayBackOfficeHeader') || !$this->installReservationEnabledDB()) {
+        if (!parent::install() || !$this->installDB() || !$this->installTab() || !$this->registerHook('displayBackOfficeHeader') || !$this->installReservationEnabledDB() || !$this->registerHook('displayProductAdditionalInfo')) {
             return false;
         }
         return true;
@@ -108,4 +108,100 @@ class GestorProduccion extends Module
         $this->context->controller->addCSS($this->_path.'views/css/gestorproduccionadmin.css');
         $this->context->controller->addJS($this->_path.'views/js/adminGestorProduccion.js');     
     }
+
+    /*A partir de aquí, vamos a poner los hooks para la ui del user*/
+
+    public function hookModuleRoutes()
+{
+    return [
+        'module-gestorproduccion-productreservation' => [
+            'controller' => 'ProductReservation',
+            'rule' => 'gestorproduccion/productreservation',
+            'keywords' => [],
+            'params' => [
+                'fc' => 'module',
+                'module' => 'gestorproduccion',
+            ],
+        ],
+    ];
 }
+
+
+public function hookDisplayProductAdditionalInfo($params)
+{
+    // Obtener el usuario actual
+    $customer = $this->context->customer;
+
+    // Verificar si el usuario es un comercial (id_default_group = 4)
+    if ($customer->isLogged() && $customer->id_default_group == 4) {
+        // Obtener el id del producto y la referencia
+        $id_product = $params['product']['id_product'];
+        $reference = $params['product']['reference'];
+
+        // Verificar si el producto está en la tabla de reservas
+        if ($this->isProductInReservationTable($id_product, $reference)) {
+            // Asignar variables a la plantilla
+            $this->context->smarty->assign([
+                'product_id' => $id_product,
+                'reference' => $reference,
+                'module_url' => $this->context->link->getModuleLink('gestorproduccion', 'ProductReservation'),
+            ]);
+            
+            PrestaShopLogger::addLog('Archivos JS del Front Office cargados para el producto ID ' . $id_product . ' y referencia ' . $reference, 1);
+
+
+            // Añadir CSS y JS
+            $this->context->controller->registerJavascript(
+                'module-gestorproduccion-js',
+                'modules/' . $this->name . '/views/js/frontProductReservation.js',
+                ['position' => 'bottom', 'priority' => 200]
+            );
+
+
+            $this->context->controller->registerStylesheet(
+                'module-gestorproduccion-css',
+                'modules/' . $this->name . '/views/css/frontProductReservation.css',
+                ['media' => 'all', 'priority' => 150]
+            );
+            PrestaShopLogger::addLog('Archivos CSS');
+
+            
+
+            // Renderizar la plantilla
+            return $this->fetch('module:gestorproduccion/views/templates/front/product_reservation.tpl');
+        }
+    }
+
+    // Log detallado si el producto no está habilitado o el usuario no es comercial
+    if (!$customer->isLogged()) {
+        PrestaShopLogger::addLog('El usuario no está logueado. No se puede mostrar el formulario de reserva.', 2);
+    } elseif ($customer->id_default_group != 4) {
+        PrestaShopLogger::addLog('El usuario logueado no es un comercial (ID de grupo: ' . $customer->id_default_group . '). No se puede mostrar el formulario de reserva.', 2);
+    } else {
+        PrestaShopLogger::addLog('El producto ID ' . $id_product . ' con referencia ' . $reference . ' no está habilitado para reservas.', 2);
+    }
+
+    return ''; // Si no es comercial o el producto no está en la tabla, no muestra nada
+}
+
+
+private function isProductInReservationTable($id_product, $reference)
+{
+    $sql = 'SELECT COUNT(*) 
+            FROM '._DB_PREFIX_.'product_reservation_enabled 
+            WHERE id_product = '.(int)$id_product.' 
+            AND reference = "'.pSQL($reference).'"';
+
+    $result = (bool)Db::getInstance()->getValue($sql);
+
+    if ($result) {
+        PrestaShopLogger::addLog('Producto ID ' . $id_product . ' con referencia ' . $reference . ' encontrado en la tabla product_reservation_enabled', 1);
+    } else {
+        PrestaShopLogger::addLog('Producto ID ' . $id_product . ' con referencia ' . $reference . ' no encontrado en la tabla product_reservation_enabled', 2);
+    }
+
+    return $result;
+}
+
+}
+
