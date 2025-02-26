@@ -67,7 +67,6 @@ document.addEventListener("DOMContentLoaded", function() {
         .then(data => {
             if (data.success) {
                 alert("Reservas habilitadas correctamente");
-                location.reload(); // Recarga la página para ver los cambios
             } else {
                 alert("Hubo un error al habilitar las reservas: " + (data.error_message || "Desconocido"));
             }

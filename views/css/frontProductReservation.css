@@ -1,0 +1,46 @@
+/* Contenedor principal */
+#product-reservation-widget {
+    margin: 20px 0;
+}
+
+/* Botón de toggle */
+#reservation-toggle {
+    margin-bottom: 10px;
+}
+
+/* Contenedor del formulario */
+#reservation-form {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: none; /* Oculto por defecto */
+}
+
+/* Formulario */
+#reservation-form-content {
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+/* Grupo de formulario */
+.form-group {
+    margin-bottom: 15px;
+}
+
+/* Etiqueta */
+.form-label {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Input */
+.form-control {
+    width: 100%;
+}
+
+/* Botón de enviar */
+.btn-success {
+    width: 100%;
+}
