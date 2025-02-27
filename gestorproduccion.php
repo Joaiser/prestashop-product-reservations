@@ -150,12 +150,13 @@ public function hookDisplayProductAdditionalInfo($params)
             PrestaShopLogger::addLog('Archivos JS del Front Office cargados para el producto ID ' . $id_product . ' y referencia ' . $reference, 1);
 
 
-            // Añadir CSS y JS
-            $this->context->controller->registerJavascript(
-                'module-gestorproduccion-js',
-                'modules/' . $this->name . '/views/js/frontProductReservation.js',
-                ['position' => 'bottom', 'priority' => 200]
-            );
+            
+            // PrestaShopLogger::addLog('Intentando registrar frontProductReservation.js');
+            // $this->context->controller->registerJavascript(
+            //     'module-gestorproduccion-js',
+            //     'modules/' . $this->name . '/views/js/frontProductReservation.js',
+            //     ['position' => 'bottom', 'priority' => 150]
+            // );
 
 
             $this->context->controller->registerStylesheet(

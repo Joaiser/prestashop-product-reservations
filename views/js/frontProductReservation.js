@@ -1,37 +1,36 @@
 document.addEventListener('DOMContentLoaded', function () {
     console.log('Script frontProductReservation.js cargado correctamente.');
 
-    // Mostrar/ocultar el formulario al hacer clic en el botón
-    var toggleButton = document.getElementById('reservation-toggle');
-    if (toggleButton) {
-        toggleButton.addEventListener('click', function (e) {
+    // Seleccionar todos los botones de reserva
+    let toggleButtons = document.querySelectorAll('.reservation-toggle');
+    toggleButtons.forEach(button => {
+        button.addEventListener('click', function (e) {
             e.preventDefault();
-            console.log('Botón de reserva clickeado.');
+            console.log('Botón de reserva clickeado para el producto ID:', this.dataset.productId);
 
-            var form = document.getElementById('reservation-form');
-            if (form) {
-                form.style.display = (form.style.display === 'none') ? 'block' : 'none';
-                console.log('Formulario de reserva ' + (form.style.display === 'none' ? 'ocultado' : 'mostrado') + '.');
+            // Buscar el formulario relacionado al botón
+            let formContainer = this.closest('.product-reservation-widget').querySelector('.reservation-form-container');
+            if (formContainer) {
+                formContainer.style.display = (formContainer.style.display === 'none' || formContainer.style.display === '') ? 'block' : 'none';
+                console.log('Formulario de reserva ' + (formContainer.style.display === 'none' ? 'ocultado' : 'mostrado') + '.');
             } else {
-                console.error('El formulario de reserva no se encontró en el DOM.');
+                console.error('No se encontró el formulario de reserva para este producto.');
             }
         });
-    } else {
-        console.error('El botón de reserva no se encontró en el DOM.');
-    }
+    });
 
     // Manejar el envío del formulario mediante AJAX
-    var reservationForm = document.getElementById('reservation-form-content');
-    if (reservationForm) {
-        reservationForm.addEventListener('submit', function (e) {
+    let reservationForms = document.querySelectorAll('.reservation-form-content');
+    reservationForms.forEach(form => {
+        form.addEventListener('submit', function (e) {
             e.preventDefault();
-            console.log('Formulario de reserva enviado.');
+            console.log('Formulario de reserva enviado para el producto ID:', this.querySelector('input[name="product_id"]').value);
 
-            // Obtener los datos del formulario
-            var formData = new FormData(this);
+            let formData = new FormData(this);
             console.log('Datos del formulario:', Object.fromEntries(formData.entries()));
 
-            // Enviar los datos mediante AJAX
+            let messageContainer = this.closest('.product-reservation-widget').querySelector('.reservation-message');
+
             fetch(this.action, {
                 method: 'POST',
                 body: formData
@@ -45,20 +44,30 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(data => {
                 console.log('Respuesta del servidor:', data);
                 if (data.success) {
-                    alert('Reserva realizada con éxito.');
+                    messageContainer.textContent = 'Reserva realizada con éxito.';
+                    messageContainer.classList.add('alert-success');
+                    messageContainer.classList.remove('alert-danger');
+                    messageContainer.style.display = 'block';
                     console.log('Reserva realizada con éxito.');
-                    document.getElementById('reservation-form').style.display = 'none'; // Ocultar el formulario
+
+                    setTimeout(() => {
+                        messageContainer.style.display = 'none';
+                        this.closest('.reservation-form-container').style.display = 'none';
+                    }, 2000); // Ocultar mensaje y formulario tras 2 segundos
                 } else {
-                    alert('Error: ' + data.message);
+                    messageContainer.textContent = 'Error: ' + data.message;
+                    messageContainer.classList.add('alert-danger');
+                    messageContainer.classList.remove('alert-success');
+                    messageContainer.style.display = 'block';
                     console.error('Error en la reserva:', data.message);
                 }
             })
             .catch(error => {
                 console.error('Error en la solicitud AJAX:', error);
-                alert('Ocurrió un error al procesar la solicitud.');
+                messageContainer.textContent = 'Ocurrió un error al procesar la solicitud.';
+                messageContainer.classList.add('alert-danger');
+                messageContainer.style.display = 'block';
             });
         });
-    } else {
-        console.error('El formulario de reserva no se encontró en el DOM.');
-    }
+    });
 });
