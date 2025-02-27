@@ -6,9 +6,10 @@
 
     <!-- Contenedor del formulario, oculto por defecto -->
     <div class="reservation-form-container mt-3" style="display: none;">
-        <form class="reservation-form-content" action="{$reservation_action_url}" method="post">
+        <form class="reservation-form-content" action="{$link->getModuleLink('gestorproduccion', 'productreservation')}" method="post">
             <input type="hidden" name="product_id" value="{$product_id}">
             <input type="hidden" name="reference" value="{$reference}">
+            <input type="hidden" name="token" value="{$token}"> <!-- Añadir el token CSRF -->
 
             <!-- Campo para la cantidad -->
             <div class="form-group">

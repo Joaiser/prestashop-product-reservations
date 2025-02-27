@@ -26,11 +26,14 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             console.log('Formulario de reserva enviado para el producto ID:', this.querySelector('input[name="product_id"]').value);
 
+            // Crear FormData con los datos del formulario
             let formData = new FormData(this);
             console.log('Datos del formulario:', Object.fromEntries(formData.entries()));
 
+            // Obtener el contenedor del mensaje
             let messageContainer = this.closest('.product-reservation-widget').querySelector('.reservation-message');
 
+            // Enviar la solicitud AJAX
             fetch(this.action, {
                 method: 'POST',
                 body: formData
@@ -50,10 +53,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     messageContainer.style.display = 'block';
                     console.log('Reserva realizada con éxito.');
 
+                    // Ocultar mensaje y formulario tras 2 segundos
                     setTimeout(() => {
                         messageContainer.style.display = 'none';
                         this.closest('.reservation-form-container').style.display = 'none';
-                    }, 2000); // Ocultar mensaje y formulario tras 2 segundos
+                    }, 2000);
                 } else {
                     messageContainer.textContent = 'Error: ' + data.message;
                     messageContainer.classList.add('alert-danger');
