@@ -12,26 +12,31 @@ class AdminGestorProduccionController extends ModuleAdminController
     public function initContent()
     {
         parent::initContent();
-    
+        
         // Obtener productos sin stock y sin fecha
         $productos_sin_stock_y_fecha = $this->getProductosSinStockYFecha();
-    
+        
         // Obtener productos sin stock pero con fecha de llegada
         $productos_con_fecha = $this->getProductosConFecha();
-
+    
         // Obtener reservas pendientes
         $reservas_pendientes = $this->getReservasPendientes();
-    
+        
+        // Obtener productos habilitados
+        $productos_habilitados = $this->getProductosHabilitados();
+        
         // Asignar los productos a la plantilla
         $this->context->smarty->assign([
             'productos_sin_stock_y_fecha' => $productos_sin_stock_y_fecha,
             'productos_con_fecha' => $productos_con_fecha,
             'reservas_pendientes' => $reservas_pendientes,
+            'productos_habilitados' => $productos_habilitados, // Asigna los productos habilitados
         ]);
-    
+        
         // Asigna la plantilla al backoffice
         $this->setTemplate('gestorproduccion.tpl');
     }
+    
     
 
     private function getProductosSinStockYFecha()
@@ -76,6 +81,20 @@ private function getReservasPendientes()
             LEFT JOIN '._DB_PREFIX_.'customer c ON pr.id_customer = c.id_customer
             WHERE pr.status = "pendiente" 
             AND pl.id_lang = '.(int)$this->context->language->id; // Asegúrate de que se filtre por el idioma actual
+
+    return Db::getInstance()->executeS($sql);
+}
+
+private function getProductosHabilitados()
+{
+    $sql = 'SELECT p.id_product, pa.id_product_attribute, pl.name AS product_name, 
+                   IFNULL(pa.reference, p.reference) AS reference
+            FROM '._DB_PREFIX_.'product_reservation_enabled pre
+            LEFT JOIN '._DB_PREFIX_.'product p ON pre.id_product = p.id_product
+            LEFT JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product
+            LEFT JOIN '._DB_PREFIX_.'product_attribute pa ON p.id_product = pa.id_product
+            WHERE pl.id_lang = '.(int)$this->context->language->id.' 
+            AND pre.is_enabled = 1';
 
     return Db::getInstance()->executeS($sql);
 }
