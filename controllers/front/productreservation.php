@@ -30,18 +30,16 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
             try {
                 // Insertar la reserva en la base de datos
                 $sql = 'INSERT INTO '._DB_PREFIX_.'product_reservations 
-                        (id_product, id_product_attribute, reference, status, reservation_expiry, reserved_stock, id_comercial, id_customer, date_added) 
-                        VALUES (
-                            '.(int)$product_id.', 
-                            '.(int)$id_product_attribute.', 
-                            "'.pSQL($reference).'", 
-                            "pending",  -- Estado por defecto
-                            NULL,       -- Fecha de expiración (puedes ajustarla según tu lógica)
-                            '.(int)$quantity.', 
-                            '.(int)$id_comercial.', 
-                            '.(int)$id_customer.', 
-                            NOW()
-                        )';
+                (id_product, id_product_attribute, reference, reserved_stock, id_comercial, id_customer, date_added) 
+                VALUES (
+                    '.(int)$product_id.', 
+                    '.(int)$id_product_attribute.', 
+                    "'.pSQL($reference).'", 
+                    '.(int)$quantity.', 
+                    '.(int)$id_comercial.', 
+                    '.(int)$id_customer.', 
+                    NOW()
+                )';
                 $result = Db::getInstance()->execute($sql);
 
                 if ($result) {

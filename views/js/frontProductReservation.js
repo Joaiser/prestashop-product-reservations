@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(data => {
                 console.log('Respuesta del servidor:', data);
 
-                messageContainer.classList.remove('alert-success', 'alert-danger'); // Limpiar clases previas
+                messageContainer.classList.remove('alert-success', 'alert-danger'); 
 
                 if (data.success) {
                     messageContainer.textContent = 'Reserva realizada con éxito.';

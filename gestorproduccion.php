@@ -87,10 +87,11 @@ class GestorProduccion extends Module
 {
     $sql = 'CREATE TABLE IF NOT EXISTS '._DB_PREFIX_.'product_reservation_enabled (
             id_product INT(10) UNSIGNED NOT NULL,
-            reference VARCHAR(64) DEFAULT NULL,  -- Nueva columna para la referencia
+            id_product_attribute INT(10) UNSIGNED NOT NULL DEFAULT 0,  
+            reference VARCHAR(64) DEFAULT NULL, 
             is_enabled TINYINT(1) NOT NULL DEFAULT 0, 
             date_enabled DATETIME NOT NULL,     
-            PRIMARY KEY (id_product, reference)  -- Clave primaria compuesta por id_product y reference
+            PRIMARY KEY (id_product, id_product_attribute, reference) 
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
     return Db::getInstance()->execute($sql);
@@ -144,7 +145,7 @@ public function hookDisplayProductAdditionalInfo($params)
         $reference = $params['product']['reference'];
         $id_product_attribute = (int)Tools::getValue('id_product_attribute', $params['product']['id_product_attribute']); // Obtener la combinación
 
-        // Verificar si el producto está en la tabla de reservas
+        // Verificar si el producto o la combinación están habilitados para reservas
         if ($this->isProductInReservationTable($id_product, $reference, $id_product_attribute)) {
             // Obtener los clientes asignados al comercial
             $customers = $this->getCustomersByComercial($customer->id);
@@ -158,30 +159,12 @@ public function hookDisplayProductAdditionalInfo($params)
                 'module_url' => $this->context->link->getModuleLink('gestorproduccion', 'ProductReservation'),
             ]);
 
-            PrestaShopLogger::addLog('Archivos JS del Front Office cargados para el producto ID ' . $id_product . ' y referencia ' . $reference, 1);
-
-            $this->context->controller->registerStylesheet(
-                'module-gestorproduccion-css',
-                'modules/' . $this->name . '/views/css/frontProductReservation.css',
-                ['media' => 'all', 'priority' => 150]
-            );
-            PrestaShopLogger::addLog('Archivos CSS');
-
             // Renderizar la plantilla
             return $this->fetch('module:gestorproduccion/views/templates/front/product_reservation.tpl');
         }
     }
 
-    // Log detallado si el producto no está habilitado o el usuario no es comercial
-    if (!$customer->isLogged()) {
-        PrestaShopLogger::addLog('El usuario no está logueado. No se puede mostrar el formulario de reserva.', 2);
-    } elseif ($customer->id_default_group != 4) {
-        PrestaShopLogger::addLog('El usuario logueado no es un comercial (ID de grupo: ' . $customer->id_default_group . '). No se puede mostrar el formulario de reserva.', 2);
-    } else {
-        PrestaShopLogger::addLog('El producto ID ' . $id_product . ' con referencia ' . $reference . ' y combinación ' . $id_product_attribute . ' no está habilitado para reservas.', 2);
-    }
-
-    return ''; // Si no es comercial o el producto no está en la tabla, no muestra nada
+    return ''; // Si no es comercial o el producto no está habilitado, no muestra nada
 }
 
 
@@ -197,11 +180,11 @@ public function getCustomersByComercial($id_comercial)
 
 private function isProductInReservationTable($id_product, $reference, $id_product_attribute = 0)
 {
-    // Verificar si el producto base está habilitado
+    // Primero, verificar si el producto base está habilitado, incluyendo el sufijo en la referencia
     $sql_base = 'SELECT COUNT(*) 
                  FROM '._DB_PREFIX_.'product_reservation_enabled 
                  WHERE id_product = '.(int)$id_product.' 
-                 AND reference = "'.pSQL($reference).'"';
+                 AND reference LIKE "'.pSQL($reference).'%"'; // Cambié el "=" por "LIKE" para permitir el sufijo
 
     $result_base = (bool)Db::getInstance()->getValue($sql_base);
 
@@ -210,12 +193,17 @@ private function isProductInReservationTable($id_product, $reference, $id_produc
         $sql_combination = 'SELECT COUNT(*) 
                             FROM '._DB_PREFIX_.'product_reservation_enabled 
                             WHERE id_product = '.(int)$id_product.' 
-                            AND id_product_attribute = '.(int)$id_product_attribute.'
-                            AND reference = "'.pSQL($reference).'"';
+                            AND id_product_attribute = '.(int)$id_product_attribute.' 
+                            AND reference LIKE "'.pSQL($reference).'%"'; // Cambié también aquí a "LIKE"
 
         $result_combination = (bool)Db::getInstance()->getValue($sql_combination);
     } else {
         $result_combination = false;
+    }
+
+    // Si no se encuentra ni el producto base ni la combinación, loguear más información
+    if (!$result_base && !$result_combination) {
+        PrestaShopLogger::addLog('Producto ID ' . $id_product . ' con referencia ' . $reference . ' y combinación ' . $id_product_attribute . ' NO encontrado en la tabla product_reservation_enabled. SQL Base: '.$sql_base.' SQL Combinación: '.$sql_combination, 3);
     }
 
     // El producto está habilitado si el producto base o la combinación están habilitados
@@ -229,6 +217,10 @@ private function isProductInReservationTable($id_product, $reference, $id_produc
 
     return $result;
 }
+
+
+
+
 
 }
 
