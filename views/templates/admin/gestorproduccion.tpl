@@ -10,12 +10,14 @@
             <div class="productos-container">
                 {foreach from=$productos_con_fecha item=producto}
                     <div class="producto">
-                        <input type="checkbox" class="producto-checkbox" name="productos[]" value="{$producto.id_product}" data-reference="{$producto.reference}">
+                        <input type="checkbox" class="producto-checkbox" name="productos[]" 
+                               value="{$producto.id_product}" 
+                               data-reference="{$producto.reference}" 
+                               data-id-product-attribute="{$producto.id_product_attribute}">
                         <p>🆔 {$producto.id_product}</p>
                         <p>📦 {$producto.name}</p>
                         <p>🔖 {$producto.reference}</p>
                         <p>📆 {$producto.available_date|date_format:"%d-%m-%Y"}</p>
-
                     </div>
                 {/foreach}
             </div>
@@ -29,10 +31,14 @@
         <div class="productos-container">
             {foreach from=$productos_sin_stock_y_fecha item=producto}
                 <div class="producto">
-                    <input type="checkbox" class="producto-checkbox" name="productos[]" value="{$producto.id_product}" data-reference="{$producto.reference}">
+                    <input type="checkbox" class="producto-checkbox" name="productos[]" 
+                           value="{$producto.id_product}" 
+                           data-reference="{$producto.reference}" 
+                           data-id-product-attribute="{$producto.id_product_attribute}">
                     <p>🆔 {$producto.id_product}</p>
                     <p>📦 {$producto.name}</p>
                     <p>🔖 {$producto.reference}</p>
+                    <p>📆 {l s='Sin fecha de llegada' mod='gestorproduccion'}</p>
                 </div>
             {/foreach}
         </div>

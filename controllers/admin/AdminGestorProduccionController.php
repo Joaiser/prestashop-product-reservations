@@ -32,7 +32,7 @@ class AdminGestorProduccionController extends ModuleAdminController
 
     private function getProductosSinStockYFecha()
 {
-    $sql = 'SELECT p.id_product, pl.name, 
+    $sql = 'SELECT p.id_product, pa.id_product_attribute, pl.name, 
                    IFNULL(pa.reference, p.reference) AS reference
             FROM '._DB_PREFIX_.'product p
             INNER JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product
@@ -48,7 +48,7 @@ class AdminGestorProduccionController extends ModuleAdminController
 
 private function getProductosConFecha()
 {
-    $sql = 'SELECT p.id_product, pl.name, 
+    $sql = 'SELECT p.id_product, pa.id_product_attribute, pl.name, 
                    IFNULL(pa.reference, p.reference) AS reference,
                    p.available_date
             FROM '._DB_PREFIX_.'product p
@@ -73,12 +73,16 @@ public function postProcess()
             $json_data = Tools::getValue('products');
             if ($json_data) {
                 // Convertir los datos de JSON a un array PHP
-                $products = json_decode($json_data, true); 
+                $products = json_decode($json_data, true);
 
                 if (is_array($products)) {
                     foreach ($products as $product) {
                         // Lógica para habilitar reservas
-                        $this->habilitarReservas($product['id_product'], $product['reference']);
+                        $this->habilitarReservas(
+                            (int)$product['id_product'],
+                            (int)$product['id_product_attribute'], 
+                            pSQL($product['reference'])
+                        );
                     }
                     die(json_encode(['success' => true])); // Devuelve un JSON
                 } else {
@@ -93,7 +97,7 @@ public function postProcess()
     }
 }
 
-private function habilitarReservas($product_id, $reference)
+private function habilitarReservas($product_id, $id_product_attribute, $reference)
 {
     // Obtener la instancia de PDO
     $pdo = Db::getInstance()->getLink();
@@ -104,8 +108,14 @@ private function habilitarReservas($product_id, $reference)
 
         // Insertar o actualizar la tabla `product_reservation_enabled`
         $sqlReservationEnabled = 'INSERT INTO '._DB_PREFIX_.'product_reservation_enabled 
-                                  (id_product, reference, is_enabled, date_enabled) 
-                                  VALUES ('.(int)$product_id.', "'.pSQL($reference).'", 1, NOW()) 
+                                  (id_product, id_product_attribute, reference, is_enabled, date_enabled) 
+                                  VALUES (
+                                      '.(int)$product_id.', 
+                                      '.(int)$id_product_attribute.', 
+                                      "'.pSQL($reference).'", 
+                                      1, 
+                                      NOW()
+                                  ) 
                                   ON DUPLICATE KEY UPDATE 
                                   is_enabled = 1, date_enabled = NOW()';
         Db::getInstance()->execute($sqlReservationEnabled);

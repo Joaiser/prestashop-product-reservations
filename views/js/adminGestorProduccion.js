@@ -12,15 +12,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
 
-    // Evento para los botones individuales
-    document.querySelectorAll(".btn-individual").forEach(button => {
-        button.addEventListener("click", function() {
-            const productId = this.dataset.id;
-            const reference = this.dataset.reference || null;
-            habilitarReserva([{ id_product: productId, reference: reference }]);
-        });
-    });
-
     // Evento para el formulario general
     document.getElementById("productosForm").addEventListener("submit", function(e) {
         e.preventDefault();
@@ -28,6 +19,7 @@ document.addEventListener("DOMContentLoaded", function() {
             .filter(c => c.checked)
             .map(c => ({
                 id_product: c.value,
+                id_product_attribute: c.dataset.idProductAttribute || 0, // Asegúrate de que este campo esté presente
                 reference: c.dataset.reference || null
             }));
 
