@@ -18,11 +18,15 @@ class AdminGestorProduccionController extends ModuleAdminController
     
         // Obtener productos sin stock pero con fecha de llegada
         $productos_con_fecha = $this->getProductosConFecha();
+
+        // Obtener reservas pendientes
+        $reservas_pendientes = $this->getReservasPendientes();
     
         // Asignar los productos a la plantilla
         $this->context->smarty->assign([
             'productos_sin_stock_y_fecha' => $productos_sin_stock_y_fecha,
             'productos_con_fecha' => $productos_con_fecha,
+            'reservas_pendientes' => $reservas_pendientes,
         ]);
     
         // Asigna la plantilla al backoffice
@@ -62,6 +66,21 @@ private function getProductosConFecha()
 
     return Db::getInstance()->executeS($sql);
 }
+
+private function getReservasPendientes()
+{
+    $sql = 'SELECT pr.*, pl.name AS product_name, c.firstname AS customer_firstname, c.lastname AS customer_lastname
+            FROM '._DB_PREFIX_.'product_reservations pr
+            LEFT JOIN '._DB_PREFIX_.'product p ON pr.id_product = p.id_product
+            LEFT JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product
+            LEFT JOIN '._DB_PREFIX_.'customer c ON pr.id_customer = c.id_customer
+            WHERE pr.status = "pendiente" 
+            AND pl.id_lang = '.(int)$this->context->language->id; // Asegúrate de que se filtre por el idioma actual
+
+    return Db::getInstance()->executeS($sql);
+}
+
+
 
 
 
