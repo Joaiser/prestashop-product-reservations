@@ -76,6 +76,27 @@
 
     </form>
 
+    <!-- Sección de productos habilitados -->
+
+<h4 style="font-weight:bold;">✅ {l s='Productos Habilitados' mod='gestorproduccion'}</h4>
+{if $productos_habilitados}
+    <div class="productos-habilitados-container">
+        {foreach from=$productos_habilitados item=producto}
+            <div class="producto-habilitado">
+                <p class="producto-habilitado-id">🆔 Producto ID: {$producto.id_product}</p>
+                <p class="producto-habilitado-nombre">📦 Producto: {$producto.product_name}</p> <!-- Aquí va el nombre del producto -->
+                <p class="producto-habilitado-reference">🔖 Referencia: {$producto.reference}</p>
+                <p class="producto-habilitado-estado">✔ Estado: Habilitado</p>
+                <button id="btn-ver-mas">Ver más</button>
+            </div>
+        {/foreach}
+    </div>
+{else}
+    <p>⏳ {l s='No hay productos habilitados' mod='gestorproduccion'}</p>
+{/if}
+
+
+
 <script>
     const ajaxUrl = "{$link->getAdminLink('AdminGestorProduccion')|escape:'javascript':'UTF-8'}";
     const csrfToken = "{$token|escape:'javascript':'UTF-8'}";
