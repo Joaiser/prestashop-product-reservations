@@ -15,18 +15,33 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
     }
 
     // Verificar si la solicitud es AJAX
-    if (Tools::isSubmit('product_id') && Tools::isSubmit('quantity') && Tools::isSubmit('reference')) {
+    if (Tools::isSubmit('product_id') && Tools::isSubmit('quantity') && Tools::isSubmit('id_customer')) {
         $product_id = (int)Tools::getValue('product_id');
         $quantity = (int)Tools::getValue('quantity');
-        $reference = pSQL(Tools::getValue('reference')); // Obtener y sanitizar la referencia
+        $id_customer = (int)Tools::getValue('id_customer');
+        $reference = pSQL(Tools::getValue('reference'));
+        $id_product_attribute = (int)Tools::getValue('id_product_attribute', 0); // Combinación (opcional)
+
+        // Obtener el ID del comercial logueado
+        $id_comercial = $this->context->customer->id;
 
         // Validar los datos
-        if ($product_id > 0 && $quantity > 0 && !empty($reference)) {
+        if ($product_id > 0 && $quantity > 0 && $id_customer > 0) {
             try {
                 // Insertar la reserva en la base de datos
                 $sql = 'INSERT INTO '._DB_PREFIX_.'product_reservations 
-                        (id_product, reference, reserved_stock, date_added) 
-                        VALUES ('.(int)$product_id.', "'.$reference.'", '.(int)$quantity.', NOW())';
+                        (id_product, id_product_attribute, reference, status, reservation_expiry, reserved_stock, id_comercial, id_customer, date_added) 
+                        VALUES (
+                            '.(int)$product_id.', 
+                            '.(int)$id_product_attribute.', 
+                            "'.pSQL($reference).'", 
+                            "pending",  -- Estado por defecto
+                            NULL,       -- Fecha de expiración (puedes ajustarla según tu lógica)
+                            '.(int)$quantity.', 
+                            '.(int)$id_comercial.', 
+                            '.(int)$id_customer.', 
+                            NOW()
+                        )';
                 $result = Db::getInstance()->execute($sql);
 
                 if ($result) {
