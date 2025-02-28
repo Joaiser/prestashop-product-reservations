@@ -3,6 +3,27 @@
 {block name="override_tpl"}
     <h3 style="margin: 0;">🚀 {l s='Gestor de Producción' mod='gestorproduccion'}</h3>
 
+    <!-- Sección de reservas pendientes -->
+    <h4 style="font-weight:bold;">🛒 {l s='Reservas Pendientes' mod='gestorproduccion'}</h4>
+    {if $reservas_pendientes}
+        <div class="reservas-container">
+            {foreach from=$reservas_pendientes item=reservation}
+                <div class="reserva">
+                    <p class="reserva-id">🆔 Reserva ID: {$reservation.id_reservation}</p>
+                    <p class="reserva-producto">📦 Producto: {$reservation.product_name}</p>
+                    <p class="reserva-cliente">👤 Cliente: {$reservation.customer_firstname} {$reservation.customer_lastname}</p>
+                    <p class="reserva-reference">🔖 Referencia: {$reservation.reference}</p>
+                    <p class="reserva-fecha">🗓 Fecha de reserva: {$reservation.date_added|date_format:"%d-%m-%Y"}</p>
+                    <p class="reserva-estado">🔄 Estado: {$reservation.status|capitalize}</p>
+                    <p>🛒 Cantidad reservada: {$reservation.reserved_stock}</p>
+                </div>
+            {/foreach}
+        </div>
+    {else}
+        <p>⏳ {l s='No hay reservas pendientes' mod='gestorproduccion'}</p>
+    {/if}
+
+
     <!-- Sección de productos con fecha de llegada -->
     <h4 style="font-weight:bold;">📅 {l s='Con fecha de llegada' mod='gestorproduccion'}</h4>
     {if $productos_con_fecha}

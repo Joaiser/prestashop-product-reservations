@@ -180,44 +180,41 @@ public function getCustomersByComercial($id_comercial)
 
 private function isProductInReservationTable($id_product, $reference, $id_product_attribute = 0)
 {
-    // Primero, verificar si el producto base está habilitado, incluyendo el sufijo en la referencia
-    $sql_base = 'SELECT COUNT(*) 
-                 FROM '._DB_PREFIX_.'product_reservation_enabled 
-                 WHERE id_product = '.(int)$id_product.' 
-                 AND reference LIKE "'.pSQL($reference).'%"'; // Cambié el "=" por "LIKE" para permitir el sufijo
-
-    $result_base = (bool)Db::getInstance()->getValue($sql_base);
-
-    // Verificar si la combinación está habilitada (si se proporciona un id_product_attribute)
-    if ($id_product_attribute > 0) {
+    // Si no se ha proporcionado una combinación (id_product_attribute = 0), verificar solo por id_product
+    if ($id_product_attribute == 0) {
+        // Verificar si el producto base está habilitado (sin necesidad de referencia)
+        $sql_base = 'SELECT COUNT(*) 
+                     FROM '._DB_PREFIX_.'product_reservation_enabled 
+                     WHERE id_product = '.(int)$id_product;
+        
+        $result_base = (bool)Db::getInstance()->getValue($sql_base);
+    } else {
+        // Si hay una combinación, buscar por id_product_attribute
         $sql_combination = 'SELECT COUNT(*) 
                             FROM '._DB_PREFIX_.'product_reservation_enabled 
                             WHERE id_product = '.(int)$id_product.' 
-                            AND id_product_attribute = '.(int)$id_product_attribute.' 
-                            AND reference LIKE "'.pSQL($reference).'%"'; // Cambié también aquí a "LIKE"
-
+                            AND id_product_attribute = '.(int)$id_product_attribute;
+        
         $result_combination = (bool)Db::getInstance()->getValue($sql_combination);
-    } else {
-        $result_combination = false;
+        $result_base = false; // No hace falta verificar el producto base cuando tenemos una combinación
     }
 
     // Si no se encuentra ni el producto base ni la combinación, loguear más información
     if (!$result_base && !$result_combination) {
-        PrestaShopLogger::addLog('Producto ID ' . $id_product . ' con referencia ' . $reference . ' y combinación ' . $id_product_attribute . ' NO encontrado en la tabla product_reservation_enabled. SQL Base: '.$sql_base.' SQL Combinación: '.$sql_combination, 3);
+        PrestaShopLogger::addLog('Producto ID ' . $id_product . ' con combinación ' . $id_product_attribute . ' NO encontrado en la tabla product_reservation_enabled. SQL Base: '.$sql_base.' SQL Combinación: '.$sql_combination, 3);
     }
 
     // El producto está habilitado si el producto base o la combinación están habilitados
     $result = $result_base || $result_combination;
 
     if ($result) {
-        PrestaShopLogger::addLog('Producto ID ' . $id_product . ' con referencia ' . $reference . ' y combinación ' . $id_product_attribute . ' encontrado en la tabla product_reservation_enabled', 1);
+        PrestaShopLogger::addLog('Producto ID ' . $id_product . ' con combinación ' . $id_product_attribute . ' encontrado en la tabla product_reservation_enabled', 1);
     } else {
-        PrestaShopLogger::addLog('Producto ID ' . $id_product . ' con referencia ' . $reference . ' y combinación ' . $id_product_attribute . ' no encontrado en la tabla product_reservation_enabled', 2);
+        PrestaShopLogger::addLog('Producto ID ' . $id_product . ' con combinación ' . $id_product_attribute . ' no encontrado en la tabla product_reservation_enabled', 2);
     }
 
     return $result;
 }
-
 
 
 
