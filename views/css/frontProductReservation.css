@@ -42,5 +42,6 @@
 
 /* Botón de enviar */
 .btn-success {
-    width: 100%;
+    background-color: black;
+    color: white;
 }
