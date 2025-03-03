@@ -4,13 +4,15 @@ document.addEventListener("DOMContentLoaded", function() {
     const checkboxes = document.querySelectorAll(".producto-checkbox");
     const btnAplicar = document.getElementById("btn-aplicar");
     let urlWithToken = `${ajaxUrl}&token=${csrfToken}`; 
-    let urlWithoutToken = `${ajaxUrl}`;
 
     // Mostrar u ocultar el botón de aplicar cuando se seleccionan productos
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener("change", function() {
             const anyChecked = Array.from(checkboxes).some(c => c.checked);
-            btnAplicar.style.display = anyChecked ? "block" : "none";
+            btnAplicar.style.display = anyChecked ? "flex" : "none";
+            btnAplicar.style.justifyContent = anyChecked ? "center" : "";
+            btnAplicar.style.alignItems = anyChecked ? "center" : "";
+
         });
     });
 
