@@ -6,22 +6,31 @@
     <!-- Sección de reservas pendientes -->
     <h4 style="font-weight:bold;">🛒 {l s='Reservas Pendientes' mod='gestorproduccion'}</h4>
     {if $reservas_pendientes}
-        <div class="reservas-container">
-            {foreach from=$reservas_pendientes item=reservation}
-                <div class="reserva">
-                    <p class="reserva-id">🆔 Reserva ID: {$reservation.id_reservation}</p>
-                    <p class="reserva-producto">📦 Producto: {$reservation.product_name}</p>
-                    <p class="reserva-cliente">👤 Cliente: {$reservation.customer_firstname} {$reservation.customer_lastname}</p>
-                    <p class="reserva-reference">🔖 Referencia: {$reservation.reference}</p>
-                    <p class="reserva-fecha">🗓 Fecha de reserva: {$reservation.date_added|date_format:"%d-%m-%Y"}</p>
-                    <p class="reserva-estado">🔄 Estado: {$reservation.status|capitalize}</p>
-                    <p>🛒 Cantidad reservada: {$reservation.reserved_stock}</p>
-                </div>
-            {/foreach}
-        </div>
-    {else}
-        <p>⏳ {l s='No hay reservas pendientes' mod='gestorproduccion'}</p>
-    {/if}
+    <div class="reservas-container">
+        {foreach from=$reservas_pendientes item=reservation}
+            <div class="reserva">
+                <p class="reserva-id">🆔 Reserva ID: {$reservation.id_reservation}</p>
+                <p class="reserva-producto">📦 Producto: {$reservation.product_name}</p>
+                <p class="reserva-cliente">👤 Cliente: {$reservation.customer_firstname} {$reservation.customer_lastname}</p>
+                <p class="reserva-reference">🔖 Referencia: {$reservation.reference}</p>
+                <p class="reserva-fecha">🗓 Fecha de reserva: {$reservation.date_added|date_format:"%d-%m-%Y"}</p>
+                <p class="reserva-estado">🔄 Estado: {$reservation.status|capitalize}</p>
+                <p>🛒 Cantidad reservada: {$reservation.reserved_stock}</p>
+
+                <!-- Formulario para borrar reserva -->
+                <form id="form-borrar-reserva-{$reservation.id_reservation}" class="form-borrar-reserva">
+                    <button type="submit" class="btn-borrar-reserva">
+                        ❌ Borrar reserva
+                    </button>
+                </form>
+                
+            </div>
+        {/foreach}
+    </div>
+{else}
+    <p>⏳ {l s='No hay reservas pendientes' mod='gestorproduccion'}</p>
+{/if}
+
 
 
     <!-- Sección de productos con fecha de llegada -->
@@ -76,21 +85,24 @@
 
     </form>
 
-    <!-- Sección de productos habilitados -->
-
+<!-- Sección de productos habilitados -->
 <h4 style="font-weight:bold;">✅ {l s='Productos Habilitados' mod='gestorproduccion'}</h4>
+
 {if $productos_habilitados}
-    <div class="productos-habilitados-container">
-        {foreach from=$productos_habilitados item=producto}
-            <div class="producto-habilitado">
-                <p class="producto-habilitado-id">🆔 Producto ID: {$producto.id_product}</p>
-                <p class="producto-habilitado-nombre">📦 Producto: {$producto.product_name}</p> <!-- Aquí va el nombre del producto -->
-                <p class="producto-habilitado-reference">🔖 Referencia: {$producto.reference}</p>
-                <p class="producto-habilitado-estado">✔ Estado: Habilitado</p>
-                <button id="btn-ver-mas">Ver más</button>
-            </div>
-        {/foreach}
-    </div>
+    <form id="form-deshabilitar-productos">
+        <div class="productos-habilitados-container">
+            {foreach from=$productos_habilitados item=producto}
+                <div class="producto-habilitado">
+                    <p class="producto-habilitado-id">🆔 Producto ID: {$producto.id_product}</p>
+                    <p class="producto-habilitado-reference">🔖 Referencia: {$producto.reference}</p>
+                    <p class="producto-habilitado-estado">✔ Estado: Habilitado</p>
+                    <button type="button" class="btn-deshabilitar" data-id="{$producto.id_product}" data-reference="{$producto.reference}">
+                        ❌ Deshabilitar
+                    </button>
+                </div>
+            {/foreach}
+        </div>
+    </form>
 {else}
     <p>⏳ {l s='No hay productos habilitados' mod='gestorproduccion'}</p>
 {/if}

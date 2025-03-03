@@ -99,12 +99,25 @@ private function getProductosHabilitados()
     return Db::getInstance()->executeS($sql);
 }
 
-
-
-
-
 public function postProcess()
 {
+    // Si se recibe una solicitud para borrar una reserva
+    if (Tools::getValue('delete_reservation')) {
+        try {
+            $id_reservation = (int)Tools::getValue('delete_reservation');
+
+            // Llamada a la función que borra la reserva
+            $this->borrarReserva($id_reservation);
+            
+            // Respuesta en JSON indicando éxito
+            die(json_encode(['success' => true, 'message' => 'Reserva eliminada con éxito.']));
+        } catch (Exception $e) {
+            // En caso de error, respondemos con el error
+            die(json_encode(['success' => false, 'error_message' => $e->getMessage()]));
+        }
+    }
+
+    // Procesar la solicitud de habilitar productos para reserva
     if (Tools::isSubmit('submit')) {
         try {
             // Obtenemos los datos de la petición
@@ -122,7 +135,7 @@ public function postProcess()
                             pSQL($product['reference'])
                         );
                     }
-                    die(json_encode(['success' => true])); // Devuelve un JSON
+                    die(json_encode(['success' => true, 'message' => 'Productos habilitados para reserva.'])); // Devuelve un JSON
                 } else {
                     throw new Exception("Los datos del producto no son válidos.");
                 }
@@ -130,7 +143,47 @@ public function postProcess()
                 throw new Exception("No se recibieron datos de productos.");
             }
         } catch (Exception $e) {
-            die(json_encode(['success' => false, 'error_message' => $e->getMessage()])); // Devuelve un JSON
+            die(json_encode(['success' => false, 'error_message' => $e->getMessage()])); // Devuelve un JSON con el error
+        }
+    }
+    
+    // Acción para deshabilitar productos
+    if (Tools::isSubmit('action') && Tools::getValue('action') === 'deshabilitar_producto') {
+        try {
+            // Obtenemos los datos de la solicitud
+            $json_data = file_get_contents("php://input");
+            $data = json_decode($json_data, true);
+
+            if (isset($data['id_product'], $data['reference'])) {
+                // Llamamos a la función para deshabilitar el producto
+                $this->deshabilitarProducto((int)$data['id_product'], pSQL($data['reference']));
+                die(json_encode(['success' => true, 'message' => 'Producto deshabilitado con éxito.']));
+            } else {
+                throw new Exception("Datos inválidos para deshabilitar el producto.");
+            }
+        } catch (Exception $e) {
+            die(json_encode(['success' => false, 'error_message' => $e->getMessage()])); // Devuelve un JSON con el error
+        }
+    }
+    
+    if (Tools::isSubmit('action')) {
+        $action = Tools::getValue('action');
+
+        if ($action === 'deshabilitar_producto') {
+            try {
+                // Obtenemos los datos de la solicitud
+                $json_data = file_get_contents("php://input");
+                $data = json_decode($json_data, true);
+
+                if (isset($data['id_product'], $data['reference'])) {
+                    $this->deshabilitarProducto((int)$data['id_product'], pSQL($data['reference']));
+                    die(json_encode(['success' => true]));
+                } else {
+                    throw new Exception("Datos inválidos.");
+                }
+            } catch (Exception $e) {
+                die(json_encode(['success' => false, 'error_message' => $e->getMessage()]));
+            }
         }
     }
 }
@@ -168,5 +221,68 @@ private function habilitarReservas($product_id, $id_product_attribute, $referenc
         throw new Exception("Error al habilitar las reservas: " . $e->getMessage());
     }
 }
+
+//Para borrar las reservas de los clientes que han reservado productos
+private function borrarReserva($id_reservation)
+{
+    // Obtener la instancia de PDO
+    $pdo = Db::getInstance()->getLink();
+
+    try {
+        // Iniciar una transacción
+        $pdo->beginTransaction();
+
+        // Eliminar la reserva de la tabla `product_reservations`
+        $sql = 'DELETE FROM '._DB_PREFIX_.'product_reservations 
+        WHERE id_reservation = '.(int)pSQL($id_reservation);
+
+        if (!Db::getInstance()->execute($sql)) {
+            throw new Exception("No se pudo eliminar la reserva.");
+        }
+
+        // Confirmar la transacción
+        $pdo->commit();
+    } catch (Exception $e) {
+        // Revertir la transacción en caso de error
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw new Exception("Error al borrar la reserva: " . $e->getMessage());
+    }
+}
+
+
+//Para borrar los productos habilitados
+
+private function deshabilitarProducto($product_id, $reference)
+{
+    // Obtener la instancia de PDO
+    $pdo = Db::getInstance()->getLink();
+
+    try {
+        // Iniciar una transacción
+        $pdo->beginTransaction();
+
+        // Eliminar el registro de la tabla `product_reservation_enabled`
+        $sql = 'DELETE FROM '._DB_PREFIX_.'product_reservation_enabled 
+                WHERE id_product = '.(int)$product_id.' 
+                AND reference = "'.pSQL($reference).'"';
+
+        if (!Db::getInstance()->execute($sql)) {
+            throw new Exception("No se pudo eliminar el producto.");
+        }
+
+        // Confirmar la transacción
+        $pdo->commit();
+    } catch (Exception $e) {
+        // Revertir la transacción en caso de error
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw new Exception("Error al deshabilitar el producto: " . $e->getMessage());
+    }
+}
+
+
 
 }
