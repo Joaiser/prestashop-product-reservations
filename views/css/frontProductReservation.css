@@ -15,7 +15,7 @@
     border: 1px solid #ddd;
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    display: none; /* Oculto por defecto */
+    display: none; 
 }
 
 /* Formulario */

@@ -74,16 +74,26 @@ private function getProductosConFecha()
 
 private function getReservasPendientes()
 {
-    $sql = 'SELECT pr.*, pl.name AS product_name, c.firstname AS customer_firstname, c.lastname AS customer_lastname
+    $sql = 'SELECT pr.*, 
+                   pl.name AS product_name, 
+                   c.firstname AS customer_firstname, 
+                   c.lastname AS customer_lastname,
+                   com.firstname AS comercial_firstname, 
+                   com.lastname AS comercial_lastname
             FROM '._DB_PREFIX_.'product_reservations pr
             LEFT JOIN '._DB_PREFIX_.'product p ON pr.id_product = p.id_product
             LEFT JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product
             LEFT JOIN '._DB_PREFIX_.'customer c ON pr.id_customer = c.id_customer
+            LEFT JOIN '._DB_PREFIX_.'customer com ON c.id_comercial = com.id_customer
             WHERE pr.status = "pendiente" 
-            AND pl.id_lang = '.(int)$this->context->language->id; // Asegúrate de que se filtre por el idioma actual
+            AND pl.id_lang = '.(int)$this->context->language->id;
 
-    return Db::getInstance()->executeS($sql);
+    $reservas = Db::getInstance()->executeS($sql);
+    return $reservas;
 }
+
+
+
 
 private function getProductosHabilitados()
 {
