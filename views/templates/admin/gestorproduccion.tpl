@@ -12,6 +12,7 @@
                 <p class="reserva-id">🆔 Reserva ID: {$reservation.id_reservation}</p>
                 <p class="reserva-producto">📦 Producto: {$reservation.product_name}</p>
                 <p class="reserva-cliente">👤 Cliente: {$reservation.customer_firstname} {$reservation.customer_lastname}</p>
+                <p class="reserva-comercial">🧑‍💼 Comercial: {$reservation.comercial_firstname} {$reservation.comercial_lastname}</p>
                 <p class="reserva-reference">🔖 Referencia: {$reservation.reference}</p>
                 <p class="reserva-fecha">🗓 Fecha de reserva: {$reservation.date_added|date_format:"%d-%m-%Y"}</p>
                 <p class="reserva-estado">🔄 Estado: {$reservation.status|capitalize}</p>
