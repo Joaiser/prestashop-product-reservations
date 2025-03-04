@@ -99,94 +99,7 @@ private function getProductosHabilitados()
     return Db::getInstance()->executeS($sql);
 }
 
-public function postProcess()
-{
-    // Si se recibe una solicitud para borrar una reserva
-    if (Tools::getValue('delete_reservation')) {
-        try {
-            $id_reservation = (int)Tools::getValue('delete_reservation');
 
-            // Llamada a la función que borra la reserva
-            $this->borrarReserva($id_reservation);
-            
-            // Respuesta en JSON indicando éxito
-            die(json_encode(['success' => true, 'message' => 'Reserva eliminada con éxito.']));
-        } catch (Exception $e) {
-            // En caso de error, respondemos con el error
-            die(json_encode(['success' => false, 'error_message' => $e->getMessage()]));
-        }
-    }
-
-    // Procesar la solicitud de habilitar productos para reserva
-    if (Tools::isSubmit('submit')) {
-        try {
-            // Obtenemos los datos de la petición
-            $json_data = Tools::getValue('products');
-            if ($json_data) {
-                // Convertir los datos de JSON a un array PHP
-                $products = json_decode($json_data, true);
-
-                if (is_array($products)) {
-                    foreach ($products as $product) {
-                        // Lógica para habilitar reservas
-                        $this->habilitarReservas(
-                            (int)$product['id_product'],
-                            (int)$product['id_product_attribute'], 
-                            pSQL($product['reference'])
-                        );
-                    }
-                    die(json_encode(['success' => true, 'message' => 'Productos habilitados para reserva.'])); // Devuelve un JSON
-                } else {
-                    throw new Exception("Los datos del producto no son válidos.");
-                }
-            } else {
-                throw new Exception("No se recibieron datos de productos.");
-            }
-        } catch (Exception $e) {
-            die(json_encode(['success' => false, 'error_message' => $e->getMessage()])); // Devuelve un JSON con el error
-        }
-    }
-    
-    // Acción para deshabilitar productos
-    if (Tools::isSubmit('action') && Tools::getValue('action') === 'deshabilitar_producto') {
-        try {
-            // Obtenemos los datos de la solicitud
-            $json_data = file_get_contents("php://input");
-            $data = json_decode($json_data, true);
-
-            if (isset($data['id_product'], $data['reference'])) {
-                // Llamamos a la función para deshabilitar el producto
-                $this->deshabilitarProducto((int)$data['id_product'], pSQL($data['reference']));
-                die(json_encode(['success' => true, 'message' => 'Producto deshabilitado con éxito.']));
-            } else {
-                throw new Exception("Datos inválidos para deshabilitar el producto.");
-            }
-        } catch (Exception $e) {
-            die(json_encode(['success' => false, 'error_message' => $e->getMessage()])); // Devuelve un JSON con el error
-        }
-    }
-    
-    if (Tools::isSubmit('action')) {
-        $action = Tools::getValue('action');
-
-        if ($action === 'deshabilitar_producto') {
-            try {
-                // Obtenemos los datos de la solicitud
-                $json_data = file_get_contents("php://input");
-                $data = json_decode($json_data, true);
-
-                if (isset($data['id_product'], $data['reference'])) {
-                    $this->deshabilitarProducto((int)$data['id_product'], pSQL($data['reference']));
-                    die(json_encode(['success' => true]));
-                } else {
-                    throw new Exception("Datos inválidos.");
-                }
-            } catch (Exception $e) {
-                die(json_encode(['success' => false, 'error_message' => $e->getMessage()]));
-            }
-        }
-    }
-}
 
 private function habilitarReservas($product_id, $id_product_attribute, $reference)
 {
@@ -232,8 +145,8 @@ private function borrarReserva($id_reservation)
         // Iniciar una transacción
         $pdo->beginTransaction();
 
-        // Eliminar la reserva de la tabla `product_reservations`
-        $sql = 'DELETE FROM '._DB_PREFIX_.'product_reservations 
+        // Eliminar la reserva de la tabla `product_reservation_enabled`
+        $sql = 'DELETE FROM '._DB_PREFIX_.'product_reservations
         WHERE id_reservation = '.(int)pSQL($id_reservation);
 
         if (!Db::getInstance()->execute($sql)) {
@@ -252,9 +165,19 @@ private function borrarReserva($id_reservation)
 }
 
 
-//Para borrar los productos habilitados
+/**
+ * Verifica si un producto tiene reservas activas
+ */
+private function tieneReservasActivas($product_id)
+{
+    $sql = 'SELECT COUNT(*) FROM '._DB_PREFIX_.'product_reservations  WHERE id_product = '.(int)$product_id;
+    return (bool)Db::getInstance()->getValue($sql);
+}
 
-private function deshabilitarProducto($product_id, $reference)
+/**
+ * Deshabilita un producto eliminándolo de la tabla `product_reservation_enabled`
+ */
+private function deshabilitarProducto($product_id)
 {
     // Obtener la instancia de PDO
     $pdo = Db::getInstance()->getLink();
@@ -265,8 +188,7 @@ private function deshabilitarProducto($product_id, $reference)
 
         // Eliminar el registro de la tabla `product_reservation_enabled`
         $sql = 'DELETE FROM '._DB_PREFIX_.'product_reservation_enabled 
-                WHERE id_product = '.(int)$product_id.' 
-                AND reference = "'.pSQL($reference).'"';
+                WHERE id_product = '.(int)$product_id;
 
         if (!Db::getInstance()->execute($sql)) {
             throw new Exception("No se pudo eliminar el producto.");
@@ -283,6 +205,67 @@ private function deshabilitarProducto($product_id, $reference)
     }
 }
 
+/**
+ * Maneja las acciones POST del formulario
+ */
+public function postProcess()
+{
+    // Manejo de eliminación de reservas
+    $id_reservation = (int) Tools::getValue('delete_reservation');
+    if ($id_reservation) {
+        try {
+            $this->borrarReserva($id_reservation);
+            exit(json_encode(['success' => true, 'message' => 'Reserva eliminada con éxito.']));
+        } catch (Exception $e) {
+            exit(json_encode(['success' => false, 'error_message' => $e->getMessage()]));
+        }
+    }
 
+    // Manejo de habilitación de productos para reserva
+    if (Tools::isSubmit('submit')) {
+        try {
+            $json_data = Tools::getValue('products');
+            if (!$json_data) {
+                throw new Exception("No se recibieron datos de productos.");
+            }
+
+            $products = json_decode($json_data, true);
+            if (!is_array($products)) {
+                throw new Exception("Los datos del producto no son válidos.");
+            }
+
+            foreach ($products as $product) {
+                $this->habilitarReservas(
+                    (int) $product['id_product'],
+                    (int) $product['id_product_attribute'],
+                    pSQL($product['reference'])
+                );
+            }
+
+            exit(json_encode(['success' => true, 'message' => 'Productos habilitados para reserva.']));
+        } catch (Exception $e) {
+            exit(json_encode(['success' => false, 'error_message' => $e->getMessage()]));
+        }
+    }
+
+    // Manejo de deshabilitación de productos
+    $action = Tools::getValue('deshabilitarProducto');
+    if ($action) {
+        try {
+            $product_id = (int) $action;  // Obtener el id_product de la URL
+
+            // Verificar si el producto tiene reservas activas
+            if ($this->tieneReservasActivas($product_id)) {
+                throw new Exception("No se puede deshabilitar el producto $product_id porque tiene reservas activas.");
+            }
+
+            // Deshabilitar el producto
+            $this->deshabilitarProducto($product_id);
+            exit(json_encode(['success' => true, 'message' => 'Producto deshabilitado con éxito.']));
+        } catch (Exception $e) {
+            exit(json_encode(['success' => false, 'error_message' => $e->getMessage()]));
+        }
+    }
+}
 
 }

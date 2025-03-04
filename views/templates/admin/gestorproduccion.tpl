@@ -31,6 +31,30 @@
     <p>⏳ {l s='No hay reservas pendientes' mod='gestorproduccion'}</p>
 {/if}
 
+<!-- Sección de productos habilitados -->
+<h4 style="font-weight:bold;">✅ {l s='Productos Habilitados' mod='gestorproduccion'}</h4>
+
+{if $productos_habilitados}
+    <div class="productos-habilitados-container">
+        {foreach from=$productos_habilitados item=producto}
+            <div class="producto-habilitado">
+                <p class="producto-habilitado-id">🆔 Producto ID: {$producto.id_product}</p>
+                <p class="producto-habilitado-reference">🔖 Referencia: {$producto.reference}</p>
+                <p class="producto-habilitado-estado">✔ Estado: Habilitado</p>
+                
+                <!-- Formulario para deshabilitar producto -->
+                <form id="form-deshabilitar-producto-{$producto.id_product}" class="form-deshabilitar-producto">
+                    <button type="submit" class="btn-deshabilitar" data-id="{$producto.id_product}">
+                        ❌ Deshabilitar
+                    </button>
+                </form>
+            </div>
+        {/foreach}
+    </div>
+{else}
+    <p>⏳ {l s='No hay productos habilitados' mod='gestorproduccion'}</p>
+{/if}
+
 
 
     <!-- Sección de productos con fecha de llegada -->
@@ -84,30 +108,6 @@
     </div>
 
     </form>
-
-<!-- Sección de productos habilitados -->
-<h4 style="font-weight:bold;">✅ {l s='Productos Habilitados' mod='gestorproduccion'}</h4>
-
-{if $productos_habilitados}
-    <form id="form-deshabilitar-productos">
-        <div class="productos-habilitados-container">
-            {foreach from=$productos_habilitados item=producto}
-                <div class="producto-habilitado">
-                    <p class="producto-habilitado-id">🆔 Producto ID: {$producto.id_product}</p>
-                    <p class="producto-habilitado-reference">🔖 Referencia: {$producto.reference}</p>
-                    <p class="producto-habilitado-estado">✔ Estado: Habilitado</p>
-                    <button type="button" class="btn-deshabilitar" data-id="{$producto.id_product}" data-reference="{$producto.reference}">
-                        ❌ Deshabilitar
-                    </button>
-                </div>
-            {/foreach}
-        </div>
-    </form>
-{else}
-    <p>⏳ {l s='No hay productos habilitados' mod='gestorproduccion'}</p>
-{/if}
-
-
 
 <script>
     const ajaxUrl = "{$link->getAdminLink('AdminGestorProduccion')|escape:'javascript':'UTF-8'}";
