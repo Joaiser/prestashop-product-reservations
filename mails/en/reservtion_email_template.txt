@@ -1,0 +1,5 @@
+Hello {customer_name},
+
+A reserved has been done with these quantity: {reserved_quantity} unity of product {product_name}.
+
+The reserved was made in the store: {store_name}.

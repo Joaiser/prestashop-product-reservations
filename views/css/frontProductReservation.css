@@ -1,15 +1,15 @@
 /* Contenedor principal */
-#product-reservation-widget {
+.product-reservation-widget {
     margin: 20px 0;
 }
 
 /* Botón de toggle */
-#reservation-toggle {
+.reservation-toggle {
     margin-bottom: 10px;
 }
 
 /* Contenedor del formulario */
-#reservation-form {
+.reservation-form {
     padding: 20px;
     background-color: #f9f9f9;
     border: 1px solid #ddd;
@@ -19,7 +19,7 @@
 }
 
 /* Formulario */
-#reservation-form-content {
+.reservation-form-content {
     max-width: 300px;
     margin: 0 auto;
 }
