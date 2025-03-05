@@ -1,13 +1,6 @@
 FALTA:
--> Tabla ps_product_reservation: id del comercial que hace 
-reserva
+-> Buscar mejor opción que get, ver porque post no me funciona pudiendo usar query
 
-->Tabla ps_product_reservation: id del cliente al que le hace la reserva
-
-->En el formulario del front, que se muestre el select para elegir 
-cliente dependiendo del comercial
-
-->Añadir en el admin, las reservas hechas, la gestion de poder quitar 
-productos que se pueden reservar, y quitar productos reservados
+-> Implementación de correos para Carlos
 
 ->Lo que se me ocurra

@@ -1,0 +1,5 @@
+Hola {customer_name},
+
+Se ha reservado {reserved_quantity} unidades del producto {product_name}.
+
+La reserva fue realizada en la tienda {store_name}.
