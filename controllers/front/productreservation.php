@@ -69,69 +69,71 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
         die(json_encode(['success' => false, 'message' => 'Solicitud inválida.']));
     }
 
-    // Función para enviar el correo a los comerciales
-    private function sendReservationEmail($product_id, $quantity, $id_customer, $id_comercial)
-    {
-        try {
-            // Obtener el nombre del producto y cliente
-            $productName = Db::getInstance()->getValue('SELECT name FROM '._DB_PREFIX_.'product_lang WHERE id_product = '.(int)$product_id.' AND id_lang = '.(int)$this->context->language->id);
-            $customerName = Db::getInstance()->getValue('SELECT CONCAT(firstname, " ", lastname) FROM '._DB_PREFIX_.'customer WHERE id_customer = '.(int)$id_customer);
-            $storeName = 'Salamandra Luz';  // Para este caso, el nombre de la tienda es fijo
+   // Función para enviar el correo a los comerciales
+private function sendReservationEmail($product_id, $quantity, $id_customer, $id_comercial)
+{
+    try {
+        // Obtener el nombre del producto y cliente
+        $productName = Db::getInstance()->getValue('SELECT name FROM '._DB_PREFIX_.'product_lang WHERE id_product = '.(int)$product_id.' AND id_lang = '.(int)$this->context->language->id);
+        $customerName = Db::getInstance()->getValue('SELECT CONCAT(firstname, " ", lastname) FROM '._DB_PREFIX_.'customer WHERE id_customer = '.(int)$id_customer);
+        $comercialName = Db::getInstance()->getValue('SELECT CONCAT(firstname, " ", lastname) FROM '._DB_PREFIX_.'customer WHERE id_customer = '.(int)$id_comercial);
+        $storeName = 'Salamandra Luz';  // Nombre de la tienda
 
-            // Crear el contenido del correo
-            $mailData = array(
-                '{product_name}' => $productName,
-                '{customer_name}' => $customerName,
-                '{reserved_quantity}' => $quantity,
-                '{store_name}' => $storeName,
+        // Crear el contenido del correo
+        $mailData = array(
+            '{product_name}' => $productName,
+            '{customer_name}' => $customerName,
+            '{reserved_quantity}' => $quantity,
+            '{store_name}' => $storeName,
+            '{comercial_name}' => $comercialName,
+        );
+
+        // Obtener el email de los comerciales
+        $commercials = Db::getInstance()->executeS('SELECT email FROM '._DB_PREFIX_.'customer WHERE id_customer = '.(int)$id_comercial);
+
+        // Verificar si se encontraron correos electrónicos
+        if (!$commercials || empty($commercials)) {
+            PrestaShopLogger::addLog('No se encontró ningún correo para el comercial con ID: ' . (int)$id_comercial, 3);
+            die(json_encode(['success' => false, 'message' => 'No se encontró correo del comercial.'])); // Puedes reemplazar `die()` con un return para mejor manejo de errores
+        }
+
+        foreach ($commercials as $commercial) {
+            if (empty($commercial['email'])) {
+                PrestaShopLogger::addLog('Correo vacío o NULL para el comercial con ID: ' . (int)$id_comercial, 3);
+                continue;
+            }
+
+            PrestaShopLogger::addLog('Intentando enviar correo a: ' . $commercial['email'], 1);
+
+            // Enviar el correo utilizando la plantilla
+            $subject = 'Nueva reserva de producto';
+
+            // Enviar el correo utilizando la plantilla HTML y el texto plano
+            $mailSent = Mail::Send(
+                $this->context->language->id,                 // ID del idioma
+                'reservation_email_template',                 // Nombre de la plantilla (sin extensión)
+                $subject,                                     // Asunto del correo
+                $mailData,                                    // Datos que sustituirán las variables en la plantilla
+                $commercial['email'],                         // Destinatario
+                null,                                         // Nombre del destinatario
+                null,                                         // Remitente (por defecto usa el del sitio)
+                null,                                         // Dirección de respuesta
+                null,                                         // No es necesario especificar la ruta
+                null,                                         // Otros parámetros
+                false                                         // No enviar copia en texto plano
             );
 
-            // Obtener el email de los comerciales
-            $commercials = Db::getInstance()->executeS('SELECT email FROM '._DB_PREFIX_.'customer WHERE id_customer = '.(int)$id_comercial);
-
-            // Verificar si se encontraron correos electrónicos
-            if (!$commercials || empty($commercials)) {
-                PrestaShopLogger::addLog('No se encontró ningún correo para el comercial con ID: ' . (int)$id_comercial, 3);
-                die(json_encode(['success' => false, 'message' => 'No se encontró correo del comercial.']));
+            if (!$mailSent) {
+                throw new Exception('Mail::Send devolvió false.');
+            } else {
+                PrestaShopLogger::addLog('Correo enviado correctamente a: ' . $commercial['email'], 1);
             }
-
-            foreach ($commercials as $commercial) {
-                if (empty($commercial['email'])) {
-                    PrestaShopLogger::addLog('Correo vacío o NULL para el comercial con ID: ' . (int)$id_comercial, 3);
-                    continue;
-                }
-
-                PrestaShopLogger::addLog('Intentando enviar correo a: ' . $commercial['email'], 1);
-
-                // Enviar un correo simple sin plantillas personalizadas
-                $subject = 'Nueva reserva de producto';
-                $message = 'Se ha realizado una nueva reserva del producto ' . $productName . 
-                           ' por el cliente ' . $customerName . 
-                           ' con una cantidad de ' . $quantity . ' unidades.';
-
-                $mailSent = Mail::Send(
-                    $this->context->language->id,
-                    '', // No usar plantilla personalizada
-                    $subject,
-                    $message, // Mensaje en texto plano
-                    $commercial['email'],
-                    null,
-                    null,
-                    null,
-                    null, // No usar ruta de plantilla
-                    null,
-                    false
-                );
-
-                if (!$mailSent) {
-                    throw new Exception('Mail::Send devolvió false.');
-                } else {
-                    PrestaShopLogger::addLog('Correo enviado correctamente a: ' . $commercial['email'], 1);
-                }
-            }
-        } catch (Exception $e) {
-            PrestaShopLogger::addLog('Error al enviar el correo: ' . $e->getMessage(), 3);
-            die(json_encode(['success' => false, 'message' => 'Error al enviar el correo: ' . $e->getMessage()]));
         }
+    } catch (Exception $e) {
+        PrestaShopLogger::addLog('Error al enviar el correo: ' . $e->getMessage(), 3);
+        die(json_encode(['success' => false, 'message' => 'Error al enviar el correo: ' . $e->getMessage()])); 
     }
+}
+
+
 }
