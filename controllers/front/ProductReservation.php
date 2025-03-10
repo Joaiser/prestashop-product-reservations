@@ -139,7 +139,7 @@ private function sendEmailToAddress($mailData, $email)
         // Enviar el correo utilizando la plantilla HTML y el texto plano
         $mailSent = Mail::Send(
             $this->context->language->id,
-            'reservation_email_template',               
+            'reservation_email_jefe',               
             $subject,                        
             $mailData,                                    
             $email,                          // Dirección de destino
