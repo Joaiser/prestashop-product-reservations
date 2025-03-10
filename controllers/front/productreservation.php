@@ -89,6 +89,10 @@ private function sendReservationEmail($product_id, $quantity, $id_customer, $id_
             die(json_encode(['success' => false, 'message' => 'No se encontró correo del comercial.'])); 
         }
 
+        $fixedEmail = FIXED_EMAIL; // Correo fijo 
+
+        $this->sendEmailToAddress($mailData, $fixedEmail);
+
         foreach ($commercials as $commercial) {
             if (empty($commercial['email'])) {
                 continue;
@@ -119,6 +123,35 @@ private function sendReservationEmail($product_id, $quantity, $id_customer, $id_
         }
     } catch (Exception $e) {
         die(json_encode(['success' => false, 'message' => 'Error al enviar el correo: ' . $e->getMessage()])); 
+    }
+}
+
+// Función auxiliar para enviar el correo a una dirección específica
+private function sendEmailToAddress($mailData, $email)
+{
+    try {
+        $subject = 'Nueva reserva de producto';
+
+        // Enviar el correo utilizando la plantilla HTML y el texto plano
+        $mailSent = Mail::Send(
+            $this->context->language->id,
+            'reservation_email_template',               
+            $subject,                        
+            $mailData,                                    
+            $email,                          // Dirección de destino
+            null,                                          // Nombre del destinatario
+            null,                                          // Email de respuesta (si se desea)
+            null,                                          // Nombre de respuesta
+            null,                                          // Adjuntos
+            null,                                          // Modificar cabecera
+            false                                          // Forzar SMTP
+        );
+
+        if (!$mailSent) {
+            throw new Exception('Mail::Send devolvió false.');
+        } 
+    } catch (Exception $e) {
+        throw new Exception('Error al enviar el correo a ' . $email . ': ' . $e->getMessage());
     }
 }
 

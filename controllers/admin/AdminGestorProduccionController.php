@@ -1,4 +1,5 @@
 <?php
+require_once _PS_MODULE_DIR_ . 'gestorproduccion/config/config.php';
 
 class AdminGestorProduccionController extends ModuleAdminController
 {

@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const checkboxes = document.querySelectorAll(".producto-checkbox");
     const btnAplicar = document.getElementById("btn-aplicar");
-    let urlWithToken = `${ajaxUrl}&token=${csrfToken}`;
+    let urlWithToken = `${ajaxUrl}`;
 
     // Mostrar u ocultar el botón de aplicar cuando se seleccionan productos
     checkboxes.forEach(checkbox => {
