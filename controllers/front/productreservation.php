@@ -10,7 +10,6 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
         $expectedToken = Tools::getToken();
 
         if ($token !== $expectedToken) {
-            PrestaShopLogger::addLog('Token inválido recibido. Token: ' . $token, 3);
             die(json_encode(['success' => false, 'message' => 'Token inválido.'])); 
         }
 
@@ -40,11 +39,9 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
                         '.(int)$id_customer.', 
                         NOW()
                     )';
-                    PrestaShopLogger::addLog('Consulta SQL para insertar reserva: ' . $sql, 1);
                     $result = Db::getInstance()->execute($sql);
 
                     if ($result) {
-                        PrestaShopLogger::addLog('Reserva guardada correctamente para el producto ID: ' . $product_id, 1);
                         
                         // Llamar a la función para enviar el correo a los comerciales
                         $this->sendReservationEmail($product_id, $quantity, $id_customer, $id_comercial);
@@ -52,20 +49,16 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
                         // Respuesta exitosa
                         die(json_encode(['success' => true]));
                     } else {
-                        PrestaShopLogger::addLog('Error al guardar la reserva. Producto ID: ' . $product_id, 3);
                         die(json_encode(['success' => false, 'message' => 'Error al guardar la reserva.'])); 
                     }
                 } catch (Exception $e) {
-                    PrestaShopLogger::addLog('Error en la consulta SQL: ' . $e->getMessage(), 3);
                     die(json_encode(['success' => false, 'message' => 'Error en la base de datos: ' . $e->getMessage()]));
                 }
             } else {
-                PrestaShopLogger::addLog('Datos inválidos en la solicitud: Producto ID: ' . $product_id . ', Cantidad: ' . $quantity . ', ID Cliente: ' . $id_customer, 3);
                 die(json_encode(['success' => false, 'message' => 'Datos inválidos.']));
             }
         }
 
-        PrestaShopLogger::addLog('Solicitud inválida recibida (sin parámetros).', 3);
         die(json_encode(['success' => false, 'message' => 'Solicitud inválida.']));
     }
 
@@ -93,47 +86,40 @@ private function sendReservationEmail($product_id, $quantity, $id_customer, $id_
 
         // Verificar si se encontraron correos electrónicos
         if (!$commercials || empty($commercials)) {
-            PrestaShopLogger::addLog('No se encontró ningún correo para el comercial con ID: ' . (int)$id_comercial, 3);
-            die(json_encode(['success' => false, 'message' => 'No se encontró correo del comercial.'])); // Puedes reemplazar `die()` con un return para mejor manejo de errores
+            die(json_encode(['success' => false, 'message' => 'No se encontró correo del comercial.'])); 
         }
 
         foreach ($commercials as $commercial) {
             if (empty($commercial['email'])) {
-                PrestaShopLogger::addLog('Correo vacío o NULL para el comercial con ID: ' . (int)$id_comercial, 3);
                 continue;
             }
 
-            PrestaShopLogger::addLog('Intentando enviar correo a: ' . $commercial['email'], 1);
 
             // Enviar el correo utilizando la plantilla
             $subject = 'Nueva reserva de producto';
 
             // Enviar el correo utilizando la plantilla HTML y el texto plano
             $mailSent = Mail::Send(
-                $this->context->language->id,                 // ID del idioma
-                'reservation_email_template',                 // Nombre de la plantilla (sin extensión)
-                $subject,                                     // Asunto del correo
-                $mailData,                                    // Datos que sustituirán las variables en la plantilla
-                $commercial['email'],                         // Destinatario
-                null,                                         // Nombre del destinatario
-                null,                                         // Remitente (por defecto usa el del sitio)
-                null,                                         // Dirección de respuesta
-                null,                                         // No es necesario especificar la ruta
-                null,                                         // Otros parámetros
-                false                                         // No enviar copia en texto plano
+                $this->context->language->id,
+                'reservation_email_template',               
+                $subject,                        
+                $mailData,                                    
+                $commercial['email'],                         
+                null,                                         
+                null,                                         
+                null,                                         
+                null,                                         
+                null,                                         
+                false                                         
             );
 
             if (!$mailSent) {
                 throw new Exception('Mail::Send devolvió false.');
-            } else {
-                PrestaShopLogger::addLog('Correo enviado correctamente a: ' . $commercial['email'], 1);
-            }
+            } 
         }
     } catch (Exception $e) {
-        PrestaShopLogger::addLog('Error al enviar el correo: ' . $e->getMessage(), 3);
         die(json_encode(['success' => false, 'message' => 'Error al enviar el correo: ' . $e->getMessage()])); 
     }
 }
-
 
 }
