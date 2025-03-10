@@ -23,7 +23,7 @@ class GestorProduccion extends Module
 
     public function install()
     {
-        if (!parent::install() || !$this->installDB() || !$this->installTab() || !$this->registerHook('displayBackOfficeHeader') || !$this->installReservationEnabledDB() || !$this->registerHook('displayProductAdditionalInfo')) {
+        if (!parent::install() || !$this->installDB() || !$this->installTab() || !$this->registerHook('displayBackOfficeHeader') || !$this->installReservationEnabledDB() || !$this->registerHook('displayCustomerAccount')) {
             return false;
         }
         return true;
@@ -132,50 +132,61 @@ class GestorProduccion extends Module
         ];
     }
 
-    public function hookDisplayProductAdditionalInfo($params)
+    public function hookDisplayCustomerAccount($params)
     {
         // Obtener el usuario actual
         $customer = $this->context->customer;
-
-        // Verificar si el usuario es un comercial (id_default_group = 4)
+    
+        // Verificar si el usuario está logueado y es un comercial (id_default_group = 4)
         if ($customer->isLogged() && $customer->id_default_group == 4) {
-            // Obtener el id del producto, la referencia y la combinación
-            $id_product = $params['product']['id_product'];
-            $reference = $params['product']['reference'];
-            $id_product_attribute = (int)Tools::getValue('id_product_attribute', $params['product']['id_product_attribute']); // Obtener la combinación
-
-            // Verificar si el producto o la combinación están habilitados para reservas
-            if ($this->isProductInReservationTable($id_product, $reference, $id_product_attribute)) {
-                // Obtener los clientes asignados al comercial
-                $customers = $this->getCustomersByComercial($customer->id);
-
-                // Asignar variables a la plantilla
-                $this->context->smarty->assign([
-                    'product_id' => $id_product,
-                    'reference' => $reference,
-                    'id_product_attribute' => $id_product_attribute,
-                    'customers' => $customers,
-                    'module_url' => $this->context->link->getModuleLink('gestorproduccion', 'ProductReservation'),
-                ]);
-
-                // Renderizar la plantilla
-                return $this->fetch('module:gestorproduccion/views/templates/front/product_reservation.tpl');
+    
+            // Añadir un enlace a la sección de "Mis Reservas" en el menú de la cuenta del cliente
+            $this->context->smarty->assign([
+                'product_reservation_link' => $this->context->link->getModuleLink('gestorproduccion', 'ProductReservation'),
+            ]);
+    
+            // Lógica para mostrar el producto en reserva (como ya tienes)
+            // Comprobar si el parámetro 'product' está presente
+            if (isset($params['product']) && is_array($params['product'])) {
+                $id_product = $params['product']['id_product'];
+                $reference = $params['product']['reference'];
+                $id_product_attribute = (int)Tools::getValue('id_product_attribute', $params['product']['id_product_attribute']); // Obtener la combinación
+    
+                // Verificar si el producto o la combinación están habilitados para reservas
+                if ($this->isProductInReservationTable($id_product, $reference, $id_product_attribute)) {
+                    // Obtener los clientes asignados al comercial
+                    $customers = $this->getCustomersByComercial($customer->id);
+    
+                    // Asignar variables a la plantilla
+                    $this->context->smarty->assign([
+                        'product_id' => $id_product,
+                        'reference' => $reference,
+                        'id_product_attribute' => $id_product_attribute,
+                        'customers' => $customers,
+                        'module_url' => $this->context->link->getModuleLink('gestorproduccion', 'ProductReservation'),
+                    ]);
+                }
             }
+    
+            // Renderizar la plantilla para mostrar el enlace de "Mis Reservas"
+            return $this->fetch('module:gestorproduccion/views/templates/front/customer_account.tpl');
         }
-
-        return ''; // Si no es comercial o el producto no está habilitado, no muestra nada
+    
+        return ''; // Si el cliente no está logueado o no es un comercial, no muestra nada
     }
+    
 
     public function getCustomersByComercial($id_comercial)
     {
         $sql = 'SELECT c.id_customer, c.firstname, c.lastname
                 FROM '._DB_PREFIX_.'customer c
                 WHERE c.id_comercial = '.(int)$id_comercial.'
-                AND c.deleted = 0'; // Excluir clientes eliminados (si aplica)
+                AND c.deleted = 0
+                 ORDER BY c.firstname ASC'; // Excluir clientes eliminados (si aplica)
         return Db::getInstance()->executeS($sql);
     }
 
-    private function isProductInReservationTable($id_product, $reference, $id_product_attribute = 0)
+    private function isProductInReservationTable($id_product, $id_product_attribute = 0)
     {
         if ($id_product_attribute == 0) {
             $sql_base = 'SELECT COUNT(*) FROM '._DB_PREFIX_.'product_reservation_enabled WHERE id_product = '.(int)$id_product;
