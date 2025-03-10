@@ -1,19 +1,14 @@
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('Script frontProductReservation.js cargado correctamente.');
 
     // Seleccionar todos los botones de reserva
     document.querySelectorAll('.reservation-toggle').forEach(button => {
         button.addEventListener('click', function (e) {
             e.preventDefault();
-            console.log('Botón de reserva clickeado para el producto ID:', this.dataset.productId);
 
             let formContainer = this.closest('.product-reservation-widget').querySelector('.reservation-form-container');
             if (formContainer) {
                 formContainer.style.display = formContainer.style.display === 'none' || formContainer.style.display === '' ? 'block' : 'none';
-                console.log('Formulario de reserva ' + (formContainer.style.display === 'none' ? 'ocultado' : 'mostrado') + '.');
-            } else {
-                console.error('No se encontró el formulario de reserva para este producto.');
-            }
+            } 
         });
     });
 
@@ -21,7 +16,6 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.reservation-form-content').forEach(form => {
         form.addEventListener('submit', function (e) {
             e.preventDefault();
-            console.log('Formulario de reserva enviado para el producto ID:', this.querySelector('input[name="product_id"]').value);
 
             let formData = new FormData(this);
             let params = new URLSearchParams(formData); // Convertimos FormData a URLSearchParams
@@ -43,14 +37,12 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(response => response.json())
             .then(data => {
-                console.log('Respuesta del servidor:', data);
 
                 messageContainer.classList.remove('alert-success', 'alert-danger'); 
 
                 if (data.success) {
                     messageContainer.textContent = 'Reserva realizada con éxito.';
                     messageContainer.classList.add('alert-success');
-                    console.log('Reserva realizada con éxito.');
 
                     // Ocultar mensaje y formulario tras 2 segundos
                     setTimeout(() => {

@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("El script ha cargado correctamente");
 
     const checkboxes = document.querySelectorAll(".producto-checkbox");
     const btnAplicar = document.getElementById("btn-aplicar");
@@ -95,7 +94,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
    // Función para deshabilitar un producto
 function deshabilitarProducto(event) {
-    console.log("Botón de deshabilitar presionado");
 
     // Obtener el botón que disparó el evento
     const button = event.target;
@@ -103,7 +101,6 @@ function deshabilitarProducto(event) {
 
     // Crear URL específica para deshabilitar producto
     const url = `${ajaxUrl}&deshabilitarProducto=${productId}&token=${csrfToken}`;
-    console.log("URL de deshabilitar producto:", url); // Verificar la URL
 
     // Confirmar con el usuario antes de proceder
     if (!confirm(`¿Seguro que deseas deshabilitar el producto con 🆔:${productId}?`)) {
@@ -119,7 +116,6 @@ function deshabilitarProducto(event) {
             return response.json();
         })
         .then(data => {
-            console.log("Respuesta del servidor:", data); // Verificar la respuesta
             if (data.success) {
                 alert("✅ Producto deshabilitado correctamente.");
                 window.location.reload(); // Recargar la página para reflejar los cambios
