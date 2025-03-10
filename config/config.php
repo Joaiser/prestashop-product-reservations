@@ -1,2 +1,2 @@
 <?php 
-define('FIXED_EMAIL', 'saezgarciabelen@gmail.com');
+define('FIXED_EMAIL', '@gmail.com');

@@ -1,6 +1,10 @@
 <?php
+
+require_once _PS_MODULE_DIR_ . 'gestorproduccion/config/config.php';
+
 class GestorProduccionProductReservationModuleFrontController extends ModuleFrontController
 {
+
     public function initContent()
     {
         parent::initContent();
