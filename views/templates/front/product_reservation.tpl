@@ -4,7 +4,10 @@
     <h2>Formulario de reserva</h2>
 
     {if isset($available_products) && $available_products|@count > 0}
-        <form id="reservation_form" class="container mt-4" action="{$url_for_submission}" method="POST">
+        <form id="reservation_form" class="container mt-4 product-reservation-widget" action="{$url_for_submission}" method="POST">
+            <!-- Token CSRF de Prestashop -->
+            <input type="hidden" name="token" value="{$token}">
+
             <div id="product_reservation_container">
                 <div class="reservation_item mb-3" data-index="0">
                     <div class="mb-3">
@@ -28,9 +31,12 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <input type="hidden" name="reference[0]" value="{$reference}">
+                        <!-- Asegúrate de pasar la referencia del producto aquí -->
+                        <input type="hidden" name="reference[0]" value="{$product.reference}">
                         <input type="hidden" name="id_product_attribute[0]" value="{$id_product_attribute}">
                     </div>
+                    <!-- Botón de borrar (X) -->
+                    <button type="button" class="remove_reservation btn btn-danger btn-sm" style="display:none;">&times;</button>
                 </div>
             </div>
 

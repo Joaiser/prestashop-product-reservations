@@ -48,50 +48,64 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
     // Lógica de procesamiento de la reserva (por AJAX)
     public function postProcess()
     {
-        if (Tools::isSubmit('product_id') && Tools::isSubmit('quantity') && Tools::isSubmit('id_customer')) {
-            $product_id = (int)Tools::getValue('product_id');
-            $quantity = (int)Tools::getValue('quantity');
-            $id_customer = (int)Tools::getValue('id_customer');
-            $reference = pSQL(Tools::getValue('reference'));
-            $id_product_attribute = (int)Tools::getValue('id_product_attribute', 0); // Combinación (opcional)
-
-            // Obtener el ID del comercial logueado
-            $id_comercial = $this->context->customer->id;
-
-            // Validar los datos
-            if ($product_id > 0 && $quantity > 0 && $id_customer > 0) {
-                try {
-                    // Insertar la reserva en la base de datos
-                    $sql = 'INSERT INTO '._DB_PREFIX_.'product_reservations 
-                    (id_product, id_product_attribute, reference, reserved_stock, id_comercial, id_customer, date_added) 
-                    VALUES (
-                        '.(int)$product_id.', 
-                        '.(int)$id_product_attribute.', 
-                        "'.pSQL($reference).'", 
-                        '.(int)$quantity.', 
-                        '.(int)$id_comercial.', 
-                        '.(int)$id_customer.', 
-                        NOW()
-                    )';
-                    $result = Db::getInstance()->execute($sql);
-
-                    if ($result) {
-                        // Llamar a la función para enviar el correo a los comerciales
-                        $this->sendReservationEmail($product_id, $quantity, $id_customer, $id_comercial);
-
-                        // Respuesta exitosa
-                        die(json_encode(['success' => true]));
-                    } else {
-                        die(json_encode(['success' => false, 'message' => 'Error al guardar la reserva.']));  // Mensaje de error
+        if (Tools::isSubmit('products')) {
+            $products = json_decode(Tools::getValue('products'), true); // Decodificar el JSON recibido
+    
+            if (is_array($products)) {
+                foreach ($products as $product) {
+                    $product_id = (int)$product['product_id'];
+                    $quantity = (int)$product['quantity'];
+                    $id_customer = (int)$product['id_customer'];
+                    $reference = isset($product['reference']) ? (string)$product['reference'] : ''; // Convertir a string
+                
+                    // Asegurarnos de que 'reference' no sea un array vacío u objeto
+                    if (is_array($reference)) {
+                        $reference = ''; // Puedes asignar un valor predeterminado si no es válido
                     }
-                } catch (Exception $e) {
-                    die(json_encode(['success' => false, 'message' => 'Error en la base de datos: ' . $e->getMessage()])); 
+                    $id_product_attribute = (int)$product['id_product_attribute'];
+    
+                    // Obtener el ID del comercial logueado
+                    $id_comercial = $this->context->customer->id;
+    
+                    // Validar los datos
+                    if ($product_id > 0 && $quantity > 0 && $id_customer > 0) {
+                        try {
+                            // Insertar la reserva en la base de datos
+                            $sql = 'INSERT INTO '._DB_PREFIX_.'product_reservations 
+                            (id_product, id_product_attribute, reference, reserved_stock, id_comercial, id_customer, date_added) 
+                            VALUES (
+                                '.(int)$product_id.', 
+                                '.(int)$id_product_attribute.', 
+                                "'.pSQL($reference).'", 
+                                '.(int)$quantity.', 
+                                '.(int)$id_comercial.', 
+                                '.(int)$id_customer.', 
+                                NOW()
+                            )';
+                            $result = Db::getInstance()->execute($sql);
+    
+                            if ($result) {
+                                // Llamar a la función para enviar el correo a los comerciales
+                                $this->sendReservationEmail($product_id, $quantity, $id_customer, $id_comercial);
+                            } else {
+                                die(json_encode(['success' => false, 'message' => 'Error al guardar la reserva.']));  // Mensaje de error
+                            }
+                        } catch (Exception $e) {
+                            die(json_encode(['success' => false, 'message' => 'Error en la base de datos: ' . $e->getMessage()])); 
+                        }
+                    } else {
+                        die(json_encode(['success' => false, 'message' => 'Datos inválidos para el producto ' . $product_id]));  // Mensaje de validación
+                    }
                 }
+    
+                // Respuesta exitosa después de procesar todos los productos
+                die(json_encode(['success' => true]));
             } else {
-                die(json_encode(['success' => false, 'message' => 'Datos inválidos.']));  // Mensaje de validación
+                die(json_encode(['success' => false, 'message' => 'Formato de datos inválido.'])); // Mensaje de error si no es un array
             }
         }
     }
+    
 
 
     // Función para enviar el correo a los comerciales

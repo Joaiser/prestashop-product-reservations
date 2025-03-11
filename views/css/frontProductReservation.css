@@ -45,3 +45,24 @@
     background-color: black;
     color: white;
 }
+
+/* Estilo para el botón de eliminación */
+.remove_reservation {
+    background: none;
+    border: none;
+    color: #dc3545;
+    font-size: 20px;
+    line-height: 20px;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    cursor: pointer;
+}
+
+.remove_reservation:hover {
+    color: #a71d2a;
+}
+
+.reservation_item {
+    position: relative; /* Necesario para posicionar la "X" dentro del contenedor */
+}

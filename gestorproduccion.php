@@ -143,7 +143,6 @@ class GestorProduccion extends Module
         // Enlace a la página de reservas
         $product_reservation_link = $this->context->link->getModuleLink('gestorproduccion', 'ProductReservation');
 
-        PrestaShopLogger::addLog('Ruta de la página de reservas: '.$product_reservation_link);
 
         // Asignar variables a la plantilla
         $this->context->smarty->assign([

@@ -1,63 +1,69 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Manejar el envío del formulario mediante AJAX
-    document.querySelector('#reservation_form').addEventListener('submit', function (e) {
-        e.preventDefault();
+    const reservationForm = document.querySelector('#reservation_form');
 
-        // Obtener todos los formularios de reserva (incluso los nuevos agregados)
-        let formData = new FormData();
-        let reservationForms = document.querySelectorAll('.reservation_item');  // Seleccionar todos los formularios de reserva
+    if (reservationForm) {
+        // Manejar el envío del formulario mediante AJAX
+        reservationForm.addEventListener('submit', function (e) {
+            e.preventDefault();
 
-        // Recorremos los formularios de reserva para agregar sus datos a formData
-        reservationForms.forEach((form, index) => {
-            let formFields = form.querySelectorAll('select, input');
-            formFields.forEach(field => {
-                formData.append(field.name, field.value);
+            // Obtener todos los formularios de reserva (incluso los nuevos agregados)
+            let formData = new FormData();
+            let reservationForms = document.querySelectorAll('.reservation_item');  // Seleccionar todos los formularios de reserva
+
+            // Recorremos los formularios de reserva para agregar sus datos a formData
+            reservationForms.forEach((form, index) => {
+                let formFields = form.querySelectorAll('select, input');
+                formFields.forEach(field => {
+                    formData.append(field.name, field.value);
+                });
             });
-        });
 
-        let actionUrl = this.action;  // URL del controlador
-        if (!actionUrl) {
-            console.error('No se encontró la URL de acción para el formulario.');
-            return;
-        }
-
-        let messageContainer = this.closest('.product-reservation-widget').querySelector('.reservation-message');
-        messageContainer.textContent = '';  // Limpiar mensaje previo
-        messageContainer.style.display = 'none';
-
-        // Enviar la solicitud AJAX
-        fetch(actionUrl, {
-            method: 'POST',
-            body: formData  // Enviar los datos del formulario
-        })
-        .then(response => response.json())
-        .then(data => {
-            messageContainer.classList.remove('alert-success', 'alert-danger'); 
-
-            if (data.success) {
-                messageContainer.textContent = 'Reservas realizadas con éxito.';
-                messageContainer.classList.add('alert-success');
-
-                // Ocultar mensaje y formulario tras 2 segundos
-                setTimeout(() => {
-                    messageContainer.style.display = 'none';
-                    this.closest('.reservation-form-container').style.display = 'none';
-                }, 2000);
-            } else {
-                messageContainer.textContent = 'Error: ' + (data.message || 'Error desconocido.');
-                messageContainer.classList.add('alert-danger');
-                console.error('Error en la reserva:', data.message);
+            let actionUrl = this.action;  // URL del controlador
+            if (!actionUrl) {
+                console.error('No se encontró la URL de acción para el formulario.');
+                return;
             }
 
-            messageContainer.style.display = 'block';
-        })
-        .catch(error => {
-            console.error('Error en la solicitud AJAX:', error);
-            messageContainer.textContent = 'Ocurrió un error al procesar la solicitud.';
-            messageContainer.classList.add('alert-danger');
-            messageContainer.style.display = 'block';
+            let messageContainer = this.closest('.product-reservation-widget').querySelector('.reservation-message');
+            messageContainer.textContent = '';  // Limpiar mensaje previo
+            messageContainer.style.display = 'none';
+
+            // Enviar la solicitud AJAX
+            fetch(actionUrl, {
+                method: 'POST',
+                body: formData  // Enviar los datos del formulario
+            })
+            .then(response => response.json())
+            .then(data => {
+                messageContainer.classList.remove('alert-success', 'alert-danger'); 
+
+                if (data.success) {
+                    messageContainer.textContent = 'Reservas realizadas con éxito.';
+                    messageContainer.classList.add('alert-success');
+
+                    // Ocultar mensaje y formulario tras 2 segundos
+                    setTimeout(() => {
+                        messageContainer.style.display = 'none';
+                        this.closest('.reservation-form-container').style.display = 'none';
+                    }, 2000);
+                } else {
+                    messageContainer.textContent = 'Error: ' + (data.message || 'Error desconocido.');
+                    messageContainer.classList.add('alert-danger');
+                    console.error('Error en la reserva:', data.message);
+                }
+
+                messageContainer.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error en la solicitud AJAX:', error);
+                messageContainer.textContent = 'Ocurrió un error al procesar la solicitud.';
+                messageContainer.classList.add('alert-danger');
+                messageContainer.style.display = 'block';
+            });
         });
-    });
+    } else {
+        console.error("El formulario con id 'reservation_form' no se encontró.");
+    }
 
     // Manejar el botón de añadir más reservas
     document.getElementById('add_more_reservations').addEventListener('click', function() {
@@ -95,6 +101,15 @@ document.addEventListener('DOMContentLoaded', function () {
         // Limpiar los valores de los nuevos campos (excepto el cliente)
         newReservation.querySelector('select[name="product_id[' + index + ']"]').value = '';
         newReservation.querySelector('input[name="quantity[' + index + ']"]').value = 1;
+
+        // Mostrar el botón de eliminar (X) solo en los campos nuevos
+        const removeButton = newReservation.querySelector('.remove_reservation');
+        removeButton.style.display = 'inline-block';
+
+        // Agregar el evento para eliminar la reserva
+        removeButton.addEventListener('click', function () {
+            newReservation.remove();  // Eliminar el campo de la reserva
+        });
 
         // Añadir el nuevo formulario al contenedor
         container.appendChild(newReservation);
