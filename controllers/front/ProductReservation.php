@@ -6,50 +6,65 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
 {
 
     public function initContent()
-{
-    parent::initContent();
-
-    // Asignar información de reservas y otros datos necesarios
-    $product_id = (int)Tools::getValue('product_id');
-    $reference = Tools::getValue('reference');
-    $id_product_attribute = (int)Tools::getValue('id_product_attribute', 0);
-
-    // Obtener lista de clientes del comercial logueado
-    $id_comercial = (int)$this->context->customer->id; // ID del comercial logueado
-    $customers = Db::getInstance()->executeS('SELECT id_customer, firstname, lastname FROM '._DB_PREFIX_.'customer WHERE id_comercial = '.(int)$id_comercial);
-
-    // Obtener los productos habilitados para reservar
-    $available_products = Db::getInstance()->executeS('
-        SELECT p.id_product, p.reference, pl.name 
-        FROM '._DB_PREFIX_.'product p
-        JOIN '._DB_PREFIX_.'product_reservation_enabled pre ON p.id_product = pre.id_product
-        LEFT JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product AND pl.id_lang = '.(int)$this->context->language->id.'
-        WHERE pre.id_product IS NOT NULL
-    ');
-
-    // Verificar si hay productos disponibles para mostrar
-    $no_products_message = empty($available_products) ? 'No hay productos disponibles para reservar en este momento.' : '';
-
-    // Asignar variables al template
-    $this->context->smarty->assign(array(
-        'product_id' => $product_id,
-        'reference' => $reference,
-        'id_product_attribute' => $id_product_attribute,
-        'customers' => $customers,
-        'available_products' => $available_products,
-        'no_products_message' => $no_products_message,
-        'token' => Tools::getToken(),
-    ));
-
-    // Mostrar la plantilla con la estructura completa
-    $this->setTemplate('module:gestorproduccion/views/templates/front/product_reservation.tpl');
-}
+    {
+        parent::initContent();
+    
+        // Asignar información de reservas y otros datos necesarios
+        $product_id = (int)Tools::getValue('product_id');
+        $reference = Tools::getValue('reference');
+        $id_product_attribute = (int)Tools::getValue('id_product_attribute', 0);
+    
+        // Obtener lista de clientes del comercial logueado
+        $id_comercial = (int)$this->context->customer->id; // ID del comercial logueado
+        $customers = Db::getInstance()->executeS('SELECT id_customer, firstname, lastname FROM '._DB_PREFIX_.'customer WHERE id_comercial = '.(int)$id_comercial);
+    
+        // Obtener los productos habilitados para reservar
+        $available_products = Db::getInstance()->executeS('
+            SELECT p.id_product, p.reference, pl.name 
+            FROM '._DB_PREFIX_.'product p
+            JOIN '._DB_PREFIX_.'product_reservation_enabled pre ON p.id_product = pre.id_product
+            LEFT JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product AND pl.id_lang = '.(int)$this->context->language->id.'
+            WHERE pre.id_product IS NOT NULL
+        ');
+    
+        // Verificar si hay productos disponibles para mostrar
+        $no_products_message = empty($available_products) ? 'No hay productos disponibles para reservar en este momento.' : '';
+    
+        // Asignar variables al template
+        $this->context->smarty->assign(array(
+            'product_id' => $product_id,
+            'reference' => $reference,
+            'id_product_attribute' => $id_product_attribute,
+            'customers' => $customers,
+            'available_products' => $available_products,
+            'no_products_message' => $no_products_message,
+            'token' => Tools::getToken(),
+            'url_for_submission' => $this->context->link->getModuleLink('gestorproduccion', 'ProductReservation'), // Asignar la URL del controlador
+        ));
+    
+        // Mostrar la plantilla con la estructura completa
+        $this->setTemplate('module:gestorproduccion/views/templates/front/product_reservation.tpl');
+    }
 
     // Lógica de procesamiento de la reserva (por AJAX)
     public function postProcess()
     {
-        if (Tools::isSubmit('products')) {
-            $products = json_decode(Tools::getValue('products'), true); // Decodificar el JSON recibido
+        // Leer el cuerpo de la solicitud
+        $input = file_get_contents('php://input');
+        $data = json_decode($input, true);
+    
+        // Registrar los datos recibidos
+        PrestaShopLogger::addLog('Datos recibidos en postProcess: ' . print_r($data, true), 1);
+    
+        // Verificar si la solicitud es AJAX
+        if (isset($data['ajax']) && isset($data['products'])) {
+            // Registrar que se detectó una solicitud AJAX
+            PrestaShopLogger::addLog('Solicitud AJAX detectada.', 1);
+    
+            $products = $data['products']; // Obtener los productos del cuerpo de la solicitud
+    
+            // Registrar los productos recibidos
+            PrestaShopLogger::addLog('Productos recibidos: ' . print_r($products, true), 1);
     
             if (is_array($products)) {
                 foreach ($products as $product) {
@@ -57,7 +72,7 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
                     $quantity = (int)$product['quantity'];
                     $id_customer = (int)$product['id_customer'];
                     $reference = isset($product['reference']) ? (string)$product['reference'] : ''; // Convertir a string
-                
+    
                     // Asegurarnos de que 'reference' no sea un array vacío u objeto
                     if (is_array($reference)) {
                         $reference = ''; // Puedes asignar un valor predeterminado si no es válido
@@ -88,21 +103,36 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
                                 // Llamar a la función para enviar el correo a los comerciales
                                 $this->sendReservationEmail($product_id, $quantity, $id_customer, $id_comercial);
                             } else {
+                                // Registrar el error en la base de datos
+                                PrestaShopLogger::addLog('Error al guardar la reserva en la base de datos.', 3);
                                 die(json_encode(['success' => false, 'message' => 'Error al guardar la reserva.']));  // Mensaje de error
                             }
                         } catch (Exception $e) {
+                            // Registrar la excepción
+                            PrestaShopLogger::addLog('Error en la base de datos: ' . $e->getMessage(), 3);
                             die(json_encode(['success' => false, 'message' => 'Error en la base de datos: ' . $e->getMessage()])); 
                         }
                     } else {
+                        // Registrar datos inválidos
+                        PrestaShopLogger::addLog('Datos inválidos para el producto ' . $product_id, 2);
                         die(json_encode(['success' => false, 'message' => 'Datos inválidos para el producto ' . $product_id]));  // Mensaje de validación
                     }
                 }
     
                 // Respuesta exitosa después de procesar todos los productos
+                PrestaShopLogger::addLog('Reserva realizada con éxito.', 1);
                 die(json_encode(['success' => true]));
             } else {
+                // Registrar formato de datos inválido
+                PrestaShopLogger::addLog('Formato de datos inválido.', 2);
                 die(json_encode(['success' => false, 'message' => 'Formato de datos inválido.'])); // Mensaje de error si no es un array
             }
+        } else {
+            // Registrar que no se detectó una solicitud AJAX
+            PrestaShopLogger::addLog('No se detectó una solicitud AJAX.', 2);
+    
+            // Si no es una solicitud AJAX, mostrar la página completa
+            parent::postProcess();
         }
     }
     

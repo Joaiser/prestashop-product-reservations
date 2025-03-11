@@ -29,14 +29,13 @@
                                 <option value="{$customer.id_customer}">{$customer.firstname} {$customer.lastname}</option>
                             {/foreach}
                         </select>
+                        <button type="button" class="remove_reservation btn btn-danger btn-sm" style="display:none;">&times;</button>
                     </div>
                     <div class="mb-3">
                         <!-- Asegúrate de pasar la referencia del producto aquí -->
                         <input type="hidden" name="reference[0]" value="{$product.reference}">
                         <input type="hidden" name="id_product_attribute[0]" value="{$id_product_attribute}">
                     </div>
-                    <!-- Botón de borrar (X) -->
-                    <button type="button" class="remove_reservation btn btn-danger btn-sm" style="display:none;">&times;</button>
                 </div>
             </div>
 
