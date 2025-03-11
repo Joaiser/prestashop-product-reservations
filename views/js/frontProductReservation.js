@@ -1,68 +1,102 @@
 document.addEventListener('DOMContentLoaded', function () {
+    // Manejar el envío del formulario mediante AJAX
+    document.querySelector('#reservation_form').addEventListener('submit', function (e) {
+        e.preventDefault();
 
-    // Seleccionar todos los botones de reserva
-    document.querySelectorAll('.reservation-toggle').forEach(button => {
-        button.addEventListener('click', function (e) {
-            e.preventDefault();
+        // Obtener todos los formularios de reserva (incluso los nuevos agregados)
+        let formData = new FormData();
+        let reservationForms = document.querySelectorAll('.reservation_item');  // Seleccionar todos los formularios de reserva
 
-            let formContainer = this.closest('.product-reservation-widget').querySelector('.reservation-form-container');
-            if (formContainer) {
-                formContainer.style.display = formContainer.style.display === 'none' || formContainer.style.display === '' ? 'block' : 'none';
-            } 
+        // Recorremos los formularios de reserva para agregar sus datos a formData
+        reservationForms.forEach((form, index) => {
+            let formFields = form.querySelectorAll('select, input');
+            formFields.forEach(field => {
+                formData.append(field.name, field.value);
+            });
+        });
+
+        let actionUrl = this.action;  // URL del controlador
+        if (!actionUrl) {
+            console.error('No se encontró la URL de acción para el formulario.');
+            return;
+        }
+
+        let messageContainer = this.closest('.product-reservation-widget').querySelector('.reservation-message');
+        messageContainer.textContent = '';  // Limpiar mensaje previo
+        messageContainer.style.display = 'none';
+
+        // Enviar la solicitud AJAX
+        fetch(actionUrl, {
+            method: 'POST',
+            body: formData  // Enviar los datos del formulario
+        })
+        .then(response => response.json())
+        .then(data => {
+            messageContainer.classList.remove('alert-success', 'alert-danger'); 
+
+            if (data.success) {
+                messageContainer.textContent = 'Reservas realizadas con éxito.';
+                messageContainer.classList.add('alert-success');
+
+                // Ocultar mensaje y formulario tras 2 segundos
+                setTimeout(() => {
+                    messageContainer.style.display = 'none';
+                    this.closest('.reservation-form-container').style.display = 'none';
+                }, 2000);
+            } else {
+                messageContainer.textContent = 'Error: ' + (data.message || 'Error desconocido.');
+                messageContainer.classList.add('alert-danger');
+                console.error('Error en la reserva:', data.message);
+            }
+
+            messageContainer.style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error en la solicitud AJAX:', error);
+            messageContainer.textContent = 'Ocurrió un error al procesar la solicitud.';
+            messageContainer.classList.add('alert-danger');
+            messageContainer.style.display = 'block';
         });
     });
 
-    // Manejar el envío del formulario mediante AJAX
-    document.querySelectorAll('.reservation-form-content').forEach(form => {
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
+    // Manejar el botón de añadir más reservas
+    document.getElementById('add_more_reservations').addEventListener('click', function() {
+        // Obtener el contenedor de las reservas
+        var container = document.getElementById('product_reservation_container');
+        
+        // Obtener el valor del cliente del primer formulario
+        let customerField = document.querySelector('[name="id_customer[0]"]');
+        if (!customerField) {
+            console.error('El campo "id_customer[0]" no se encontró.');
+            return;
+        }
 
-            let formData = new FormData(this);
-            let params = new URLSearchParams(formData); // Convertimos FormData a URLSearchParams
-            let actionUrl = this.action; // URL del controlador
+        // Obtener el índice de la última reserva
+        var index = container.getElementsByClassName('reservation_item').length;
 
-            if (!actionUrl) {
-                console.error('No se encontró la URL de acción para el formulario.');
-                return;
-            }
+        // Clonar el primer formulario
+        var newReservation = container.getElementsByClassName('reservation_item')[0].cloneNode(true);
 
-            let messageContainer = this.closest('.product-reservation-widget').querySelector('.reservation-message');
-            messageContainer.textContent = ''; // Limpiar mensaje previo
-            messageContainer.style.display = 'none';
+        // Cambiar los IDs y nombres para el nuevo formulario
+        newReservation.setAttribute('data-index', index);
+        newReservation.querySelector('select[name="product_id[0]"]').setAttribute('name', 'product_id[' + index + ']');
+        newReservation.querySelector('input[name="quantity[0]"]').setAttribute('name', 'quantity[' + index + ']');
+        newReservation.querySelector('select[name="id_customer[0]"]').setAttribute('name', 'id_customer[' + index + ']');
+        newReservation.querySelector('input[name="reference[0]"]').setAttribute('name', 'reference[' + index + ']');
+        newReservation.querySelector('input[name="id_product_attribute[0]"]').setAttribute('name', 'id_product_attribute[' + index + ']');
 
-            // Enviar la solicitud AJAX
-            fetch(actionUrl, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
+        // Mantener el mismo cliente en los formularios clonados
+        let currentCustomerId = customerField.value;
+        newReservation.querySelector('select[name="id_customer[' + index + ']"]').value = currentCustomerId;
 
-                messageContainer.classList.remove('alert-success', 'alert-danger'); 
+        // Deshabilitar el campo "id_customer" en los formularios nuevos
+        newReservation.querySelector('select[name="id_customer[' + index + ']"]').disabled = true;
 
-                if (data.success) {
-                    messageContainer.textContent = 'Reserva realizada con éxito.';
-                    messageContainer.classList.add('alert-success');
+        // Limpiar los valores de los nuevos campos (excepto el cliente)
+        newReservation.querySelector('select[name="product_id[' + index + ']"]').value = '';
+        newReservation.querySelector('input[name="quantity[' + index + ']"]').value = 1;
 
-                    // Ocultar mensaje y formulario tras 2 segundos
-                    setTimeout(() => {
-                        messageContainer.style.display = 'none';
-                        this.closest('.reservation-form-container').style.display = 'none';
-                    }, 2000);
-                } else {
-                    messageContainer.textContent = 'Error: ' + (data.message || 'Error desconocido.');
-                    messageContainer.classList.add('alert-danger');
-                    console.error('Error en la reserva:', data.message);
-                }
-
-                messageContainer.style.display = 'block';
-            })
-            .catch(error => {
-                console.error('Error en la solicitud AJAX:', error);
-                messageContainer.textContent = 'Ocurrió un error al procesar la solicitud.';
-                messageContainer.classList.add('alert-danger');
-                messageContainer.style.display = 'block';
-            });
-        });
+        // Añadir el nuevo formulario al contenedor
+        container.appendChild(newReservation);
     });
 });

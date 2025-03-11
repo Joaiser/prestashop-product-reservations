@@ -1,51 +1,54 @@
- <!-- Contenedor del formulario, oculto por defecto -->
- <div class="reservation-form-container mt-3" style="display: none;">
-    <form class="reservation-form-content" action="{$module_url}" method="post">
-        <input type="hidden" name="product_id" value="{$product_id}">
-        <input type="hidden" name="reference" value="{$reference}">
-        <input type="hidden" name="id_product_attribute" value="{$id_product_attribute}"> <!-- Campo para la combinación -->
-        <input type="hidden" name="token" value="{$token}">
-    
-        <!-- Campo para seleccionar cliente -->
-        <div class="form-group">
-            <label for="customer-{$product_id}" class="form-label">Cliente:</label>
-            <select name="id_customer" id="customer-{$product_id}" class="form-control" required>
-                {foreach $customers as $customer}
-                    <option value="{$customer.id_customer}">
-                        {$customer.firstname} {$customer.lastname}
-                    </option>
-                {/foreach}
-            </select>
-        </div>
-    
-        <!-- Campo para la cantidad -->
-        <div class="form-group">
-            <label for="quantity-{$product_id}" class="form-label">Cantidad:</label>
-            <input type="number" name="quantity" id="quantity-{$product_id}" class="form-control" min="1" required>
-        </div>
-    
-        <!-- Mensaje dinámico para respuestas AJAX -->
-        <div class="reservation-message alert" style="display: none;"></div>
-    
-        <!-- Botón de envío -->
-        <button type="submit" class="btn btn-success">
-            <i class="fas fa-check"></i> Confirmar reserva
-        </button>
-    </form>
-</div>
-</div>
+{extends file='page.tpl'}
 
-<!-- Nueva sección: Productos reservados -->
-<h2 class="mt-5">Productos reservados</h2>
-<div class="reserved-products-list mt-3">
-{foreach $reserved_products as $reserved_product}
-    <div class="reserved-product-item">
-        <p><strong>Producto:</strong> {$reserved_product.name}</p>
-        <p><strong>Cantidad:</strong> {$reserved_product.quantity}</p>
-        <p><strong>Cliente:</strong> {$reserved_product.customer_name}</p>
-        <p><strong>Fecha de reserva:</strong> {$reserved_product.reservation_date}</p>
-    </div>
-{/foreach}
-</div>
+{block name="content"}
+    <h2>Formulario de reserva</h2>
 
-<script src="{$urls.base_url}modules/gestorproduccion/views/js/frontProductReservation.js"></script>
+    {if isset($available_products) && $available_products|@count > 0}
+        <form id="reservation_form" class="container mt-4" action="{$url_for_submission}" method="POST">
+            <div id="product_reservation_container">
+                <div class="reservation_item mb-3" data-index="0">
+                    <div class="mb-3">
+                        <label for="product_0" class="form-label">Producto:</label>
+                        <select name="product_id[0]" id="product_0" class="form-select" required>
+                            {foreach from=$available_products item=product}
+                                <option value="{$product.id_product}">{$product.name} - {$product.reference}</option>
+                            {/foreach}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity_0" class="form-label">Cantidad:</label>
+                        <input type="number" id="quantity_0" name="quantity[0]" class="form-control" min="1" value="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_customer_0" class="form-label">Cliente:</label>
+                        <select name="id_customer[0]" id="id_customer_0" class="form-select" required>
+                            {foreach from=$customers item=customer}
+                                <option value="{$customer.id_customer}">{$customer.firstname} {$customer.lastname}</option>
+                            {/foreach}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <input type="hidden" name="reference[0]" value="{$reference}">
+                        <input type="hidden" name="id_product_attribute[0]" value="{$id_product_attribute}">
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" id="add_more_reservations" class="btn btn-secondary">+ Añadir más productos</button>
+
+            <div class="mb-3 mt-3">
+                <button type="submit" class="btn btn-primary">Realizar reserva</button>
+            </div>
+
+            <!-- Contenedor de mensajes de éxito o error -->
+            <div class="mb-3">
+                <div class="reservation-message" style="display:none;"></div>
+            </div>
+        </form>
+    {else}
+        <p>No hay productos habilitados para reserva.</p>
+    {/if}
+
+    <!-- Cargar el script de reserva -->
+    <script src="{$urls.base_url}modules/gestorproduccion/views/js/frontProductReservation.js"></script>
+{/block}

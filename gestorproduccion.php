@@ -122,7 +122,7 @@ class GestorProduccion extends Module
         return [
             'module-gestorproduccion-productreservation' => [
                 'controller' => 'ProductReservation',
-                'rule' => 'gestorproduccion/productreservation',
+                'rule' => 'gestorproduccion/product-reservation',
                 'keywords' => [],
                 'params' => [
                     'fc' => 'module',
@@ -133,47 +133,29 @@ class GestorProduccion extends Module
     }
 
     public function hookDisplayCustomerAccount($params)
-    {
-        // Obtener el usuario actual
-        $customer = $this->context->customer;
-    
-        // Verificar si el usuario está logueado y es un comercial (id_default_group = 4)
-        if ($customer->isLogged() && $customer->id_default_group == 4) {
-    
-            // Añadir un enlace a la sección de "Mis Reservas" en el menú de la cuenta del cliente
-            $this->context->smarty->assign([
-                'product_reservation_link' => $this->context->link->getModuleLink('gestorproduccion', 'ProductReservation'),
-            ]);
-    
-            // Lógica para mostrar el producto en reserva (como ya tienes)
-            // Comprobar si el parámetro 'product' está presente
-            if (isset($params['product']) && is_array($params['product'])) {
-                $id_product = $params['product']['id_product'];
-                $reference = $params['product']['reference'];
-                $id_product_attribute = (int)Tools::getValue('id_product_attribute', $params['product']['id_product_attribute']); // Obtener la combinación
-    
-                // Verificar si el producto o la combinación están habilitados para reservas
-                if ($this->isProductInReservationTable($id_product, $reference, $id_product_attribute)) {
-                    // Obtener los clientes asignados al comercial
-                    $customers = $this->getCustomersByComercial($customer->id);
-    
-                    // Asignar variables a la plantilla
-                    $this->context->smarty->assign([
-                        'product_id' => $id_product,
-                        'reference' => $reference,
-                        'id_product_attribute' => $id_product_attribute,
-                        'customers' => $customers,
-                        'module_url' => $this->context->link->getModuleLink('gestorproduccion', 'ProductReservation'),
-                    ]);
-                }
-            }
-    
-            // Renderizar la plantilla para mostrar el enlace de "Mis Reservas"
-            return $this->fetch('module:gestorproduccion/views/templates/front/customer_account.tpl');
-        }
-    
-        return ''; // Si el cliente no está logueado o no es un comercial, no muestra nada
+{
+    // Obtener el usuario actual
+    $customer = $this->context->customer;
+
+    // Verificar si el usuario está logueado y es un comercial (id_default_group = 4)
+    if ($customer->isLogged() && $customer->id_default_group == 4) {
+
+        // Enlace a la página de reservas
+        $product_reservation_link = $this->context->link->getModuleLink('gestorproduccion', 'ProductReservation');
+
+        PrestaShopLogger::addLog('Ruta de la página de reservas: '.$product_reservation_link);
+
+        // Asignar variables a la plantilla
+        $this->context->smarty->assign([
+            'product_reservation_link' => $product_reservation_link,
+        ]);
+
+        return $this->fetch('module:gestorproduccion/views/templates/front/customer_account.tpl');
     }
+
+    return ''; // Si el cliente no está logueado o no es un comercial, no muestra nada
+}
+
     
 
     public function getCustomersByComercial($id_comercial)
@@ -186,14 +168,4 @@ class GestorProduccion extends Module
         return Db::getInstance()->executeS($sql);
     }
 
-    private function isProductInReservationTable($id_product, $id_product_attribute = 0)
-    {
-        if ($id_product_attribute == 0) {
-            $sql_base = 'SELECT COUNT(*) FROM '._DB_PREFIX_.'product_reservation_enabled WHERE id_product = '.(int)$id_product;
-            return (bool)Db::getInstance()->getValue($sql_base);
-        } else {
-            $sql_combination = 'SELECT COUNT(*) FROM '._DB_PREFIX_.'product_reservation_enabled WHERE id_product = '.(int)$id_product.' AND id_product_attribute = '.(int)$id_product_attribute;
-            return (bool)Db::getInstance()->getValue($sql_combination);
-        }
-    }
 }
