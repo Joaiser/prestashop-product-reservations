@@ -2,6 +2,6 @@
    href="{$product_reservation_link}" 
    title="Ver mis reservas">
     <span class="link-item">
-        <i>X</i> Ver mis reservas
+        <i>X</i> Mis reservas
     </span>
 </a>

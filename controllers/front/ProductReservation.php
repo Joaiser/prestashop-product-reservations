@@ -8,28 +8,29 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
     public function initContent()
     {
         parent::initContent();
-    
-        // Asignar información de reservas y otros datos necesarios
+
         $product_id = (int)Tools::getValue('product_id');
         $reference = Tools::getValue('reference');
         $id_product_attribute = (int)Tools::getValue('id_product_attribute', 0);
-    
-        // Obtener lista de clientes del comercial logueado
         $id_comercial = (int)$this->context->customer->id; // ID del comercial logueado
+
+        // Obtener reservas activas por cliente
+        $reservas_por_cliente = $this->getReservasActivas($id_comercial);
+
         $customers = Db::getInstance()->executeS('SELECT id_customer, firstname, lastname FROM '._DB_PREFIX_.'customer WHERE id_comercial = '.(int)$id_comercial);
-    
+
         // Obtener los productos habilitados para reservar
         $available_products = Db::getInstance()->executeS('
             SELECT p.id_product, p.reference, pl.name 
             FROM '._DB_PREFIX_.'product p
             JOIN '._DB_PREFIX_.'product_reservation_enabled pre ON p.id_product = pre.id_product
-            LEFT JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product AND pl.id_lang = '.(int)$this->context->language->id.'
+            LEFT JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product AND pl.id_lang = '.(int)$this->context->language->id.' 
             WHERE pre.id_product IS NOT NULL
         ');
-    
+
         // Verificar si hay productos disponibles para mostrar
         $no_products_message = empty($available_products) ? 'No hay productos disponibles para reservar en este momento.' : '';
-    
+
         // Asignar variables al template
         $this->context->smarty->assign(array(
             'product_id' => $product_id,
@@ -37,11 +38,12 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
             'id_product_attribute' => $id_product_attribute,
             'customers' => $customers,
             'available_products' => $available_products,
+            'reservas_por_cliente' => $reservas_por_cliente,
             'no_products_message' => $no_products_message,
             'token' => Tools::getToken(),
-            'url_for_submission' => $this->context->link->getModuleLink('gestorproduccion', 'ProductReservation'), // Asignar la URL del controlador
+            'url_for_submission' => $this->context->link->getModuleLink('gestorproduccion', 'ProductReservation'),
         ));
-    
+
         // Mostrar la plantilla con la estructura completa
         $this->setTemplate('module:gestorproduccion/views/templates/front/product_reservation.tpl');
     }
@@ -134,6 +136,50 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
             // Si no es una solicitud AJAX, mostrar la página completa
             parent::postProcess();
         }
+    }
+
+    // Función para mostrar las reservas activas por comercial
+    public function getReservasActivas($id_comercial)
+    {
+        $sql = 'SELECT pr.id_reservation, pr.id_product, pr.id_product_attribute, pr.reference, pr.status, pr.reservation_expiry, pr.reserved_stock, pr.id_comercial, pr.id_customer, pr.date_added
+                FROM '._DB_PREFIX_.'product_reservations pr
+                WHERE pr.id_comercial = '.(int)$id_comercial.' 
+                AND pr.status = "pendiente"
+                ORDER BY pr.id_customer, pr.date_added ASC';
+
+        $reservas_activas = Db::getInstance()->executeS($sql);
+
+        if (!$reservas_activas) {
+            return [];
+        }
+
+        $reservas_por_cliente = [];
+
+        foreach ($reservas_activas as $reserva) {
+            $id_cliente = $reserva['id_customer'];
+
+            if (!isset($reservas_por_cliente[$id_cliente])) {
+                $reservas_por_cliente[$id_cliente] = [
+                    'nombre_cliente' => $this->getClientName($id_cliente),
+                    'reservas' => []
+                ];
+            }
+
+            $reservas_por_cliente[$id_cliente]['reservas'][] = $reserva;
+        }
+
+        return $reservas_por_cliente;
+    }
+
+    // Función auxiliar para obtener el nombre del cliente
+    private function getClientName($id_customer) {
+        $sql = 'SELECT firstname, lastname FROM '._DB_PREFIX_.'customer WHERE id_customer = '.(int)$id_customer;
+        $result = Db::getInstance()->getRow($sql);
+
+        if ($result) {
+            return $result['firstname'] . ' ' . $result['lastname'];
+        }
+        return 'Cliente no encontrado';
     }
     
 
