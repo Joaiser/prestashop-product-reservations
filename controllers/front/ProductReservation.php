@@ -67,6 +67,8 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
     
             // Registrar los productos recibidos
             PrestaShopLogger::addLog('Productos recibidos: ' . print_r($products, true), 1);
+            
+            $productosReservados = [];
     
             if (is_array($products)) {
                 foreach ($products as $product) {
@@ -103,7 +105,19 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
     
                             if ($result) {
                                 // Llamar a la función para enviar el correo a los comerciales
-                                $this->sendReservationEmail($product_id, $quantity, $id_customer, $id_comercial);
+                               $productosReservados[] = [
+                                    'product_id' => $product_id,
+                                    'quantity' => $quantity,
+                                    'id_customer' => $id_customer,
+                                    'id_comercial' => $id_comercial
+                                ];
+    
+                                // Enviar el correo a los comerciales
+                                $this->sendReservationEmail($productosReservados, $id_customer, $id_comercial);
+
+                                // Enviar el correo al correo general del jefe
+                                $this->sendEmailToAddress($productosReservados, $id_customer, FIXED_EMAIL);
+
                             } else {
                                 // Registrar el error en la base de datos
                                 PrestaShopLogger::addLog('Error al guardar la reserva en la base de datos.', 3);
@@ -185,95 +199,143 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
 
 
     // Función para enviar el correo a los comerciales
-    private function sendReservationEmail($product_id, $quantity, $id_customer, $id_comercial)
+    private function sendReservationEmail($productosReservados, $id_customer, $id_comercial)
     {
         try {
-            // Obtener el nombre del producto y cliente
-            $productName = Db::getInstance()->getValue('SELECT name FROM '._DB_PREFIX_.'product_lang WHERE id_product = '.(int)$product_id.' AND id_lang = '.(int)$this->context->language->id);
+            if (!$id_customer || !$id_comercial) {
+                throw new Exception('ID de cliente o comercial no válido.');
+            }
+    
             $customerName = Db::getInstance()->getValue('SELECT CONCAT(firstname, " ", lastname) FROM '._DB_PREFIX_.'customer WHERE id_customer = '.(int)$id_customer);
             $comercialName = Db::getInstance()->getValue('SELECT CONCAT(firstname, " ", lastname) FROM '._DB_PREFIX_.'customer WHERE id_customer = '.(int)$id_comercial);
-            $storeName = 'Salamandra Luz';  // Nombre de la tienda
-
-            // Crear el contenido del correo
-            $mailData = array(
-                '{product_name}' => $productName,
-                '{customer_name}' => $customerName,
-                '{reserved_quantity}' => $quantity,
-                '{store_name}' => $storeName,
-                '{comercial_name}' => $comercialName,
-            );
-
-            // Obtener el email de los comerciales
-            $commercials = Db::getInstance()->executeS('SELECT email FROM '._DB_PREFIX_.'customer WHERE id_customer = '.(int)$id_comercial);
-
-            // Verificar si se encontraron correos electrónicos
-            if (!$commercials || empty($commercials)) {
-                die(json_encode(['success' => false, 'message' => 'No se encontró correo del comercial.']));
+    
+            if (!$customerName || !$comercialName) {
+                throw new Exception('No se pudo obtener el nombre del cliente o del comercial.');
             }
-
-            $fixedEmail = FIXED_EMAIL; // Correo fijo 
-
-            $this->sendEmailToAddress($mailData, $fixedEmail);
-
-            foreach ($commercials as $commercial) {
-                if (empty($commercial['email'])) {
-                    continue;
+    
+            if (empty($productosReservados)) {
+                throw new Exception('No hay productos reservados.');
+            }
+    
+            $productosTexto = "";
+            foreach ($productosReservados as $producto) {
+                if (!isset($producto['product_id'], $producto['reference'], $producto['quantity'])) {
+                    continue; // Saltar productos con datos incompletos
                 }
-
-                // Enviar el correo utilizando la plantilla
-                $subject = 'Nueva reserva de producto';
-
-                // Enviar el correo utilizando la plantilla HTML y el texto plano
-                $mailSent = Mail::Send(
-                    $this->context->language->id,
-                    'reservation_email_template',               
-                    $subject,                        
-                    $mailData,                                    
-                    $commercial['email'],                         
-                    null,                                         
-                    null,                                         
-                    null,                                         
-                    null,                                         
-                    null,                                         
-                    false                                         
-                );
-
-                if (!$mailSent) {
-                    throw new Exception('Mail::Send devolvió false.');
-                } 
+    
+                $productName = Db::getInstance()->getValue('SELECT name FROM '._DB_PREFIX_.'product_lang WHERE id_product = '.(int)$producto['product_id'].' AND id_lang = '.(int)$this->context->language->id);
+    
+                if (!$productName) {
+                    $productName = 'Producto desconocido'; // En caso de error en la consulta
+                }
+    
+                $productosTexto .= "Producto: {$productName} (Ref: {$producto['reference']}), Cantidad: {$producto['quantity']}\n";
             }
+    
+            if (empty($productosTexto)) {
+                throw new Exception('No se pudo obtener la información de los productos.');
+            }
+    
+            $templateVars = [
+                '{comercial_name}' => $comercialName,
+                '{customer_name}' => $customerName,
+                '{products}' => nl2br($productosTexto)
+            ];
+    
+            $mailSent = Mail::Send(
+                (int)$this->context->language->id,
+                'reservation_notification',
+                'Nueva Reserva de Productos',
+                $templateVars,
+                'correo@empresa.com',
+                null,
+                null,
+                null,
+                null,
+                null,
+                _PS_MODULE_DIR_ . 'gestorproduccion/mails/',
+                false,
+                null
+            );
+    
+            if (!$mailSent) {
+                throw new Exception('Error al enviar el correo.');
+            }
+    
+            PrestaShopLogger::addLog('Correo de reserva enviado correctamente.', 1);
         } catch (Exception $e) {
-            die(json_encode(['success' => false, 'message' => 'Error al enviar el correo: ' . $e->getMessage()]));
+            PrestaShopLogger::addLog('Error en sendReservationEmail: ' . $e->getMessage(), 3);
         }
     }
+    
+    
 
     // Función auxiliar para enviar el correo a una dirección específica
-    private function sendEmailToAddress($mailData, $email)
-    {
-        try {
-            $subject = 'Nueva reserva de producto';
-
-            // Enviar el correo utilizando la plantilla HTML y el texto plano
-            $mailSent = Mail::Send(
-                $this->context->language->id,
-                'reservation_email_jefe',               
-                $subject,                        
-                $mailData,                                    
-                $email,                          
-                null,                                         
-                null,                                         
-                null,                                         
-                null,                                         
-                null,                                         
-                false                                         
-            );
-
-            if (!$mailSent) {
-                throw new Exception('Mail::Send devolvió false.');
-            } 
-        } catch (Exception $e) {
-            throw new Exception('Error al enviar el correo a ' . $email . ': ' . $e->getMessage());
+    private function sendEmailToAddress($productosReservados, $id_customer, $email)
+{
+    try {
+        if (!$id_customer) {
+            throw new Exception('ID de cliente no válido.');
         }
+
+        $customerName = Db::getInstance()->getValue('SELECT CONCAT(firstname, " ", lastname) FROM '._DB_PREFIX_.'customer WHERE id_customer = '.(int)$id_customer);
+        
+        if (!$customerName) {
+            throw new Exception('No se pudo obtener el nombre del cliente.');
+        }
+
+        if (empty($productosReservados)) {
+            throw new Exception('No hay productos reservados.');
+        }
+
+        $productosTexto = "";
+        foreach ($productosReservados as $producto) {
+            if (!isset($producto['product_id'], $producto['reference'], $producto['quantity'])) {
+                continue; // Saltar productos con datos incompletos
+            }
+
+            $productName = Db::getInstance()->getValue('SELECT name FROM '._DB_PREFIX_.'product_lang WHERE id_product = '.(int)$producto['product_id'].' AND id_lang = '.(int)$this->context->language->id);
+
+            if (!$productName) {
+                $productName = 'Producto desconocido'; // En caso de error en la consulta
+            }
+
+            $productosTexto .= "Producto: {$productName} (Ref: {$producto['reference']}), Cantidad: {$producto['quantity']}\n";
+        }
+
+        if (empty($productosTexto)) {
+            throw new Exception('No se pudo obtener la información de los productos.');
+        }
+
+        $templateVars = [
+            '{customer_name}' => $customerName,
+            '{products}' => nl2br($productosTexto)
+        ];
+
+        $mailSent = Mail::Send(
+            (int)$this->context->language->id,
+            'reservation_email_jefe',
+            'Nueva Reserva de Productos',
+            $templateVars,
+            $email,
+            null,
+            null,
+            null,
+            null,
+            null,
+            _PS_MODULE_DIR_ . 'gestorproduccion/mails/',
+            false,
+            null
+        );
+
+        if (!$mailSent) {
+            throw new Exception('Error al enviar el correo.');
+        }
+
+        PrestaShopLogger::addLog('Correo de reserva enviado al jefe correctamente.', 1);
+    } catch (Exception $e) {
+        PrestaShopLogger::addLog('Error en sendEmailToAddress: ' . $e->getMessage(), 3);
     }
+}
 
 }

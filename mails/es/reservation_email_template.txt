@@ -1,5 +1,11 @@
 Hola {comercial_name},
 
-Se ha reservado {reserved_quantity} unidades del producto {product_name} para {customer_name}.
+{customer_name} ha realizado una nueva reserva de productos.
+
+Detalles de la reserva:
+{products}
 
 La reserva fue realizada en la tienda {store_name}.
+
+Saludos,
+El equipo de {store_name}
