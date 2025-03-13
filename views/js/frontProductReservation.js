@@ -2,6 +2,45 @@ document.addEventListener('DOMContentLoaded', function () {
     const reservationForm = document.querySelector('#reservation_form');
 
     if (reservationForm) {
+        // Función para filtrar opciones en un select
+        function filterOptions(select, searchText) {
+            const options = select.querySelectorAll('option');
+            options.forEach(option => {
+                const text = option.textContent.toLowerCase();
+                if (text.includes(searchText.toLowerCase())) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+        }
+
+        // Función para habilitar la búsqueda en tiempo real en un select
+        function enableSearchOnSelect(select) {
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.placeholder = 'Buscar...';
+            searchInput.style.width = '100%';
+            searchInput.style.marginBottom = '10px';
+            searchInput.addEventListener('input', function () {
+                filterOptions(select, this.value);
+            });
+
+            // Insertar el campo de búsqueda antes del select
+            select.parentNode.insertBefore(searchInput, select);
+        }
+
+        // Habilitar la búsqueda en los selects
+        const customerSelect = document.querySelector('select[name^="id_customer"]');
+        const productSelect = document.querySelector('select[name^="product_id"]');
+
+        if (customerSelect) {
+            enableSearchOnSelect(customerSelect);
+        }
+        if (productSelect) {
+            enableSearchOnSelect(productSelect);
+        }
+
         // Función para actualizar la referencia cuando se selecciona un producto
         function updateReference(select) {
             const index = select.name.match(/\d+/)[0];

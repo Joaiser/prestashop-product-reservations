@@ -11,6 +11,19 @@
             <div id="product_reservation_container">
                 <div class="reservation_item mb-3" data-index="0">
                     <div class="mb-3">
+                        <label for="id_customer_0" class="form-label">Cliente:</label>
+                        <select name="id_customer[0]" id="id_customer_0" class="form-select" required>
+                            <option value=""></option>
+                            {foreach from=$customers item=customer}
+                                <option value="{$customer.id_customer}">{$customer.firstname} {$customer.lastname}</option>
+                            {/foreach}
+                        </select>
+                    </div>
+                    <div class="mb-3";">
+                        <label for="quantity_0" class="form-label">Cantidad:</label>
+                        <input type="number" id="quantity_0" name="quantity[0]" class="form-control" min="1" value="1" required style="width: 480px;">
+                    </div>
+                    <div class="mb-3">
                         <label for="product_0" class="form-label">Producto:</label>
                         <select name="product_id[0]" id="product_0" class="form-select" required>
                             <option value=""></option>
@@ -18,19 +31,6 @@
                                 <option value="{$product.id_product}" data-reference="{$product.reference}" data-attribute="{$product.id_product_attribute}">
                                     {$product.name} - {$product.reference} {$product.attribute_reference}
                                 </option>
-                            {/foreach}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="quantity_0" class="form-label">Cantidad:</label>
-                        <input type="number" id="quantity_0" name="quantity[0]" class="form-control" min="1" value="1" required style="width: 480px;">
-                    </div>
-                    <div class="mb-3">
-                        <label for="id_customer_0" class="form-label">Cliente:</label>
-                        <select name="id_customer[0]" id="id_customer_0" class="form-select" required>
-                            <option value=""></option>
-                            {foreach from=$customers item=customer}
-                                <option value="{$customer.id_customer}">{$customer.firstname} {$customer.lastname}</option>
                             {/foreach}
                         </select>
                         <button type="button" class="remove_reservation btn btn-danger btn-sm" style="display:none;">&times;</button>
