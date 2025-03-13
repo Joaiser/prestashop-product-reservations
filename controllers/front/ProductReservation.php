@@ -66,8 +66,6 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
     if (isset($data['ajax']) && isset($data['products'])) {
         $products = $data['products']; // Obtener los productos del cuerpo de la solicitud
 
-        // Registrar los productos recibidos
-        PrestaShopLogger::addLog('Productos recibidos: ' . print_r($products, true), 1);
 
         $productosReservados = []; // Array para almacenar los productos reservados
 
@@ -115,17 +113,14 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
                             ];
                         } else {
                             // Registrar el error en la base de datos
-                            PrestaShopLogger::addLog('Error al guardar la reserva en la base de datos.', 3);
                             die(json_encode(['success' => false, 'message' => 'Error al guardar la reserva.']));  // Mensaje de error
                         }
                     } catch (Exception $e) {
                         // Registrar la excepción
-                        PrestaShopLogger::addLog('Error en la base de datos: ' . $e->getMessage(), 3);
                         die(json_encode(['success' => false, 'message' => 'Error en la base de datos: ' . $e->getMessage()])); 
                     }
                 } else {
                     // Registrar datos inválidos
-                    PrestaShopLogger::addLog('Datos inválidos para el producto ' . $product_id, 2);
                     die(json_encode(['success' => false, 'message' => 'Datos inválidos para el producto ' . $product_id]));  // Mensaje de validación
                 }
             }
@@ -134,22 +129,12 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
             if (!empty($productosReservados)) {
                 $this->sendReservationEmail($productosReservados, $id_customer, $id_comercial);
                 // $this->sendEmailToAddress($productosReservados, $id_customer, FIXED_EMAIL); // Descomenta si necesitas enviar al correo general
-            } else {
-                PrestaShopLogger::addLog('No hay productos reservados para enviar correos.', 2);
-            }
-
-            // Respuesta exitosa después de procesar todos los productos
-            PrestaShopLogger::addLog('Reserva realizada con éxito.', 1);
+            } 
             die(json_encode(['success' => true]));
         } else {
-            // Registrar formato de datos inválido
-            PrestaShopLogger::addLog('Formato de datos inválido.', 2);
             die(json_encode(['success' => false, 'message' => 'Formato de datos inválido.'])); // Mensaje de error si no es un array
         }
     } else {
-        // Registrar que no se detectó una solicitud AJAX
-        PrestaShopLogger::addLog('No se detectó una solicitud AJAX.', 2);
-
         // Si no es una solicitud AJAX, mostrar la página completa
         parent::postProcess();
     }
@@ -238,9 +223,6 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
             throw new Exception('No hay productos reservados.');
         }
 
-        // Log para verificar el contenido de $productosReservados
-        PrestaShopLogger::addLog('Contenido de $productosReservados: ' . print_r($productosReservados, true), 1);
-
         // Variable para almacenar el texto de los productos
         $productosTexto = "";
 
@@ -262,7 +244,6 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
 
             // Si no se obtiene el nombre, usar un valor predeterminado
             if (!$productName) {
-                PrestaShopLogger::addLog('No se pudo obtener el nombre del producto con ID: ' . $producto['product_id'], 3);
                 $productName = 'Producto desconocido';
             }
 
@@ -325,8 +306,6 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
             throw new Exception('Error al enviar el correo.');
         }
 
-        // Log de éxito
-        PrestaShopLogger::addLog('Correo de reserva enviado correctamente al comercial y al correo general.', 1);
     } catch (Exception $e) {
         // Log de error
         PrestaShopLogger::addLog('Error en sendReservationEmail: ' . $e->getMessage(), 3);
