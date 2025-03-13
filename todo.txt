@@ -1,6 +1,0 @@
-FALTA:
--> Buscar mejor opción que get, ver porque post no me funciona pudiendo usar query
-
--> Implementación de correos para Carlos
-
-->Lo que se me ocurra

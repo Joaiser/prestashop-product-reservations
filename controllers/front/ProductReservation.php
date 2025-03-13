@@ -50,107 +50,103 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
 
     // Lógica de procesamiento de la reserva (por AJAX)
     public function postProcess()
-    {
-        // Leer el cuerpo de la solicitud
-        $input = file_get_contents('php://input');
-        $data = json_decode($input, true);
-    
-        // Registrar los datos recibidos
-        PrestaShopLogger::addLog('Datos recibidos en postProcess: ' . print_r($data, true), 1);
-    
-        // Verificar si la solicitud es AJAX
-        if (isset($data['ajax']) && isset($data['products'])) {
-            // Registrar que se detectó una solicitud AJAX
-            PrestaShopLogger::addLog('Solicitud AJAX detectada.', 1);
-    
-            $products = $data['products']; // Obtener los productos del cuerpo de la solicitud
-    
-            // Registrar los productos recibidos
-            PrestaShopLogger::addLog('Productos recibidos: ' . print_r($products, true), 1);
-            
-            $productosReservados = [];
-    
-            if (is_array($products)) {
-                foreach ($products as $product) {
-                    $product_id = (int)$product['product_id'];
-                    $quantity = (int)$product['quantity'];
-                    $id_customer = (int)$product['id_customer'];
-                    $reference = isset($product['reference']) ? (string)$product['reference'] : ''; // Convertir a string
-    
-                    // Asegurarnos de que 'reference' no sea un array vacío u objeto
-                    if (is_array($reference)) {
-                        $reference = ''; // Puedes asignar un valor predeterminado si no es válido
-                    }
-                    $id_product_attribute = (int)$product['id_product_attribute'];
-    
-                    // Obtener el ID del comercial logueado
-                    $id_comercial = $this->context->customer->id;
-    
-                    // Validar los datos
-                    if ($product_id > 0 && $quantity > 0 && $id_customer > 0) {
-                        try {
-                            // Insertar la reserva en la base de datos
-                            $sql = 'INSERT INTO '._DB_PREFIX_.'product_reservations 
-                            (id_product, id_product_attribute, reference, reserved_stock, id_comercial, id_customer, date_added) 
-                            VALUES (
-                                '.(int)$product_id.', 
-                                '.(int)$id_product_attribute.', 
-                                "'.pSQL($reference).'", 
-                                '.(int)$quantity.', 
-                                '.(int)$id_comercial.', 
-                                '.(int)$id_customer.', 
-                                NOW()
-                            )';
-                            $result = Db::getInstance()->execute($sql);
-    
-                            if ($result) {
-                                // Llamar a la función para enviar el correo a los comerciales
-                               $productosReservados[] = [
-                                    'product_id' => $product_id,
-                                    'quantity' => $quantity,
-                                    'id_customer' => $id_customer,
-                                    'id_comercial' => $id_comercial
-                                ];
-    
-                                // Enviar el correo a los comerciales
-                                $this->sendReservationEmail($productosReservados, $id_customer, $id_comercial);
+{
+    // Leer el cuerpo de la solicitud
+    $input = file_get_contents('php://input');
+    $data = json_decode($input, true);
 
-                                // Enviar el correo al correo general del jefe
-                                $this->sendEmailToAddress($productosReservados, $id_customer, FIXED_EMAIL);
+    // Verificar si la solicitud es AJAX
+    if (isset($data['ajax']) && isset($data['products'])) {
+        $products = $data['products']; // Obtener los productos del cuerpo de la solicitud
 
-                            } else {
-                                // Registrar el error en la base de datos
-                                PrestaShopLogger::addLog('Error al guardar la reserva en la base de datos.', 3);
-                                die(json_encode(['success' => false, 'message' => 'Error al guardar la reserva.']));  // Mensaje de error
-                            }
-                        } catch (Exception $e) {
-                            // Registrar la excepción
-                            PrestaShopLogger::addLog('Error en la base de datos: ' . $e->getMessage(), 3);
-                            die(json_encode(['success' => false, 'message' => 'Error en la base de datos: ' . $e->getMessage()])); 
-                        }
-                    } else {
-                        // Registrar datos inválidos
-                        PrestaShopLogger::addLog('Datos inválidos para el producto ' . $product_id, 2);
-                        die(json_encode(['success' => false, 'message' => 'Datos inválidos para el producto ' . $product_id]));  // Mensaje de validación
-                    }
+        // Registrar los productos recibidos
+        PrestaShopLogger::addLog('Productos recibidos: ' . print_r($products, true), 1);
+
+        $productosReservados = []; // Array para almacenar los productos reservados
+
+        if (is_array($products)) {
+            foreach ($products as $product) {
+                $product_id = (int)$product['product_id'];
+                $quantity = (int)$product['quantity'];
+                $id_customer = (int)$product['id_customer'];
+                $reference = isset($product['reference']) ? (string)$product['reference'] : ''; // Convertir a string
+
+                // Asegurarnos de que 'reference' no sea un array vacío u objeto
+                if (is_array($reference)) {
+                    $reference = ''; // Puedes asignar un valor predeterminado si no es válido
                 }
-    
-                // Respuesta exitosa después de procesar todos los productos
-                PrestaShopLogger::addLog('Reserva realizada con éxito.', 1);
-                die(json_encode(['success' => true]));
-            } else {
-                // Registrar formato de datos inválido
-                PrestaShopLogger::addLog('Formato de datos inválido.', 2);
-                die(json_encode(['success' => false, 'message' => 'Formato de datos inválido.'])); // Mensaje de error si no es un array
+                $id_product_attribute = (int)$product['id_product_attribute'];
+
+                // Obtener el ID del comercial logueado
+                $id_comercial = $this->context->customer->id;
+
+                // Validar los datos
+                if ($product_id > 0 && $quantity > 0 && $id_customer > 0) {
+                    try {
+                        // Insertar la reserva en la base de datos
+                        $sql = 'INSERT INTO '._DB_PREFIX_.'product_reservations 
+                                (id_product, id_product_attribute, reference, reserved_stock, id_comercial, id_customer, date_added) 
+                                VALUES (
+                                    '.(int)$product_id.', 
+                                    '.(int)$id_product_attribute.', 
+                                    "'.pSQL($reference).'", 
+                                    '.(int)$quantity.', 
+                                    '.(int)$id_comercial.', 
+                                    '.(int)$id_customer.', 
+                                    NOW()
+                                )';
+                        $result = Db::getInstance()->execute($sql);
+
+                        if ($result) {
+                            // Agregar el producto a la lista de reservados
+                            $productosReservados[] = [
+                                'product_id' => $product_id,
+                                'quantity' => $quantity,
+                                'id_customer' => $id_customer,
+                                'id_comercial' => $id_comercial,
+                                'reference' => $reference
+                            ];
+                        } else {
+                            // Registrar el error en la base de datos
+                            PrestaShopLogger::addLog('Error al guardar la reserva en la base de datos.', 3);
+                            die(json_encode(['success' => false, 'message' => 'Error al guardar la reserva.']));  // Mensaje de error
+                        }
+                    } catch (Exception $e) {
+                        // Registrar la excepción
+                        PrestaShopLogger::addLog('Error en la base de datos: ' . $e->getMessage(), 3);
+                        die(json_encode(['success' => false, 'message' => 'Error en la base de datos: ' . $e->getMessage()])); 
+                    }
+                } else {
+                    // Registrar datos inválidos
+                    PrestaShopLogger::addLog('Datos inválidos para el producto ' . $product_id, 2);
+                    die(json_encode(['success' => false, 'message' => 'Datos inválidos para el producto ' . $product_id]));  // Mensaje de validación
+                }
             }
+
+            // Enviar el correo solo si hay productos reservados
+            if (!empty($productosReservados)) {
+                $this->sendReservationEmail($productosReservados, $id_customer, $id_comercial);
+                // $this->sendEmailToAddress($productosReservados, $id_customer, FIXED_EMAIL); // Descomenta si necesitas enviar al correo general
+            } else {
+                PrestaShopLogger::addLog('No hay productos reservados para enviar correos.', 2);
+            }
+
+            // Respuesta exitosa después de procesar todos los productos
+            PrestaShopLogger::addLog('Reserva realizada con éxito.', 1);
+            die(json_encode(['success' => true]));
         } else {
-            // Registrar que no se detectó una solicitud AJAX
-            PrestaShopLogger::addLog('No se detectó una solicitud AJAX.', 2);
-    
-            // Si no es una solicitud AJAX, mostrar la página completa
-            parent::postProcess();
+            // Registrar formato de datos inválido
+            PrestaShopLogger::addLog('Formato de datos inválido.', 2);
+            die(json_encode(['success' => false, 'message' => 'Formato de datos inválido.'])); // Mensaje de error si no es un array
         }
+    } else {
+        // Registrar que no se detectó una solicitud AJAX
+        PrestaShopLogger::addLog('No se detectó una solicitud AJAX.', 2);
+
+        // Si no es una solicitud AJAX, mostrar la página completa
+        parent::postProcess();
     }
+}
 
     // Función para mostrar las reservas activas por comercial
     public function getReservasActivas($id_comercial)
@@ -200,142 +196,134 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
 
     // Función para enviar el correo a los comerciales
     private function sendReservationEmail($productosReservados, $id_customer, $id_comercial)
-    {
-        try {
-            if (!$id_customer || !$id_comercial) {
-                throw new Exception('ID de cliente o comercial no válido.');
-            }
-    
-            $customerName = Db::getInstance()->getValue('SELECT CONCAT(firstname, " ", lastname) FROM '._DB_PREFIX_.'customer WHERE id_customer = '.(int)$id_customer);
-            $comercialName = Db::getInstance()->getValue('SELECT CONCAT(firstname, " ", lastname) FROM '._DB_PREFIX_.'customer WHERE id_customer = '.(int)$id_comercial);
-    
-            if (!$customerName || !$comercialName) {
-                throw new Exception('No se pudo obtener el nombre del cliente o del comercial.');
-            }
-    
-            if (empty($productosReservados)) {
-                throw new Exception('No hay productos reservados.');
-            }
-    
-            $productosTexto = "";
-            foreach ($productosReservados as $producto) {
-                if (!isset($producto['product_id'], $producto['reference'], $producto['quantity'])) {
-                    continue; // Saltar productos con datos incompletos
-                }
-    
-                $productName = Db::getInstance()->getValue('SELECT name FROM '._DB_PREFIX_.'product_lang WHERE id_product = '.(int)$producto['product_id'].' AND id_lang = '.(int)$this->context->language->id);
-    
-                if (!$productName) {
-                    $productName = 'Producto desconocido'; // En caso de error en la consulta
-                }
-    
-                $productosTexto .= "Producto: {$productName} (Ref: {$producto['reference']}), Cantidad: {$producto['quantity']}\n";
-            }
-    
-            if (empty($productosTexto)) {
-                throw new Exception('No se pudo obtener la información de los productos.');
-            }
-    
-            $templateVars = [
-                '{comercial_name}' => $comercialName,
-                '{customer_name}' => $customerName,
-                '{products}' => nl2br($productosTexto)
-            ];
-    
-            $mailSent = Mail::Send(
-                (int)$this->context->language->id,
-                'reservation_notification',
-                'Nueva Reserva de Productos',
-                $templateVars,
-                'correo@empresa.com',
-                null,
-                null,
-                null,
-                null,
-                null,
-                _PS_MODULE_DIR_ . 'gestorproduccion/mails/',
-                false,
-                null
-            );
-    
-            if (!$mailSent) {
-                throw new Exception('Error al enviar el correo.');
-            }
-    
-            PrestaShopLogger::addLog('Correo de reserva enviado correctamente.', 1);
-        } catch (Exception $e) {
-            PrestaShopLogger::addLog('Error en sendReservationEmail: ' . $e->getMessage(), 3);
-        }
-    }
-    
-    
-
-    // Función auxiliar para enviar el correo a una dirección específica
-    private function sendEmailToAddress($productosReservados, $id_customer, $email)
 {
     try {
-        if (!$id_customer) {
-            throw new Exception('ID de cliente no válido.');
+        // Verificar que los IDs de cliente y comercial sean válidos
+        if (!$id_customer || !$id_comercial) {
+            throw new Exception('ID de cliente o comercial no válido.');
         }
 
-        $customerName = Db::getInstance()->getValue('SELECT CONCAT(firstname, " ", lastname) FROM '._DB_PREFIX_.'customer WHERE id_customer = '.(int)$id_customer);
-        
-        if (!$customerName) {
-            throw new Exception('No se pudo obtener el nombre del cliente.');
+        // Obtener el nombre del cliente
+        $customerName = Db::getInstance()->getValue(
+            'SELECT CONCAT(firstname, " ", lastname) 
+             FROM '._DB_PREFIX_.'customer 
+             WHERE id_customer = '.(int)$id_customer
+        );
+
+        // Obtener el nombre y correo del comercial
+        $comercialData = Db::getInstance()->getRow(
+            'SELECT CONCAT(firstname, " ", lastname) AS name, email 
+             FROM '._DB_PREFIX_.'customer 
+             WHERE id_customer = '.(int)$id_comercial
+        );
+
+        // Verificar que se obtuvieron los datos del cliente y comercial
+        if (!$customerName || !$comercialData) {
+            throw new Exception('No se pudo obtener el nombre del cliente o del comercial.');
         }
 
+        $comercialName = $comercialData['name']; // Nombre del comercial
+        $comercialEmail = $comercialData['email']; // Correo del comercial
+        $shopName = Configuration::get('PS_SHOP_NAME');
+
+        // Verificar que hay productos reservados
         if (empty($productosReservados)) {
             throw new Exception('No hay productos reservados.');
         }
 
+        // Log para verificar el contenido de $productosReservados
+        PrestaShopLogger::addLog('Contenido de $productosReservados: ' . print_r($productosReservados, true), 1);
+
+        // Variable para almacenar el texto de los productos
         $productosTexto = "";
+
+        // Recorrer los productos reservados
         foreach ($productosReservados as $producto) {
-            if (!isset($producto['product_id'], $producto['reference'], $producto['quantity'])) {
+            // Verificar que los campos mínimos estén presentes
+            if (!isset($producto['product_id'], $producto['quantity'], $producto['id_customer'])) {
+                PrestaShopLogger::addLog('Producto con datos incompletos: ' . print_r($producto, true), 2);
                 continue; // Saltar productos con datos incompletos
             }
 
-            $productName = Db::getInstance()->getValue('SELECT name FROM '._DB_PREFIX_.'product_lang WHERE id_product = '.(int)$producto['product_id'].' AND id_lang = '.(int)$this->context->language->id);
+            // Obtener el nombre del producto
+            $productName = Db::getInstance()->getValue(
+                'SELECT name 
+                 FROM '._DB_PREFIX_.'product_lang 
+                 WHERE id_product = '.(int)$producto['product_id'].' 
+                 AND id_lang = '.(int)$this->context->language->id
+            );
 
+            // Si no se obtiene el nombre, usar un valor predeterminado
             if (!$productName) {
-                $productName = 'Producto desconocido'; // En caso de error en la consulta
+                PrestaShopLogger::addLog('No se pudo obtener el nombre del producto con ID: ' . $producto['product_id'], 3);
+                $productName = 'Producto desconocido';
             }
 
-            $productosTexto .= "Producto: {$productName} (Ref: {$producto['reference']}), Cantidad: {$producto['quantity']}\n";
+            // Obtener la referencia del producto (si está disponible)
+            $reference = isset($producto['reference']) ? $producto['reference'] : 'Sin referencia';
+
+            // Construir el texto del producto
+            $productosTexto .= "Producto: {$productName} (Ref: {$reference}), Cantidad: {$producto['quantity']}\n";
         }
 
+        // Verificar que se generó texto para los productos
         if (empty($productosTexto)) {
             throw new Exception('No se pudo obtener la información de los productos.');
         }
 
+        // Preparar las variables para el correo
         $templateVars = [
+            '{comercial_name}' => $comercialName,
             '{customer_name}' => $customerName,
-            '{products}' => nl2br($productosTexto)
+            '{products}' => nl2br($productosTexto),
+            '{store_name}' => $shopName
         ];
 
-        $mailSent = Mail::Send(
+        // Enviar el correo al comercial
+        $mailSentToComercial = Mail::Send(
             (int)$this->context->language->id,
-            'reservation_email_jefe',
-            'Nueva Reserva de Productos',
-            $templateVars,
-            $email,
-            null,
-            null,
-            null,
-            null,
-            null,
-            _PS_MODULE_DIR_ . 'gestorproduccion/mails/',
-            false,
-            null
+            'reservation_email_template', // Plantilla de correo
+            'Nueva Reserva de Productos', // Asunto del correo
+            $templateVars, // Variables para la plantilla
+            $comercialEmail, // Correo del comercial
+            $comercialName, // Nombre del comercial
+            null, // Desde (opcional)
+            null, // Desde nombre (opcional)
+            null, // Adjuntos (opcional)
+            null, // SMTP (opcional)
+            _PS_MODULE_DIR_ . 'gestorproduccion/mails/', // Ruta de plantillas
+            false, // No usar SMTP
+            null // ID de la tienda (opcional)
         );
 
-        if (!$mailSent) {
+        /// Enviar el correo al correo general (jefe o administrador)
+        $mailSentToGeneral = Mail::Send(
+           (int)$this->context->language->id,
+           'reservation_email_jefe', // Plantilla de correo
+           'Nueva Reserva de Productos', // Asunto del correo
+           $templateVars, // Variables para la plantilla
+           FIXED_EMAIL, // Correo general
+           null, // Nombre del destinatario (opcional)
+           null, // Desde (opcional)
+           null, // Desde nombre (opcional)
+           null, // Adjuntos (opcional)
+           null, // SMTP (opcional)
+           _PS_MODULE_DIR_ . 'gestorproduccion/mails/', // Ruta de plantillas
+           false, // No usar SMTP
+           null // ID de la tienda (opcional)
+        );
+
+        // Verificar si los correos se enviaron correctamente
+        if (!$mailSentToComercial || !$mailSentToGeneral ) {
             throw new Exception('Error al enviar el correo.');
         }
 
-        PrestaShopLogger::addLog('Correo de reserva enviado al jefe correctamente.', 1);
+        // Log de éxito
+        PrestaShopLogger::addLog('Correo de reserva enviado correctamente al comercial y al correo general.', 1);
     } catch (Exception $e) {
-        PrestaShopLogger::addLog('Error en sendEmailToAddress: ' . $e->getMessage(), 3);
+        // Log de error
+        PrestaShopLogger::addLog('Error en sendReservationEmail: ' . $e->getMessage(), 3);
     }
 }
-
+    
 }
