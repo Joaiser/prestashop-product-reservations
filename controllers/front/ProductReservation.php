@@ -6,47 +6,54 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
 {
 
     public function initContent()
-    {
-        parent::initContent();
+{
+    parent::initContent();
 
-        $product_id = (int)Tools::getValue('product_id');
-        $reference = Tools::getValue('reference');
-        $id_product_attribute = (int)Tools::getValue('id_product_attribute', 0);
-        $id_comercial = (int)$this->context->customer->id; // ID del comercial logueado
+    $product_id = (int)Tools::getValue('product_id');
+    $reference = Tools::getValue('reference');
+    $id_product_attribute = (int)Tools::getValue('id_product_attribute', 0);
+    $id_comercial = (int)$this->context->customer->id; // ID del comercial logueado
 
-        // Obtener reservas activas por cliente
-        $reservas_por_cliente = $this->getReservasActivas($id_comercial);
 
-        $customers = Db::getInstance()->executeS('SELECT id_customer, firstname, lastname FROM '._DB_PREFIX_.'customer WHERE id_comercial = '.(int)$id_comercial);
+    // Obtener reservas activas por cliente
+    $reservas_por_cliente = $this->getReservasActivas($id_comercial);
 
-        // Obtener los productos habilitados para reservar
-        $available_products = Db::getInstance()->executeS('
-            SELECT p.id_product, p.reference, pl.name 
-            FROM '._DB_PREFIX_.'product p
-            JOIN '._DB_PREFIX_.'product_reservation_enabled pre ON p.id_product = pre.id_product
-            LEFT JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product AND pl.id_lang = '.(int)$this->context->language->id.' 
-            WHERE pre.id_product IS NOT NULL
-        ');
+    $customers = Db::getInstance()->executeS('SELECT id_customer, firstname, lastname FROM '._DB_PREFIX_.'customer WHERE id_comercial = '.(int)$id_comercial);
 
-        // Verificar si hay productos disponibles para mostrar
-        $no_products_message = empty($available_products) ? 'No hay productos disponibles para reservar en este momento.' : '';
+    // Obtener los productos habilitados para reservar 
+    $available_products = Db::getInstance()->executeS('
+    SELECT 
+        p.id_product, 
+        IFNULL(pa.reference, p.reference) AS reference,  -- Usar la referencia del atributo si existe, si no, la del producto
+        pl.name, 
+        pre.id_product_attribute,
+        IFNULL(pa.reference, "") AS attribute_reference 
+    FROM '._DB_PREFIX_.'product p
+    JOIN '._DB_PREFIX_.'product_reservation_enabled pre ON p.id_product = pre.id_product
+    LEFT JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product AND pl.id_lang = '.(int)$this->context->language->id.'
+    LEFT JOIN '._DB_PREFIX_.'product_attribute pa ON pre.id_product_attribute = pa.id_product_attribute
+    WHERE pre.is_enabled = 1
+');
 
-        // Asignar variables al template
-        $this->context->smarty->assign(array(
-            'product_id' => $product_id,
-            'reference' => $reference,
-            'id_product_attribute' => $id_product_attribute,
-            'customers' => $customers,
-            'available_products' => $available_products,
-            'reservas_por_cliente' => $reservas_por_cliente,
-            'no_products_message' => $no_products_message,
-            'token' => Tools::getToken(),
-            'url_for_submission' => $this->context->link->getModuleLink('gestorproduccion', 'ProductReservation'),
-        ));
+    // Verificar si hay productos disponibles para mostrar
+    $no_products_message = empty($available_products) ? 'No hay productos disponibles para reservar en este momento.' : '';
 
-        // Mostrar la plantilla con la estructura completa
-        $this->setTemplate('module:gestorproduccion/views/templates/front/product_reservation.tpl');
-    }
+    // Asignar variables al template
+    $this->context->smarty->assign(array(
+        'product_id' => $product_id,
+        'reference' => $reference,
+        'id_product_attribute' => $id_product_attribute,
+        'customers' => $customers,
+        'available_products' => $available_products,
+        'reservas_por_cliente' => $reservas_por_cliente,
+        'no_products_message' => $no_products_message,
+        'token' => Tools::getToken(),
+        'url_for_submission' => $this->context->link->getModuleLink('gestorproduccion', 'ProductReservation'),
+    ));
+
+    // Mostrar la plantilla con la estructura completa
+    $this->setTemplate('module:gestorproduccion/views/templates/front/product_reservation.tpl');
+}
 
     // Lógica de procesamiento de la reserva (por AJAX)
     public function postProcess()

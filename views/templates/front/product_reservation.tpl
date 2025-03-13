@@ -15,13 +15,15 @@
                         <select name="product_id[0]" id="product_0" class="form-select" required>
                             <option value=""></option>
                             {foreach from=$available_products item=product}
-                                <option value="{$product.id_product}">{$product.name} - {$product.reference}</option>
+                                <option value="{$product.id_product}" data-reference="{$product.reference}" data-attribute="{$product.id_product_attribute}">
+                                    {$product.name} - {$product.reference} {$product.attribute_reference}
+                                </option>
                             {/foreach}
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="quantity_0" class="form-label">Cantidad:</label>
-                        <input type="number" id="quantity_0" name="quantity[0]" class="form-control" min="1" value="1" required>
+                        <input type="number" id="quantity_0" name="quantity[0]" class="form-control" min="1" value="1" required style="width: 480px;">
                     </div>
                     <div class="mb-3">
                         <label for="id_customer_0" class="form-label">Cliente:</label>
@@ -34,9 +36,9 @@
                         <button type="button" class="remove_reservation btn btn-danger btn-sm" style="display:none;">&times;</button>
                     </div>
                     <div class="mb-3">
-                        <!-- Asegúrate de pasar la referencia del producto aquí -->
-                        <input type="hidden" name="reference[0]" value="{$product.reference}">
-                        <input type="hidden" name="id_product_attribute[0]" value="{$id_product_attribute}">
+                        <!-- Campos ocultos para referencia y atributo -->
+                        <input type="hidden" name="reference[0]" id="reference_0" value="">
+                        <input type="hidden" name="id_product_attribute[0]" id="id_product_attribute_0" value="">
                     </div>
                 </div>
             </div>
@@ -79,4 +81,5 @@
 
     <!-- Cargar el script de reserva -->
     <script src="{$urls.base_url}modules/gestorproduccion/views/js/frontProductReservation.js"></script>
+
 {/block}
