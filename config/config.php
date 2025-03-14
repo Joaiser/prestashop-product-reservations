@@ -1,2 +1,2 @@
 <?php 
-define('FIXED_EMAIL', 'carlosperezperalta@yahoo.es');
+define('FIXED_EMAIL', 'cjp@salamandraluz.net');

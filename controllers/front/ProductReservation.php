@@ -144,10 +144,10 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
     public function getReservasActivas($id_comercial)
     {
         $sql = 'SELECT pr.id_reservation, pr.id_product, pr.id_product_attribute, pr.reference, pr.status, pr.reservation_expiry, pr.reserved_stock, pr.id_comercial, pr.id_customer, pr.date_added
-                FROM '._DB_PREFIX_.'product_reservations pr
-                WHERE pr.id_comercial = '.(int)$id_comercial.' 
-                AND pr.status = "pendiente"
-                ORDER BY pr.id_customer, pr.date_added ASC';
+        FROM '._DB_PREFIX_.'product_reservations pr
+        WHERE pr.id_comercial = '.(int)$id_comercial.' 
+        AND pr.status = "pendiente"
+        ORDER BY pr.id_customer, pr.date_added ASC';
 
         $reservas_activas = Db::getInstance()->executeS($sql);
 
