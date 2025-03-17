@@ -19,3 +19,11 @@ export function showError(message) {
     messageContainer.classList.add('alert-danger');
     messageContainer.style.display = 'block';
 }
+
+export function showSuccess(message) {
+    const messageContainer = document.querySelector('.reservation-message');
+    messageContainer.textContent = message;
+    messageContainer.classList.remove('alert-danger');
+    messageContainer.classList.add('alert-success');
+    messageContainer.style.display = 'block';
+}

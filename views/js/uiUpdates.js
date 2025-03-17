@@ -1,3 +1,5 @@
+import { initializeChoices } from './choice.js';
+
 // Función para actualizar la referencia y el atributo del producto
 export function updateReference(select) {
     const matchResult = select.name.match(/\d+/);
@@ -18,33 +20,42 @@ export function updateReference(select) {
     const idProductAttributeInput = document.querySelector(`input[name="id_product_attribute[${index}]"]`);
 
     if (referenceInput && idProductAttributeInput) {
-        referenceInput.value = reference;
-        idProductAttributeInput.value = idProductAttribute;
+        referenceInput.value = reference || ''; // Asegurarse de que no sea undefined
+        idProductAttributeInput.value = idProductAttribute || ''; // Asegurarse de que no sea undefined
     } else {
         console.error('No se encontraron los inputs de referencia o atributo para el índice:', index);
     }
 }
 
-// Función para inicializar las actualizaciones de la UI
 export function initializeUIUpdates(reservationForm) {
-    // Asignar el evento `change` a los campos de selección de productos existentes
+    console.log("Inicializando UI Updates");
+
+    // Inicializa el evento de cambio de producto
     document.querySelectorAll('select[name^="product_id"]').forEach(select => {
         select.addEventListener('change', function () {
             updateReference(this);
         });
     });
 
+    // Solo actualiza el campo de cliente y no los campos de productos
     toggleCustomerField();
+
+    // Inicializa Choices.js para todos los selects de productos
+    initializeChoices();
 }
 
 // Función para habilitar o deshabilitar el campo de cliente
 export function toggleCustomerField() {
     const productCount = countProducts();
     const customerFields = document.querySelectorAll('select[name^="id_customer"]');
-    customerFields.forEach(field => field.disabled = productCount !== 1);
+    customerFields.forEach(field => {
+        field.disabled = productCount > 1; // Solo un cliente debe ser permitido
+    });
 }
 
 // Función para contar los productos
 function countProducts() {
     return document.querySelectorAll('.reservation_item').length;
 }
+
+
