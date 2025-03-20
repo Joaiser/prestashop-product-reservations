@@ -1,3 +1,4 @@
+// Función para comprobar si todos los campos están completos
 export function areFieldsComplete() {
     const reservationItems = document.querySelectorAll('.reservation_item');
     for (let item of reservationItems) {
@@ -5,13 +6,15 @@ export function areFieldsComplete() {
         const quantity = item.querySelector('input[name^="quantity"]').value;
         const customerId = item.querySelector('select[name^="id_customer"]').value;
 
+        // Si alguno de los campos está vacío, retorna false
         if (!productId || !quantity || !customerId) {
             return false;
         }
     }
-    return true;
+    return true;  // Si todos los campos están completos, retorna true
 }
 
+// Función para mostrar mensaje de error
 export function showError(message) {
     const messageContainer = document.querySelector('.reservation-message');
     messageContainer.textContent = message;
@@ -20,6 +23,7 @@ export function showError(message) {
     messageContainer.style.display = 'block';
 }
 
+// Función para mostrar mensaje de éxito
 export function showSuccess(message) {
     const messageContainer = document.querySelector('.reservation-message');
     messageContainer.textContent = message;

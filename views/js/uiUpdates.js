@@ -4,7 +4,6 @@ import { initializeChoices } from './choice.js';
 export function updateReference(select) {
     const matchResult = select.name.match(/\d+/);
     if (!matchResult) {
-        console.error('No se encontró un número en el atributo "name" del select:', select.name);
         return;
     }
 
@@ -22,13 +21,10 @@ export function updateReference(select) {
     if (referenceInput && idProductAttributeInput) {
         referenceInput.value = reference || ''; // Asegurarse de que no sea undefined
         idProductAttributeInput.value = idProductAttribute || ''; // Asegurarse de que no sea undefined
-    } else {
-        console.error('No se encontraron los inputs de referencia o atributo para el índice:', index);
-    }
+    } 
 }
 
 export function initializeUIUpdates(reservationForm) {
-    console.log("Inicializando UI Updates");
 
     // Inicializa el evento de cambio de producto
     document.querySelectorAll('select[name^="product_id"]').forEach(select => {

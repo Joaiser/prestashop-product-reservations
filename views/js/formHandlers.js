@@ -8,6 +8,7 @@ export function initializeFormHandlers(reservationForm) {
     reservationForm.addEventListener('submit', function (e) {
         e.preventDefault();
 
+        // Comprobar si todos los campos están completos antes de enviar
         if (!areFieldsComplete()) {
             showError('Por favor, completa todos los campos antes de enviar el formulario.');
             return;
@@ -37,12 +38,13 @@ export function initializeFormHandlers(reservationForm) {
     const addMoreReservationsButton = document.getElementById('add_more_reservations');
     if (addMoreReservationsButton) {
         addMoreReservationsButton.addEventListener('click', function () {
+            // Comprobar si todos los campos están completos antes de añadir otro producto
             if (!areFieldsComplete()) {
                 showError('Por favor, completa todos los campos antes de añadir otro producto.');
                 return;
             }
 
-            addReservationItem();
+            addReservationItem(); // Añadir un nuevo item de reserva
         });
     }
 }
@@ -50,13 +52,11 @@ export function initializeFormHandlers(reservationForm) {
 function addReservationItem() {
     const container = document.getElementById('product_reservation_container');
     if (!container) {
-        console.error('No se encontró el contenedor de reservas.');
         return;
     }
 
     const customerField = document.querySelector('[name="id_customer[0]"]');
     if (!customerField) {
-        console.error('No se encontró el campo de cliente.');
         return;
     }
 
@@ -201,7 +201,6 @@ function getProductsFromForm() {
         products.push(product);
     });
 
-    console.log("Datos a enviar:", products); // Verificar los datos antes de enviar
     return products;
 }
 

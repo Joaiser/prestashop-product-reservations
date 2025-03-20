@@ -21,6 +21,7 @@
                     <div class="mb-3" style="width: 100%;" role="dialog">
                         <label for="id_customer" class="form-label">Cliente:</label>
                         <select name="id_customer[0]" id="id_customer" class="form-select" required style="width: 100%;">
+                            <option value="" disabled selected>Buscar cliente...</option>
                             {foreach from=$customers item=customer}
                                 <option value="{$customer.id_customer}">{$customer.firstname} {$customer.lastname}</option>
                             {/foreach}
@@ -29,6 +30,7 @@
                     <div class="mb-3" style="width: 100%;">
                         <label for="product_id" class="form-label">Producto:</label>
                         <select name="product_id[0]" id="product_id_0" class="form-select" required style="width: 100%;">
+                            <option value="" disabled selected>Buscar producto...</option>
                             {foreach from=$available_products item=product}
                                 <option value="{$product.id_product}" data-reference="{$product.reference}" data-attribute="{$product.id_product_attribute}">
                                     {$product.name} - {$product.reference} {$product.attribute_reference}
@@ -37,6 +39,7 @@
                         </select>
                         <button type="button" class="remove_reservation btn btn-danger btn-sm" style="display:none;">&times;</button>
                     </div>
+                    
                     <div class="mb-3" style="width: 100%;">
                         <label for="quantity" class="form-label">Cantidad:</label>
                         <input type="number" id="quantity" name="quantity[0]" class="form-control" min="1" value="1" required style="width: 100%;">
