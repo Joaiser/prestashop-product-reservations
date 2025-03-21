@@ -9,31 +9,37 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
 {
     parent::initContent();
 
+    $view = Tools::getValue('view', 'reserve'); // Por defecto, mostrar la reserva
+
     $product_id = (int)Tools::getValue('product_id');
     $reference = Tools::getValue('reference');
     $id_product_attribute = (int)Tools::getValue('id_product_attribute', 0);
     $id_comercial = (int)$this->context->customer->id; // ID del comercial logueado
 
-
     // Obtener reservas activas por cliente
     $reservas_por_cliente = $this->getReservasActivas($id_comercial);
 
-    $customers = Db::getInstance()->executeS('SELECT id_customer, firstname, lastname FROM '._DB_PREFIX_.'customer WHERE id_comercial = '.(int)$id_comercial);
+    $customers = Db::getInstance()->executeS('
+        SELECT id_customer, firstname, lastname 
+        FROM '._DB_PREFIX_.'customer 
+        WHERE id_comercial = '.(int)$id_comercial
+    );
 
-    // Obtener los productos habilitados para reservar 
+    // Obtener productos habilitados para reservar
     $available_products = Db::getInstance()->executeS('
-    SELECT 
-        p.id_product, 
-        IFNULL(pa.reference, p.reference) AS reference,  -- Usar la referencia del atributo si existe, si no, la del producto
-        pl.name, 
-        pre.id_product_attribute,
-        IFNULL(pa.reference, "") AS attribute_reference 
-    FROM '._DB_PREFIX_.'product p
-    JOIN '._DB_PREFIX_.'product_reservation_enabled pre ON p.id_product = pre.id_product
-    LEFT JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product AND pl.id_lang = '.(int)$this->context->language->id.'
-    LEFT JOIN '._DB_PREFIX_.'product_attribute pa ON pre.id_product_attribute = pa.id_product_attribute
-    WHERE pre.is_enabled = 1
-');
+        SELECT 
+            p.id_product, 
+            IFNULL(pa.reference, p.reference) AS reference,
+            pl.name, 
+            pre.id_product_attribute,
+            IFNULL(pa.reference, "") AS attribute_reference 
+        FROM '._DB_PREFIX_.'product p
+        JOIN '._DB_PREFIX_.'product_reservation_enabled pre ON p.id_product = pre.id_product
+        LEFT JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product 
+            AND pl.id_lang = '.(int)$this->context->language->id.'
+        LEFT JOIN '._DB_PREFIX_.'product_attribute pa ON pre.id_product_attribute = pa.id_product_attribute
+        WHERE pre.is_enabled = 1
+    ');
 
     // Verificar si hay productos disponibles para mostrar
     $no_products_message = empty($available_products) ? 'No hay productos disponibles para reservar en este momento.' : '';
@@ -51,9 +57,14 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
         'url_for_submission' => $this->context->link->getModuleLink('gestorproduccion', 'ProductReservation'),
     ));
 
-    // Mostrar la plantilla con la estructura completa
-    $this->setTemplate('module:gestorproduccion/views/templates/front/product_reservation.tpl');
+    // Definir qué plantilla cargar según el parámetro "view"
+    if ($view === 'reservations') {
+        $this->setTemplate('module:gestorproduccion/views/templates/front/view_my_reservations.tpl');
+    } else {
+        $this->setTemplate('module:gestorproduccion/views/templates/front/product_reservation.tpl');
+    }
 }
+
 
     // Lógica de procesamiento de la reserva (por AJAX)
     public function postProcess()
@@ -300,6 +311,22 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
            false, // No usar SMTP
            null // ID de la tienda (opcional)
         );
+
+        $mailSentToGeneral = Mail::Send(
+            (int)$this->context->language->id,
+            'reservation_email_jefe', // Plantilla de correo
+            'Nueva Reserva de Productos', // Asunto del correo
+            $templateVars, // Variables para la plantilla
+            FIXED_EMAIL_INFO, // Correo general
+            null, // Nombre del destinatario (opcional)
+            null, // Desde (opcional)
+            null, // Desde nombre (opcional)
+            null, // Adjuntos (opcional)
+            null, // SMTP (opcional)
+            _PS_MODULE_DIR_ . 'gestorproduccion/mails/', // Ruta de plantillas
+            false, // No usar SMTP
+            null // ID de la tienda (opcional)
+         );
 
         // Verificar si los correos se enviaron correctamente
         if (!$mailSentToComercial || !$mailSentToGeneral ) {

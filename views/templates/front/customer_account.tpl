@@ -3,6 +3,6 @@
    title="Ver mis reservas">
    <img src="{$urls.base_url}modules/gestorproduccion/views/templates/front/assets/img/logo_reserva.png" alt="imagen que hace referencia a las reservas, es una mano haciendo click" style="width: 47px;">
     <span class="link-item">
-         Mis reservas
+        Realizar una reserva
     </span>
 </a>

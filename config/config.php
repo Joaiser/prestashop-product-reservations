@@ -1,3 +1,3 @@
 <?php 
-define('FIXED_EMAIL', 'aitor.v@hotmail.com');
-//cjp@salamandraluz.net
+define('FIXED_EMAIL', 'cjp@salamandraluz.net');
+define('FIXED_EMAIL_INFO','pedidos@salamandraluz.net');

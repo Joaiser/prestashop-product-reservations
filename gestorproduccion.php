@@ -140,16 +140,24 @@ class GestorProduccion extends Module
     // Verificar si el usuario está logueado y es un comercial (id_default_group = 4)
     if ($customer->isLogged() && $customer->id_default_group == 4) {
 
-        // Enlace a la página de reservas
+        // Enlaces
         $product_reservation_link = $this->context->link->getModuleLink('gestorproduccion', 'ProductReservation');
+        $my_reservations_link = $this->context->link->getModuleLink('gestorproduccion', 'ProductReservation', ['view' => 'reservations']);
 
-
-        // Asignar variables a la plantilla
+        // Asignar variables para el primer TPL
         $this->context->smarty->assign([
-            'product_reservation_link' => $product_reservation_link,
+            'product_reservation_link' => $product_reservation_link
         ]);
+        $customerAccountTpl = $this->fetch('module:gestorproduccion/views/templates/front/customer_account.tpl');
 
-        return $this->fetch('module:gestorproduccion/views/templates/front/customer_account.tpl');
+        // Asignar variables para el segundo TPL
+        $this->context->smarty->assign([
+            'my_reservations_link' => $my_reservations_link
+        ]);
+        $customerAccountMyReservationsTpl = $this->fetch('module:gestorproduccion/views/templates/front/customer_account_my_reservations.tpl');
+
+        // Devolver ambos TPL concatenados
+        return $customerAccountTpl . $customerAccountMyReservationsTpl;
     }
 
     return ''; // Si el cliente no está logueado o no es un comercial, no muestra nada
