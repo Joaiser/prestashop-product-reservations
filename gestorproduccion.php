@@ -22,20 +22,33 @@ class GestorProduccion extends Module
     }
 
     public function install()
-    {
-        if (!parent::install() || !$this->installDB() || !$this->installTab() || !$this->registerHook('displayBackOfficeHeader') || !$this->installReservationEnabledDB() || !$this->registerHook('displayCustomerAccount')) {
-            return false;
-        }
-        return true;
-    }
+{
+    require_once dirname(__FILE__).'/classes/InstallHelper.php';
     
-    public function uninstall()
-    {
-        if (!parent::uninstall() || !$this->uninstallDB() || !$this->uninstallTab() || !$this->uninstallReservationEnabledDB()) {
-            return false;
-        }
-        return true;
+    if (!parent::install() 
+        || !InstallHelper::installDB() 
+        || !InstallHelper::installReservationEnabledDB() 
+        || !$this->installTab() 
+        || !$this->registerHook('displayBackOfficeHeader') 
+        || !$this->registerHook('displayCustomerAccount')) {
+        return false;
     }
+    return true;
+}
+
+public function uninstall()
+{
+    require_once dirname(__FILE__).'/classes/InstallHelper.php';
+    
+    if (!parent::uninstall() 
+        || !InstallHelper::uninstallDB() 
+        || !InstallHelper::uninstallReservationEnabledDB() 
+        || !$this->uninstallTab()) {
+        return false;
+    }
+    return true;
+}
+
 
     private function installTab()
     {
@@ -62,52 +75,6 @@ class GestorProduccion extends Module
         return true;
     }
 
-    private function installDB()
-    {
-        $sql = 'CREATE TABLE IF NOT EXISTS '._DB_PREFIX_.'product_reservations (
-                id_reservation INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                id_product INT(10) UNSIGNED NOT NULL,
-                id_product_attribute INT(10) UNSIGNED DEFAULT NULL,
-                reference VARCHAR(255) NOT NULL,
-                status ENUM("pendiente", "confirmada", "cancelada") NOT NULL DEFAULT "pendiente",
-                reservation_expiry DATETIME DEFAULT NULL,
-                reserved_stock INT(10) UNSIGNED DEFAULT 0,               
-                id_comercial INT(10) UNSIGNED NOT NULL,
-                id_customer INT(10) UNSIGNED NOT NULL,
-                date_added DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                INDEX idx_product (id_product),
-                INDEX idx_customer (id_customer),
-                INDEX idx_comercial (id_comercial)
-            ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
-    
-        return Db::getInstance()->execute($sql);
-    }
-
-    private function installReservationEnabledDB()
-    {
-        $sql = 'CREATE TABLE IF NOT EXISTS '._DB_PREFIX_.'product_reservation_enabled (
-                id_product INT(10) UNSIGNED NOT NULL,
-                id_product_attribute INT(10) UNSIGNED NOT NULL DEFAULT 0,  
-                reference VARCHAR(64) DEFAULT NULL, 
-                is_enabled TINYINT(1) NOT NULL DEFAULT 0, 
-                date_enabled DATETIME NOT NULL,     
-                PRIMARY KEY (id_product, id_product_attribute, reference) 
-            ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
-
-        return Db::getInstance()->execute($sql);
-    }
-
-    private function uninstallDB()
-    {
-        $sql = 'DROP TABLE IF EXISTS '._DB_PREFIX_.'product_reservations';
-        return Db::getInstance()->execute($sql);
-    }
-
-    private function uninstallReservationEnabledDB()
-    {
-        $sql = 'DROP TABLE IF EXISTS '._DB_PREFIX_.'product_reservation_enabled';
-        return Db::getInstance()->execute($sql);
-    }
 
     public function hookDisplayBackOfficeHeader()
     {
@@ -117,22 +84,7 @@ class GestorProduccion extends Module
 
     /*A partir de aquí, vamos a poner los hooks para la UI del usuario*/
 
-    public function hookModuleRoutes()
-    {
-        return [
-            'module-gestorproduccion-productreservation' => [
-                'controller' => 'ProductReservation',
-                'rule' => 'gestorproduccion/product-reservation',
-                'keywords' => [],
-                'params' => [
-                    'fc' => 'module',
-                    'module' => 'gestorproduccion',
-                ],
-            ],
-        ];
-    }
-
-    public function hookDisplayCustomerAccount($params)
+     public function hookDisplayCustomerAccount($params)
 {
     // Obtener el usuario actual
     $customer = $this->context->customer;
@@ -163,17 +115,28 @@ class GestorProduccion extends Module
     return ''; // Si el cliente no está logueado o no es un comercial, no muestra nada
 }
 
+    public function hookModuleRoutes()
+    {
+        return [
+            'module-gestorproduccion-productreservation' => [
+                'controller' => 'ProductReservation',
+                'rule' => 'gestorproduccion/product-reservation',
+                'keywords' => [],
+                'params' => [
+                    'fc' => 'module',
+                    'module' => 'gestorproduccion',
+                ],
+            ],
+        ];
+    }
     
 
     public function getCustomersByComercial($id_comercial)
-    {
-        $sql = 'SELECT c.id_customer, c.firstname, c.lastname
-                FROM '._DB_PREFIX_.'customer c
-                WHERE c.id_comercial = '.(int)$id_comercial.'
-                AND c.deleted = 0
-                 ORDER BY c.firstname ASC'; // Excluir clientes eliminados (si aplica)
-        return Db::getInstance()->executeS($sql);
-    }
+{
+    require_once dirname(__FILE__).'/classes/ReservationModel.php';
+    return ReservationModel::getCustomersByComercial($id_comercial);
+}
+
 
 
 }

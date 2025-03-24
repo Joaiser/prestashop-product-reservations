@@ -1,6 +1,6 @@
 {extends file='customer/page.tpl'}
 
-{block name="content"}
+{block name="page_content"}
 
 <link rel="stylesheet" href="{$urls.base_url}modules/gestorproduccion/views/css/choices.min.css" />
 

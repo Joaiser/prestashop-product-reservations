@@ -51,18 +51,14 @@ export function initializeFormHandlers(reservationForm) {
 
 function addReservationItem() {
     const container = document.getElementById('product_reservation_container');
-    if (!container) {
-        return;
-    }
+    if (!container) return;
 
     const customerField = document.querySelector('[name="id_customer[0]"]');
-    if (!customerField) {
-        return;
-    }
+    if (!customerField) return;
 
     const index = container.getElementsByClassName('reservation_item').length;
 
-    // Crear un nuevo ítem de reserva desde cero
+    // Crear el nuevo ítem de reserva
     const newReservation = document.createElement('div');
     newReservation.classList.add('reservation_item', 'mb-3');
     newReservation.setAttribute('data-index', index);
@@ -70,8 +66,38 @@ function addReservationItem() {
     newReservation.style.flexDirection = 'column';
     newReservation.style.alignItems = 'flex-start';
     newReservation.style.justifyContent = 'center';
+    newReservation.style.backgroundColor = '#f0f0f0'; 
+    newReservation.style.boxShadow = '3px 3px 5px rgba(0,0,0,0.2)'; 
+    newReservation.style.borderRadius = '8px';
+    newReservation.style.padding = '10px';
+    newReservation.style.marginBottom = '10px';
+    newReservation.style.position = 'relative'; // IMPORTANTE para que el botón se posicione dentro de este contenedor
 
-    // Crear el select de cliente
+    // Contenedor del botón de eliminar
+    const removeButtonContainer = document.createElement('div');
+    removeButtonContainer.style.position = 'absolute';
+    removeButtonContainer.style.top = '5px';
+    removeButtonContainer.style.right = '5px';
+
+    // Crear el botón de eliminar
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.classList.add('remove_reservation', 'btn', 'btn-danger', 'btn-sm');
+    removeButton.innerHTML = '×';
+    removeButton.style.padding = '2px 6px';
+    removeButton.style.fontSize = '14px';
+    removeButton.style.borderRadius = '50%';
+    removeButton.style.boxShadow = '2px 2px 4px rgba(0,0,0,0.2)';
+    removeButton.addEventListener('click', function () {
+        newReservation.remove();
+        toggleCustomerField();
+    });
+
+    // Agregar botón al contenedor y este al `newReservation`
+    removeButtonContainer.appendChild(removeButton);
+    newReservation.appendChild(removeButtonContainer);
+
+    // Crear y añadir el select de cliente
     const newCustomerSelect = document.createElement('select');
     newCustomerSelect.setAttribute('name', `id_customer[${index}]`);
     newCustomerSelect.setAttribute('id', `id_customer_${index}`);
@@ -79,25 +105,20 @@ function addReservationItem() {
     newCustomerSelect.style.width = '100%';
     newCustomerSelect.required = true;
 
-    // Copiar las opciones del select de cliente original
     const originalCustomerSelect = document.querySelector('[name="id_customer[0]"]');
     if (originalCustomerSelect) {
-        const options = originalCustomerSelect.querySelectorAll('option');
-        options.forEach(option => {
-            const clonedOption = option.cloneNode(true);
-            newCustomerSelect.appendChild(clonedOption);
+        originalCustomerSelect.querySelectorAll('option').forEach(option => {
+            newCustomerSelect.appendChild(option.cloneNode(true));
         });
     }
 
-    // Crear el contenedor para el select de cliente
     const customerContainer = document.createElement('div');
     customerContainer.classList.add('mb-3');
     customerContainer.style.width = '100%';
-    customerContainer.setAttribute('role', 'dialog');
     customerContainer.innerHTML = '<label for="id_customer" class="form-label">Cliente:</label>';
     customerContainer.appendChild(newCustomerSelect);
 
-    // Crear el select de productos
+    // Crear y añadir el select de productos
     const newProductSelect = document.createElement('select');
     newProductSelect.setAttribute('name', `product_id[${index}]`);
     newProductSelect.setAttribute('id', `product_id_${index}`);
@@ -105,41 +126,24 @@ function addReservationItem() {
     newProductSelect.style.width = '100%';
     newProductSelect.required = true;
 
-    // Copiar las opciones del select de productos original
     const originalProductSelect = document.querySelector('[name="product_id[0]"]');
     if (originalProductSelect) {
-        const options = originalProductSelect.querySelectorAll('option');
-        options.forEach(option => {
-            const clonedOption = option.cloneNode(true);
-            newProductSelect.appendChild(clonedOption);
+        originalProductSelect.querySelectorAll('option').forEach(option => {
+            newProductSelect.appendChild(option.cloneNode(true));
         });
     }
 
-    // Configurar el evento `change` en el nuevo select de productos
     newProductSelect.addEventListener('change', function () {
         updateReference(this);
     });
 
-    // Crear el contenedor para el select de productos
     const productContainer = document.createElement('div');
     productContainer.classList.add('mb-3');
     productContainer.style.width = '100%';
     productContainer.innerHTML = '<label for="product_id" class="form-label">Producto:</label>';
     productContainer.appendChild(newProductSelect);
 
-    // Crear el botón de eliminar
-    const removeButton = document.createElement('button');
-    removeButton.type = 'button';
-    removeButton.classList.add('remove_reservation', 'btn', 'btn-danger', 'btn-sm');
-    removeButton.style.display = 'inline-block';
-    removeButton.innerHTML = '×';
-    removeButton.addEventListener('click', function () {
-        newReservation.remove();
-        toggleCustomerField();
-    });
-    productContainer.appendChild(removeButton);
-
-    // Crear el input de cantidad
+    // Crear input de cantidad
     const quantityInput = document.createElement('input');
     quantityInput.type = 'number';
     quantityInput.setAttribute('name', `quantity[${index}]`);
@@ -150,14 +154,13 @@ function addReservationItem() {
     quantityInput.required = true;
     quantityInput.style.width = '50%';
 
-    // Crear el contenedor para el input de cantidad
     const quantityContainer = document.createElement('div');
     quantityContainer.classList.add('mb-3');
     quantityContainer.style.width = '100%';
     quantityContainer.innerHTML = '<label for="quantity" class="form-label">Cantidad:</label>';
     quantityContainer.appendChild(quantityInput);
 
-    // Crear los campos ocultos
+    // Campos ocultos
     const referenceInput = document.createElement('input');
     referenceInput.type = 'hidden';
     referenceInput.setAttribute('name', `reference[${index}]`);
@@ -170,15 +173,25 @@ function addReservationItem() {
     idProductAttributeInput.setAttribute('id', `id_product_attribute_${index}`);
     idProductAttributeInput.value = '';
 
-    // Añadir todos los elementos al nuevo ítem
+    // Agregar todo al `newReservation`
     newReservation.appendChild(customerContainer);
     newReservation.appendChild(productContainer);
     newReservation.appendChild(quantityContainer);
     newReservation.appendChild(referenceInput);
     newReservation.appendChild(idProductAttributeInput);
 
-    // Añadir el nuevo ítem al contenedor
+    // Agregar al contenedor principal
     container.appendChild(newReservation);
+
+    // Animación de entrada
+    newReservation.style.opacity = '0';
+    newReservation.style.transform = 'translateY(-10px)';
+    newReservation.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+
+    setTimeout(() => {
+        newReservation.style.opacity = '1';
+        newReservation.style.transform = 'translateY(0)';
+    }, 10);
 
     // Deshabilitar el select de cliente si ya hay más de un ítem
     toggleCustomerField();
@@ -186,6 +199,7 @@ function addReservationItem() {
     // Inicializar Choices.js en el nuevo select de productos
     initializeDynamicChoices(newReservation);
 }
+
 
 
 function getProductsFromForm() {
