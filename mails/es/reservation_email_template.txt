@@ -1,9 +1,0 @@
-Hola {comercial_name},
-
-{customer_name} tiene una reserva.
-
-Detalles de la reserva:
-{products}
-
-Saludos,
-El equipo de {store_name}
