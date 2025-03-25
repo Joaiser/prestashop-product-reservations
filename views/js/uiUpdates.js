@@ -44,8 +44,22 @@ export function initializeUIUpdates(reservationForm) {
 export function toggleCustomerField() {
     const productCount = countProducts();
     const customerFields = document.querySelectorAll('select[name^="id_customer"]');
-    customerFields.forEach(field => {
-        field.disabled = productCount > 1; // Solo un cliente debe ser permitido
+    
+    customerFields.forEach((field, index) => {
+        const container = field.closest('.mb-3'); // Encuentra el contenedor del campo
+        
+        if (container) {
+            if (index === 0) { // Siempre mostrar el primer campo
+                container.style.display = 'block';
+                field.disabled = productCount > 1;
+            } else { // Ocultar completamente los campos adicionales
+                container.style.display = 'none';
+                
+                // Asegurarse de que el valor se mantenga
+                const firstCustomerValue = customerFields[0].value;
+                field.value = firstCustomerValue;
+            }
+        }
     });
 }
 
