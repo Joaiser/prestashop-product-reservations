@@ -1,5 +1,0 @@
-Hello {comercial_name},
-
-A reservation has been made with the following quantity: {reserved_quantity} units of the product {product_name} for {customer_name}.
-
-The reservation was made at {store_name} store.
