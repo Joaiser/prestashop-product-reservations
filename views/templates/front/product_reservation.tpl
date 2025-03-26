@@ -33,7 +33,7 @@
                             <option value="" disabled selected>Buscar producto...</option>
                             {foreach from=$available_products item=product}
                                 <option value="{$product.id_product}" data-reference="{$product.reference}" data-attribute="{$product.id_product_attribute}">
-                                    {$product.name} - {$product.reference} {$product.attribute_reference}
+                                    {$product.reference} - {$product.name}
                                 </option>
                             {/foreach}
                         </select>

@@ -1,27 +1,28 @@
 import { initializeChoices } from './choice.js';
-
 // Función para actualizar la referencia y el atributo del producto
 export function updateReference(select) {
-    const matchResult = select.name.match(/\d+/);
-    if (!matchResult) {
-        return;
+    const reservationItem = select.closest('.reservation_item');
+    if (!reservationItem) return;
+    
+    const index = reservationItem.getAttribute('data-index');
+    let reference = '';
+    let idProductAttribute = '0';
+    
+    // Obtener la opción seleccionada directamente del select
+    const selectedOption = select.options[select.selectedIndex];
+    
+    if (selectedOption && selectedOption.value) {
+        reference = selectedOption.getAttribute('data-reference') || '';
+        idProductAttribute = selectedOption.getAttribute('data-attribute') || '0';
     }
-
-    const index = matchResult[0];
-    const selectedProduct = select.options[select.selectedIndex];
-
-    // Obtener la referencia y el atributo del producto desde los atributos data-*
-    const reference = selectedProduct.getAttribute('data-reference');
-    const idProductAttribute = selectedProduct.getAttribute('data-attribute');
-
-    // Actualizar los campos ocultos
-    const referenceInput = document.querySelector(`input[name="reference[${index}]"]`);
-    const idProductAttributeInput = document.querySelector(`input[name="id_product_attribute[${index}]"]`);
-
-    if (referenceInput && idProductAttributeInput) {
-        referenceInput.value = reference || ''; // Asegurarse de que no sea undefined
-        idProductAttributeInput.value = idProductAttribute || ''; // Asegurarse de que no sea undefined
-    } 
+    
+    // Actualizar campos ocultos
+    const referenceInput = reservationItem.querySelector(`input[name="reference[${index}]"]`);
+    const idProductAttributeInput = reservationItem.querySelector(`input[name="id_product_attribute[${index}]"]`);
+    
+    if (referenceInput) referenceInput.value = reference;
+    if (idProductAttributeInput) idProductAttributeInput.value = idProductAttribute;
+    
 }
 
 export function initializeUIUpdates(reservationForm) {

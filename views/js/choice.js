@@ -1,6 +1,7 @@
+import { updateReference } from "./uiUpdates.js";
+
 // Función para inicializar Choices.js en los selects pasados por parámetro
 export function initializeChoices(selectors = ['#id_customer', '#product_id_0'], container = document) {
-
     selectors.forEach(selector => {
         const elements = container.querySelectorAll(selector);
         elements.forEach(element => {
@@ -9,30 +10,66 @@ export function initializeChoices(selectors = ['#id_customer', '#product_id_0'],
                 placeholderValue: "Selecciona una opción",
                 removeItemButton: true,
                 searchEnabled: true,
+                // Añadir estilos directamente en la configuración
+                callbackOnInit: function() {
+                    const dropdown = this.containerOuter.element.querySelector('.choices__list--dropdown');
+                    if (dropdown) {
+                        dropdown.style.zIndex = '9999';
+                    }
+                }
             });
         });
     });
 }
 
-
 export function initializeDynamicChoices(newReservation) {
     const index = newReservation.getAttribute('data-index');
-
     const productSelect = newReservation.querySelector(`#product_id_${index}`);
-    if (productSelect) {
+    const originalProductSelect = document.querySelector('[name="product_id[0]"]');
+    
+    if (!productSelect || !originalProductSelect) return;
 
-        // Destruir la instancia anterior de Choices.js si existe
-        if (productSelect._choices) {
-            productSelect._choices.destroy();
-        }
+    // Limpiar instancia anterior
+    if (productSelect._choices) {
+        productSelect._choices.destroy();
+    }
 
-        // Inicializar Choices.js en el nuevo select de productos
-        const choices = new Choices(productSelect, {
-            placeholder: true,
-            placeholderValue: "Selecciona un producto",
-            removeItemButton: true,
-            searchEnabled: true,
+    // Clonar las opciones manualmente preservando los atributos data-*
+    Array.from(originalProductSelect.options)
+        .filter(option => option.value !== '')
+        .forEach(option => {
+            const newOption = new Option(option.text, option.value);
+            newOption.setAttribute('data-reference', option.getAttribute('data-reference'));
+            newOption.setAttribute('data-attribute', option.getAttribute('data-attribute'));
+            productSelect.add(newOption);
         });
 
-    } 
+    // Inicializar Choices con las opciones clonadas
+    const choices = new Choices(productSelect, {
+        placeholder: true,
+        placeholderValue: "Buscar producto...",
+        removeItemButton: true,
+        searchEnabled: true,
+        shouldSort: false,
+        callbackOnInit: function() {
+            this.setChoiceByValue('');
+            // Aplicar z-index directamente al dropdown
+            const dropdown = this.containerOuter.element.querySelector('.choices__list--dropdown');
+            if (dropdown) {
+                dropdown.style.zIndex = '9999';
+            }
+        },
+        classNames: {
+            item: 'choices__item',
+            button: 'choices__button',
+            // Opcional: puedes añadir clases personalizadas para más control
+            listDropdown: 'choices__list--dropdown-high-zindex'
+        }
+    });
+
+    productSelect.addEventListener('change', function() {
+        updateReference(this);
+    });
+
+    productSelect._choices = choices;
 }

@@ -3,6 +3,19 @@ import { sendReservation } from './apiHandlers.js';
 import { toggleCustomerField, updateReference } from './uiUpdates.js';
 import { initializeDynamicChoices } from './choice.js';
 
+function getProductsFromForm() {
+    return Array.from(document.querySelectorAll('.reservation_item')).map(form => {
+        const index = form.getAttribute('data-index');
+        return {
+            product_id: form.querySelector(`select[name="product_id[${index}]"]`)?.value || '',
+            quantity: form.querySelector(`input[name="quantity[${index}]"]`)?.value || '1',
+            id_customer: form.querySelector(`select[name="id_customer[${index}]"]`)?.value || '',
+            reference: form.querySelector(`input[name="reference[${index}]"]`)?.value || '',
+            id_product_attribute: form.querySelector(`input[name="id_product_attribute[${index}]"]`)?.value || '0'
+        };
+    });
+}
+
 export function initializeFormHandlers(reservationForm) {
     // Manejar el envío del formulario
     reservationForm.addEventListener('submit', function (e) {
@@ -53,13 +66,12 @@ function reindexReservationItems() {
     const container = document.getElementById('product_reservation_container');
     if (!container) return;
     
-    const items = container.querySelector('.reservation_item');
+    // CORRECCIÓN: querySelectorAll en lugar de querySelector
+    const items = container.querySelectorAll('.reservation_item');
     
     Array.from(items).forEach((item, index) => {
-        // Actualizar el atributo data-index
         item.setAttribute('data-index', index);
         
-        // Reindexar todos los campos dentro del item
         const fields = item.querySelectorAll('[name*="["]');
         fields.forEach(field => {
             const name = field.getAttribute('name');
@@ -69,7 +81,6 @@ function reindexReservationItems() {
         });
     });
     
-    // Actualizar la visibilidad de los campos de cliente
     toggleCustomerField();
 }
 
@@ -77,7 +88,6 @@ function addReservationItem() {
     const container = document.getElementById('product_reservation_container');
     if (!container) return;
 
-    // Usamos timestamp como índice temporal (será corregido por reindexación)
     const tempIndex = Date.now();
     const customerField = document.querySelector('[name="id_customer[0]"]');
     if (!customerField) return;
@@ -130,7 +140,7 @@ function addReservationItem() {
     removeButtonContainer.appendChild(removeButton);
     newReservation.appendChild(removeButtonContainer);
 
-    // Select de cliente (hidden para items adicionales)
+    // Select de cliente
     const customerContainer = document.createElement('div');
     customerContainer.className = 'mb-3';
     customerContainer.style.width = '100%';
@@ -157,7 +167,7 @@ function addReservationItem() {
     const productContainer = document.createElement('div');
     productContainer.className = 'mb-3';
     productContainer.style.width = '100%';
-    
+
     const newProductSelect = document.createElement('select');
     newProductSelect.name = `product_id[${tempIndex}]`;
     newProductSelect.id = `product_id_${tempIndex}`;
@@ -168,13 +178,13 @@ function addReservationItem() {
         updateReference(this);
     });
 
-    // Clonar opciones del primer select de productos
-    const originalProductSelect = document.querySelector('[name="product_id[0]"]');
-    if (originalProductSelect) {
-        Array.from(originalProductSelect.options).forEach(option => {
-            newProductSelect.appendChild(option.cloneNode(true));
-        });
-    }
+    // Solo añadir el placeholder inicial
+    const placeholderOption = document.createElement('option');
+    placeholderOption.value = '';
+    placeholderOption.textContent = 'Buscar producto...';
+    placeholderOption.disabled = true;
+    placeholderOption.selected = true;
+    newProductSelect.appendChild(placeholderOption);
 
     productContainer.innerHTML = '<label for="product_id" class="form-label">Producto:</label>';
     productContainer.appendChild(newProductSelect);
@@ -219,7 +229,6 @@ function addReservationItem() {
         idProductAttributeInput
     );
 
-    // Agregar al contenedor principal
     container.appendChild(newReservation);
 
     // Animación
@@ -228,31 +237,12 @@ function addReservationItem() {
         newReservation.style.transform = 'translateY(0)';
     }, 10);
 
-    // Actualizar campos de cliente
     toggleCustomerField();
 
-    // Inicializar Choices.js si es necesario
+    // Inicializar Choices.js
     if (typeof initializeDynamicChoices === 'function') {
         initializeDynamicChoices(newReservation);
     }
-}
-
-
-
-function getProductsFromForm() {
-    let products = [];
-    document.querySelectorAll('.reservation_item').forEach((form, index) => {
-        let product = {
-            product_id: form.querySelector('select[name="product_id[' + index + ']"]').value,
-            quantity: form.querySelector('input[name="quantity[' + index + ']"]').value,
-            id_customer: form.querySelector('select[name="id_customer[' + index + ']"]').value,
-            reference: form.querySelector('input[name="reference[' + index + ']"]').value,
-            id_product_attribute: form.querySelector('input[name="id_product_attribute[' + index + ']"]').value
-        };
-        products.push(product);
-    });
-
-    return products;
 }
 
 // Función para resetear el formulario

@@ -64,5 +64,5 @@
 }
 
 .reservation_item {
-    position: relative; /* Necesario para posicionar la "X" dentro del contenedor */
+    position: relative; 
 }
