@@ -66,7 +66,7 @@ function reindexReservationItems() {
     const container = document.getElementById('product_reservation_container');
     if (!container) return;
     
-    // CORRECCIÓN: querySelectorAll en lugar de querySelector
+    
     const items = container.querySelectorAll('.reservation_item');
     
     Array.from(items).forEach((item, index) => {

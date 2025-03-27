@@ -22,7 +22,7 @@ export function initializeChoices(selectors = ['#id_customer', '#product_id_0'],
     });
 }
 
-export function initializeDynamicChoices(newReservation) {
+export function initializeDynamicChoices(newReservation, firstCustomerValue) {
     const index = newReservation.getAttribute('data-index');
     const productSelect = newReservation.querySelector(`#product_id_${index}`);
     const originalProductSelect = document.querySelector('[name="product_id[0]"]');
@@ -44,6 +44,11 @@ export function initializeDynamicChoices(newReservation) {
             productSelect.add(newOption);
         });
 
+    // Establecer el valor por defecto (si existe un valor para el primer cliente)
+    if (firstCustomerValue) {
+        productSelect.value = firstCustomerValue;
+    }
+
     // Inicializar Choices con las opciones clonadas
     const choices = new Choices(productSelect, {
         placeholder: true,
@@ -52,7 +57,7 @@ export function initializeDynamicChoices(newReservation) {
         searchEnabled: true,
         shouldSort: false,
         callbackOnInit: function() {
-            this.setChoiceByValue('');
+            this.setChoiceByValue(firstCustomerValue || '');  // Si tienes un valor por defecto, lo pones aquí
             // Aplicar z-index directamente al dropdown
             const dropdown = this.containerOuter.element.querySelector('.choices__list--dropdown');
             if (dropdown) {
