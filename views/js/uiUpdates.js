@@ -1,11 +1,71 @@
 import { initializeChoices } from './choice.js';
 
 // Estado global mejorado
-const customerState = {
+export const reservationSystem = {
     initialized: false,
-    previousValue: null,
+    mainCustomer: null,
     messageContainer: null,
-    hasProducts: false
+    
+    init: function() {
+        if (this.initialized) return;
+        
+        const mainCustomerSelect = document.querySelector('select[name="id_customer[0]"]');
+        if (!mainCustomerSelect) return;
+        
+        // Crear mensaje
+        this.messageContainer = document.createElement('div');
+        this.messageContainer.id = 'customer-change-message';
+        Object.assign(this.messageContainer.style, {
+            display: 'none',
+            marginTop: '10px',
+            padding: '10px',
+            backgroundColor: '#f8d7da',
+            color: '#721c24',
+            border: '1px solid #f5c6cb',
+            borderRadius: '4px'
+        });
+        this.messageContainer.innerHTML = 'Todos los productos serán reservados para <span id="new-customer-name"></span>.';
+        mainCustomerSelect.parentNode.appendChild(this.messageContainer);
+        
+        // Establecer cliente principal
+        this.mainCustomer = mainCustomerSelect.value;
+        this.initialized = true;
+        
+        // Listener para cambios en el cliente principal
+        mainCustomerSelect.addEventListener('change', this.handleCustomerChange.bind(this));
+    },
+    
+    handleCustomerChange: function(e) {
+        const newValue = e.target.value;
+        const customerName = e.target.options[e.target.selectedIndex]?.text || '';
+        
+        if (newValue && newValue !== this.mainCustomer) {
+            // Actualizar todos los selects de cliente
+            document.querySelectorAll('select[name^="id_customer"]').forEach(select => {
+                select.value = newValue;
+            });
+            
+            // Mostrar mensaje
+            const nameSpan = document.getElementById('new-customer-name');
+            if (nameSpan) {
+                nameSpan.textContent = customerName;
+                this.messageContainer.style.display = 'block';
+                
+                setTimeout(() => {
+                    this.messageContainer.style.display = 'none';
+                }, 3000);
+            }
+            
+            this.mainCustomer = newValue;
+        }
+    },
+    
+    // Verificar si hay productos válidos
+    hasValidProducts: function() {
+        return Array.from(document.querySelectorAll('.reservation_item')).some(item => {
+            return item.querySelector('select[name^="product_id"]').value !== '';
+        });
+    }
 };
 
 // Función para actualizar la referencia del producto
@@ -27,6 +87,8 @@ export function updateReference(select) {
 
 // Función para inicializar la UI
 export function initializeUIUpdates(reservationForm) {
+    reservationSystem.init();
+    
     document.querySelectorAll('select[name^="product_id"]').forEach(select => {
         select.addEventListener('change', function() {
             updateReference(this);
@@ -49,13 +111,12 @@ export function toggleCustomerField() {
         if (index === 0) {
             container.style.display = 'block';
             field.disabled = productCount > 1;
-            // Actualizamos el estado con el valor actual
-            if (customerState.previousValue === null) {
-                customerState.previousValue = field.value;
-            }
         } else {
             container.style.display = 'none';
-            field.value = customerFields[0].value;
+            // Sincronizar con el cliente principal
+            if (reservationSystem.mainCustomer) {
+                field.value = reservationSystem.mainCustomer;
+            }
         }
     });
 }
@@ -65,61 +126,8 @@ export function countProducts() {
     return document.querySelectorAll('.reservation_item').length;
 }
 
-// Función para manejar cambios de cliente (versión mejorada)
-export function handleCustomerChange(hasProducts) {
-    const customerSelect = document.querySelector('select[name="id_customer[0]"]');
-    if (!customerSelect) return;
-
-    // Inicializar el contenedor del mensaje una sola vez
-    if (!customerState.messageContainer) {
-        customerState.messageContainer = document.createElement('div');
-        customerState.messageContainer.id = 'customer-change-message';
-        Object.assign(customerState.messageContainer.style, {
-            display: 'none',
-            marginTop: '10px',
-            padding: '10px',
-            backgroundColor: '#f8d7da',
-            color: '#721c24',
-            border: '1px solid #f5c6cb',
-            borderRadius: '4px'
-        });
-        customerState.messageContainer.innerHTML = 'Todos los productos serán reservados para <span id="new-customer-name"></span>.';
-        customerSelect.closest('.mb-3')?.appendChild(customerState.messageContainer);
-    }
-
-    // Actualizar estado de productos
-    customerState.hasProducts = hasProducts();
-
-    // Inicializar con el valor actual si es la primera vez
-    if (customerState.previousValue === null) {
-        customerState.previousValue = customerSelect.value;
-    }
-
-    // Manejador de eventos mejorado
-    customerSelect.addEventListener('change', function() {
-        const newValue = this.value;
-        const customerName = this.options[this.selectedIndex]?.text || '';
-        
-        // Actualizar estado de productos en cada cambio
-        customerState.hasProducts = hasProducts();
-        
-        // Mostrar mensaje solo si:
-        // 1. Hay productos
-        // 2. El valor cambió realmente
-        // 3. No es un valor vacío
-        if (customerState.hasProducts && newValue && newValue !== customerState.previousValue) {
-            const nameElement = document.getElementById('new-customer-name');
-            if (nameElement) {
-                nameElement.textContent = customerName;
-                customerState.messageContainer.style.display = 'block';
-                
-                setTimeout(() => {
-                    customerState.messageContainer.style.display = 'none';
-                }, 3000);
-            }
-        }
-
-        // Actualizar el valor anterior
-        customerState.previousValue = newValue;
-    });
+// Función para manejar cambios de cliente
+export function handleCustomerChange() {
+    // Esta función ahora está integrada en reservationSystem
+    return reservationSystem.hasValidProducts();
 }

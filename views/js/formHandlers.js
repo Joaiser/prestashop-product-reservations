@@ -1,6 +1,6 @@
 import { areFieldsComplete, showError, showSuccess } from './utils.js';
 import { sendReservation } from './apiHandlers.js';
-import { toggleCustomerField, updateReference, handleCustomerChange, countProducts } from './uiUpdates.js';
+import { toggleCustomerField, updateReference, handleCustomerChange, countProducts, reservationSystem } from './uiUpdates.js';
 import { initializeDynamicChoices } from './choice.js';
 
 function getProductsFromForm() {
@@ -158,11 +158,15 @@ function addReservationItem() {
         Array.from(originalCustomerSelect.options).forEach(option => {
             newCustomerSelect.appendChild(option.cloneNode(true));
         });
+        // Forzar sincronización con cliente principal
+        if (reservationSystem.mainCustomer) {
+            newCustomerSelect.value = reservationSystem.mainCustomer;
+        }
     }
 
     customerContainer.innerHTML = '<label for="id_customer" class="form-label">Cliente:</label>';
     customerContainer.appendChild(newCustomerSelect);
-    handleCustomerChange(() => countProducts() > 0);
+    handleCustomerChange();
 
     // Select de producto
     const productContainer = document.createElement('div');
