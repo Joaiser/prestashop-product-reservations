@@ -1,10 +1,10 @@
 import { initializeChoices } from './choice.js';
 
-// Estado global mejorado
 export const reservationSystem = {
     initialized: false,
     mainCustomer: null,
     messageContainer: null,
+    isFirstSelection: true,
     
     init: function() {
         if (this.initialized) return;
@@ -12,40 +12,45 @@ export const reservationSystem = {
         const mainCustomerSelect = document.querySelector('select[name="id_customer[0]"]');
         if (!mainCustomerSelect) return;
         
-        // Crear mensaje
+        // Crear mensaje (oculto inicialmente)
         this.messageContainer = document.createElement('div');
         this.messageContainer.id = 'customer-change-message';
         Object.assign(this.messageContainer.style, {
             display: 'none',
             marginTop: '10px',
             padding: '10px',
-            backgroundColor: '#f8d7da',
-            color: '#721c24',
+            backgroundColor: '#d4edda', 
+            color: '#155724',
             border: '1px solid #f5c6cb',
             borderRadius: '4px'
         });
         this.messageContainer.innerHTML = 'Todos los productos serán reservados para <span id="new-customer-name"></span>.';
         mainCustomerSelect.parentNode.appendChild(this.messageContainer);
         
-        // Establecer cliente principal
-        this.mainCustomer = mainCustomerSelect.value;
+        // Inicialización
+        this.mainCustomer = null;
+        this.isFirstSelection = true;
         this.initialized = true;
         
-        // Listener para cambios en el cliente principal
-        mainCustomerSelect.addEventListener('change', this.handleCustomerChange.bind(this));
+        // Listener para cambios
+        mainCustomerSelect.addEventListener('change', (e) => {
+            this.handleCustomerChange(e);
+        });
     },
     
     handleCustomerChange: function(e) {
         const newValue = e.target.value;
+        if (!newValue) return;
+        
         const customerName = e.target.options[e.target.selectedIndex]?.text || '';
         
-        if (newValue && newValue !== this.mainCustomer) {
-            // Actualizar todos los selects de cliente
-            document.querySelectorAll('select[name^="id_customer"]').forEach(select => {
-                select.value = newValue;
-            });
-            
-            // Mostrar mensaje
+        // Actualizar todos los selects de cliente
+        document.querySelectorAll('select[name^="id_customer"]').forEach(select => {
+            select.value = newValue;
+        });
+        
+        // Mostrar mensaje siempre que haya un cambio válido
+        if (!this.isFirstSelection && newValue !== this.mainCustomer) {
             const nameSpan = document.getElementById('new-customer-name');
             if (nameSpan) {
                 nameSpan.textContent = customerName;
@@ -55,16 +60,10 @@ export const reservationSystem = {
                     this.messageContainer.style.display = 'none';
                 }, 3000);
             }
-            
-            this.mainCustomer = newValue;
         }
-    },
-    
-    // Verificar si hay productos válidos
-    hasValidProducts: function() {
-        return Array.from(document.querySelectorAll('.reservation_item')).some(item => {
-            return item.querySelector('select[name^="product_id"]').value !== '';
-        });
+        
+        this.mainCustomer = newValue;
+        this.isFirstSelection = false;
     }
 };
 
@@ -101,7 +100,6 @@ export function initializeUIUpdates(reservationForm) {
 
 // Función para manejar el campo de cliente
 export function toggleCustomerField() {
-    const productCount = countProducts();
     const customerFields = document.querySelectorAll('select[name^="id_customer"]');
     
     customerFields.forEach((field, index) => {
@@ -110,24 +108,11 @@ export function toggleCustomerField() {
         
         if (index === 0) {
             container.style.display = 'block';
-            field.disabled = productCount > 1;
         } else {
             container.style.display = 'none';
-            // Sincronizar con el cliente principal
             if (reservationSystem.mainCustomer) {
                 field.value = reservationSystem.mainCustomer;
             }
         }
     });
-}
-
-// Función para contar productos
-export function countProducts() {
-    return document.querySelectorAll('.reservation_item').length;
-}
-
-// Función para manejar cambios de cliente
-export function handleCustomerChange() {
-    // Esta función ahora está integrada en reservationSystem
-    return reservationSystem.hasValidProducts();
 }
