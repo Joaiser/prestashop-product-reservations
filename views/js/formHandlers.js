@@ -1,6 +1,6 @@
 import { areFieldsComplete, showError, showSuccess } from './utils.js';
 import { sendReservation } from './apiHandlers.js';
-import { toggleCustomerField, updateReference } from './uiUpdates.js';
+import { toggleCustomerField, updateReference, handleCustomerChange, countProducts } from './uiUpdates.js';
 import { initializeDynamicChoices } from './choice.js';
 
 function getProductsFromForm() {
@@ -162,6 +162,7 @@ function addReservationItem() {
 
     customerContainer.innerHTML = '<label for="id_customer" class="form-label">Cliente:</label>';
     customerContainer.appendChild(newCustomerSelect);
+    handleCustomerChange(() => countProducts() > 0);
 
     // Select de producto
     const productContainer = document.createElement('div');
@@ -243,6 +244,7 @@ function addReservationItem() {
     if (typeof initializeDynamicChoices === 'function') {
         initializeDynamicChoices(newReservation);
     }
+   
 }
 
 // Función para resetear el formulario
