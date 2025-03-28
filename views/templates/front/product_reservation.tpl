@@ -4,7 +4,7 @@
 
 <link rel="stylesheet" href="{$urls.base_url}modules/gestorproduccion/views/css/choices.min.css" />
 
-     <script src="{$urls.base_url}modules/gestorproduccion/views/js/choices.min.js"></script>
+     <script src="{$urls.base_url}modules/gestorproduccion/views/js/choices.min.js" defer></script>
  
      <script type="module" src="{$urls.base_url}modules/gestorproduccion/views/js/frontProductReservation.js"></script>
 

@@ -14,6 +14,8 @@
                             <strong style="font-weight: bold;">Stock reservado:</strong> {$reserva.reserved_stock} <br>
                             <strong style="font-weight: bold;">Fecha de reserva:</strong> {$reserva.date_added|date_format:"%d-%m-%Y"} <br>
                         </li>
+					<p>--------------------------------</p>
+						
                     {/foreach}
                 </ul>
             </div>

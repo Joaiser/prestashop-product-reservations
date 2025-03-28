@@ -1,0 +1,58 @@
+✅ Lista de mejoras para el código
+1️⃣ Implementar un store global (reservationStore)
+
+📌 Para qué lo usaremos:
+
+Almacenar los productos reservados.
+
+Guardar los datos del cliente.
+
+Manejar el estado del formulario (loading, enviado, valores).
+
+Gestionar errores globales.
+
+Evitar repetir querySelector.
+
+Controlar el estado de la UI (modales, botones, etc.).
+
+2️⃣ Crear clases en vez de modificar estilos con JS
+
+En lugar de hacer element.style.display = 'none', usar clases CSS y agregar o quitar con classList.add y classList.remove.
+
+Mantener el CSS más limpio y modular.
+
+3️⃣ Crear una función para generar elementos dinámicamente
+
+En lugar de escribir document.createElement() cada vez, hacer una función reutilizable.
+
+Permitir agregar clases, atributos y contenido fácilmente.
+
+4️⃣ Simplificar formHandlers.js
+
+Cómo hacerlo bien:
+
+Evitar repetir código moviendo lógica común a funciones.
+
+Usar el store en vez de variables sueltas.
+
+No abusar de querySelector, en su lugar usar referencias en el store.
+
+Mejor manejo de errores. Sobretodo cuando se envia el formulario ya que esto no se puede controlar el error de momento
+
+5️⃣ Adaptar uiUpdates.js al store y mejorarlo
+
+Cómo mejorar:
+
+Escuchar cambios en el store para actualizar la UI automáticamente.
+
+Evitar hacer muchas consultas al DOM.
+
+
+
+6️⃣ Adaptar cambios en frontProductReservation.js
+
+Usar el store en vez de variables sueltas.
+
+Usar las nuevas funciones (createElement, formHandlers mejorado).
+
+No repetir lógica de inicialización.

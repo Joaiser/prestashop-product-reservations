@@ -57,6 +57,7 @@ export function initializeDynamicChoices(newReservation, firstCustomerValue) {
         searchEnabled: true,
         shouldSort: false,
         callbackOnInit: function() {
+            //ESTO NO FUNCIONA HAY QUE ARREGLARLO
             this.setChoiceByValue(firstCustomerValue || '');  // Si tienes un valor por defecto, lo pones aquí
             // Aplicar z-index directamente al dropdown
             const dropdown = this.containerOuter.element.querySelector('.choices__list--dropdown');

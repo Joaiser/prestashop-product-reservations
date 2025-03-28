@@ -1,6 +1,36 @@
 {extends file="helpers/view/view.tpl"}
 
 {block name="override_tpl"}
+<h3 style="margin: 0;">📝 {l s='Incluye la nota' mod='gestorproduccion'}</h3>
+				<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario</title>
+</head>
+<body>
+    <form action="" method="post">
+	
+	        <label for="opciones">Selecciona una opción:</label><br>
+        <select id="opciones" name="cliente_nota">
+	{foreach from=$CustomersQueHanReservado item=reservation}
+    <option value="{$reservation.id_customer}">{$reservation.final_name}</option>
+	{/foreach}
+
+
+        </select>
+        <label for="comentario">Comentario:</label><br>
+        <textarea id="comentario" name="comentario" rows="4" cols="50" placeholder="Escribe tu comentario..."></textarea><br><br>
+        
+<br><br>
+        
+        <input type="submit" value="Enviar">
+    </form>
+</body>
+</html>
+
+
     <h3 style="margin: 0;">🚀 {l s='Gestor de Producción' mod='gestorproduccion'}</h3>
 
     <!-- Sección de reservas pendientes -->

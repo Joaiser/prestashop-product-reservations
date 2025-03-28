@@ -156,4 +156,38 @@ class AdminGestorProduccion
             throw new Exception("Error al deshabilitar el producto: " . $e->getMessage());
         }
     }
+	
+	   public function insertarNota($customer_id,$notas_reservas)
+    {
+        $pdo = Db::getInstance()->getLink();
+
+        try {
+            $pdo->beginTransaction();
+
+            $sqlReservationEnabled = 'INSERT INTO notas_reservas 
+                          (id_user, nota) 
+                          VALUES (' . (int)$customer_id . ', "' . pSQL($notas_reservas) . '")';
+
+            Db::getInstance()->execute($sqlReservationEnabled);
+
+
+            $pdo->commit();
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw new Exception("Error al habilitar las reservas: " . $e->getMessage());
+        }
+    }
+	
+	public function getCustomersQueHanReservado()
+    {
+		$sql = 'SELECT DISTINCT c.id_customer, CONCAT(c.firstname, " ", c.lastname) AS final_name 
+        FROM ' . _DB_PREFIX_ . 'product_reservations pr
+        INNER JOIN ' . _DB_PREFIX_ . 'customer c ON pr.id_customer = c.id_customer';
+		
+        return Db::getInstance()->executeS($sql);
+    }
+	
+
 }

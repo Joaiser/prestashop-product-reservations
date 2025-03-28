@@ -23,8 +23,13 @@ class AdminGestorProduccionController extends ModuleAdminController
             'productos_con_fecha' => $this->gestorProduccion->getProductosConFecha(),
             'reservas_pendientes' => $this->gestorProduccion->getReservasPendientes(),
             'productos_habilitados' => $this->gestorProduccion->getProductosHabilitados(),
+			'CustomersQueHanReservado' => $this->gestorProduccion->getCustomersQueHanReservado()
         ]);
         
+		if (!empty($_POST['cliente_nota']) && isset($_POST['comentario'])) {
+            $this->gestorProduccion->insertarNota($_POST['cliente_nota'], $_POST['comentario']);
+        }
+        	
         $this->setTemplate('gestorproduccion.tpl');
     }
 
