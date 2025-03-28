@@ -18,23 +18,51 @@ class AdminGestorProduccionController extends ModuleAdminController
     {
         parent::initContent();
         
+        $id_categoria = (int)Tools::getValue('id_categoria', 0);
+        
+        // Obtener productos iniciales (todas las categorías por defecto)
+        $productos_iniciales = $this->gestorProduccion->getProductosPorCategoria(0);
+        
         $this->context->smarty->assign([
             'productos_sin_stock_y_fecha' => $this->gestorProduccion->getProductosSinStockYFecha(),
             'productos_con_fecha' => $this->gestorProduccion->getProductosConFecha(),
             'reservas_pendientes' => $this->gestorProduccion->getReservasPendientes(),
             'productos_habilitados' => $this->gestorProduccion->getProductosHabilitados(),
-			'CustomersQueHanReservado' => $this->gestorProduccion->getCustomersQueHanReservado()
+            'CustomersQueHanReservado' => $this->gestorProduccion->getCustomersQueHanReservado(),
+            'categorias' => $this->gestorProduccion->getCategorias(),
+            'id_categoria_seleccionada' => $id_categoria,
+            'productos' => $productos_iniciales, // Asignamos productos iniciales
         ]);
         
-		if (!empty($_POST['cliente_nota']) && isset($_POST['comentario'])) {
+        if (!empty($_POST['cliente_nota']) && isset($_POST['comentario'])) {
             $this->gestorProduccion->insertarNota($_POST['cliente_nota'], $_POST['comentario']);
         }
-        	
+    
         $this->setTemplate('gestorproduccion.tpl');
     }
 
+
     public function postProcess()
     {
+
+        if (Tools::isSubmit('ajax') && Tools::getValue('action') == 'filterProducts') {
+            $id_categoria = (int)Tools::getValue('id_categoria', 0);
+            $productos = $this->gestorProduccion->getProductosPorCategoria($id_categoria);
+            
+            $this->context->smarty->assign([
+                'productos' => $productos
+            ]);
+            
+            $html = $this->context->smarty->fetch(
+                'module:gestorproduccion/views/templates/admin/_partials/productos.tpl'
+            );
+            
+            die(json_encode([
+                'success' => true,
+                'html' => $html
+            ]));
+        }
+
         // Manejo de eliminación de reservas
         $id_reservation = (int) Tools::getValue('delete_reservation');
         if ($id_reservation) {

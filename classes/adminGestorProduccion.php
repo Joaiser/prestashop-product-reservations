@@ -188,6 +188,54 @@ class AdminGestorProduccion
 		
         return Db::getInstance()->executeS($sql);
     }
-	
+
+    public function getTodosLosProductos()
+    {
+        $sql = 'SELECT p.id_product, pa.id_product_attribute, pl.name AS product_name, 
+                       IFNULL(pa.reference, p.reference) AS reference
+                FROM '._DB_PREFIX_.'product p
+                INNER JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product
+                LEFT JOIN '._DB_PREFIX_.'product_attribute pa ON p.id_product = pa.id_product
+                WHERE pl.id_lang = '.(int)$this->context->language->id;
+
+        return Db::getInstance()->executeS($sql);
+    }
+
+    // Función para obtener productos filtrados por categoría, con atributos
+    public function getProductosPorCategoria($id_categoria)
+    {
+        // Si se selecciona la categoría "Todas las categorías" (id_categoria == 0)
+        if ($id_categoria == 0) {
+            $sql = 'SELECT p.id_product, pa.id_product_attribute, pl.name AS product_name, 
+                           IFNULL(pa.reference, p.reference) AS reference
+                    FROM '._DB_PREFIX_.'product p
+                    INNER JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product
+                    LEFT JOIN '._DB_PREFIX_.'product_attribute pa ON p.id_product = pa.id_product
+                    WHERE pl.id_lang = '.(int)$this->context->language->id;
+        } else {
+            $sql = 'SELECT p.id_product, pa.id_product_attribute, pl.name AS product_name, 
+                           IFNULL(pa.reference, p.reference) AS reference
+                    FROM '._DB_PREFIX_.'product p
+                    INNER JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product
+                    LEFT JOIN '._DB_PREFIX_.'product_attribute pa ON p.id_product = pa.id_product
+                    INNER JOIN '._DB_PREFIX_.'category_product cp ON p.id_product = cp.id_product
+                    WHERE pl.id_lang = '.(int)$this->context->language->id.'
+                    AND cp.id_category = '.(int)$id_categoria;
+        }
+    
+        return Db::getInstance()->executeS($sql);
+    }    
+
+    public function getCategorias()
+{
+    $sql = 'SELECT c.id_category, cl.name AS category_name
+            FROM '._DB_PREFIX_.'category c
+            INNER JOIN '._DB_PREFIX_.'category_lang cl ON c.id_category = cl.id_category
+            WHERE cl.id_lang = '.(int)$this->context->language->id.'
+            AND c.active = 1'; // Filtramos solo las categorías activas
+
+    return Db::getInstance()->executeS($sql);
+}
+
 
 }

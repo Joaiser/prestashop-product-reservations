@@ -79,6 +79,7 @@ public function uninstall()
     public function hookDisplayBackOfficeHeader()
     {
         $this->context->controller->addCSS($this->_path.'views/css/gestorproduccionadmin.css');
+        $this->context->controller->addJS($this->_path.'views/js/adminGestorProduccionFilter.js');
         $this->context->controller->addJS($this->_path.'views/js/adminGestorProduccion.js');     
     }
 

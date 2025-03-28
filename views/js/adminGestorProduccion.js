@@ -1,4 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
+    
+    const {ajaxUrl, csrfToken} = window.gestorProduccionVars || {}; 
+    
 
     const checkboxes = document.querySelectorAll(".producto-checkbox");
     const btnAplicar = document.getElementById("btn-aplicar");

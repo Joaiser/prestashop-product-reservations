@@ -1,41 +1,36 @@
 {extends file="helpers/view/view.tpl"}
 
 {block name="override_tpl"}
+
+<script>
+    window.gestorProduccionVars = {
+        ajaxUrl: "{$link->getAdminLink('AdminGestorProduccion')|escape:'javascript':'UTF-8'}",
+        csrfToken: "{$token|escape:'javascript':'UTF-8'}"
+    };
+</script>
+
+
+<h2 style="margin-bottom: 32px;">🚀 {l s='Gestor de Producción' mod='gestorproduccion'}</h2>
+
 <h3 style="margin: 0;">📝 {l s='Incluye la nota' mod='gestorproduccion'}</h3>
-				<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulario</title>
-</head>
-<body>
-    <form action="" method="post">
-	
-	        <label for="opciones">Selecciona una opción:</label><br>
+    <form action="" method="post" style="padding-block: 2%;">
+        <label for="opciones">Selecciona una opción:</label><br>
         <select id="opciones" name="cliente_nota">
-	{foreach from=$CustomersQueHanReservado item=reservation}
-    <option value="{$reservation.id_customer}">{$reservation.final_name}</option>
-	{/foreach}
-
-
+            {foreach from=$CustomersQueHanReservado item=reservation}
+                <option value="{$reservation.id_customer}">{$reservation.final_name}</option>
+            {/foreach}
         </select>
         <label for="comentario">Comentario:</label><br>
-        <textarea id="comentario" name="comentario" rows="4" cols="50" placeholder="Escribe tu comentario..."></textarea><br><br>
-        
-<br><br>
-        
+        <textarea id="comentario" name="comentario" rows="4" cols="50" placeholder="Escribe tu comentario..."></textarea>
+        <br>
         <input type="submit" value="Enviar">
     </form>
-</body>
-</html>
 
 
-    <h3 style="margin: 0;">🚀 {l s='Gestor de Producción' mod='gestorproduccion'}</h3>
 
-    <!-- Sección de reservas pendientes -->
-    <h4 style="font-weight:bold;">🛒 {l s='Reservas Pendientes' mod='gestorproduccion'}</h4>
-    {if $reservas_pendientes}
+<!-- Sección de reservas pendientes -->
+<h4 style="font-weight:bold;">🛒 {l s='Reservas Pendientes' mod='gestorproduccion'}</h4>
+{if $reservas_pendientes}
     <div class="reservas-container">
         {foreach from=$reservas_pendientes item=reservation}
             <div class="reserva">
@@ -54,7 +49,6 @@
                         ❌ Borrar reserva
                     </button>
                 </form>
-                
             </div>
         {/foreach}
     </div>
@@ -86,35 +80,35 @@
     <p>⏳ {l s='No hay productos habilitados' mod='gestorproduccion'}</p>
 {/if}
 
+<!-- Sección para filtrar por categoría -->
+<h4 style="font-weight:bold;">📦 {l s='Todos los Productos' mod='gestorproduccion'}</h4>
 
+<!-- Formulario para seleccionar categoría -->
+<form id="categoria-filter-form">
+    <label for="id_categoria">{l s='Selecciona una categoría:' mod='gestorproduccion'}</label>
+    <select name="id_categoria" id="id_categoria" class="form-control">
+        <option value="0" {if $id_categoria_seleccionada == 0}selected{/if}>
+            {l s='Todas las categorías' mod='gestorproduccion'}
+        </option>
+        {foreach from=$categorias item=category}
+            <option value="{$category.id_category}" {if $category.id_category == $id_categoria_seleccionada}selected{/if}>
+                {$category.category_name}
+            </option>
+        {/foreach}
+    </select>
+</form>
 
-    <!-- Sección de productos con fecha de llegada -->
-    <h4 style="font-weight:bold;">📅 {l s='Con fecha de llegada' mod='gestorproduccion'}</h4>
-    {if $productos_con_fecha}
-        <form id="productosForm">
-            <div class="productos-container">
-                {foreach from=$productos_con_fecha item=producto}
-                    <div class="producto">
-                        <input type="checkbox" class="producto-checkbox" name="productos[]" 
-                               value="{$producto.id_product}" 
-                               data-reference="{$producto.reference}" 
-                               data-id-product-attribute="{$producto.id_product_attribute}">
-                        <p>🆔 {$producto.id_product}</p>
-                        <p>📦 {$producto.name}</p>
-                        <p>🔖 {$producto.reference}</p>
-                        <p>📆 {$producto.available_date|date_format:"%d-%m-%Y"}</p>
-                    </div>
-                {/foreach}
-            </div>
-    {else}
-        <p>⏳ {l s='No hay productos con fecha de llegada' mod='gestorproduccion'}</p>
-    {/if}
+<!-- Contenedor principal para productos -->
+<div id="productos-container">
+    {include file='module:gestorproduccion/views/templates/admin/_partials/productos.tpl' productos=$productos}
+</div>
 
-    <!-- Sección de productos sin fecha de llegada -->
-    <h4 style="font-weight:bold;">❌ {l s='Sin fecha de llegada' mod='gestorproduccion'}</h4>
-    {if $productos_sin_stock_y_fecha}
+<!-- Sección de productos con fecha de llegada -->
+<h4 style="font-weight:bold;">📅 {l s='Con fecha de llegada' mod='gestorproduccion'}</h4>
+{if $productos_con_fecha}
+    <form id="productosForm">
         <div class="productos-container">
-            {foreach from=$productos_sin_stock_y_fecha item=producto}
+            {foreach from=$productos_con_fecha item=producto}
                 <div class="producto">
                     <input type="checkbox" class="producto-checkbox" name="productos[]" 
                            value="{$producto.id_product}" 
@@ -123,26 +117,43 @@
                     <p>🆔 {$producto.id_product}</p>
                     <p>📦 {$producto.name}</p>
                     <p>🔖 {$producto.reference}</p>
-                    <p>📆 {l s='Sin fecha de llegada' mod='gestorproduccion'}</p>
+                    <p>📆 {$producto.available_date|date_format:"%d-%m-%Y"}</p>
                 </div>
             {/foreach}
         </div>
-    {else}
-        <p>🎉 {l s='No hay productos sin stock' mod='gestorproduccion'}</p>
-    {/if}
+{else}
+    <p>⏳ {l s='No hay productos con fecha de llegada' mod='gestorproduccion'}</p>
+{/if}
 
-    <!-- Botón general para aplicar selección -->
-    <div id="button-container">
-        <button type="submit" id="btn-aplicar" class="btn btn-success" style="display:none;">
-            🔄 {l s='Habilitar reservas para seleccionados' mod='gestorproduccion'}
-        </button>
+<!-- Sección de productos sin fecha de llegada -->
+<h4 style="font-weight:bold;">❌ {l s='Sin fecha de llegada' mod='gestorproduccion'}</h4>
+{if $productos_sin_stock_y_fecha}
+    <div class="productos-container">
+        {foreach from=$productos_sin_stock_y_fecha item=producto}
+            <div class="producto">
+                <input type="checkbox" class="producto-checkbox" name="productos[]" 
+                       value="{$producto.id_product}" 
+                       data-reference="{$producto.reference}" 
+                       data-id-product-attribute="{$producto.id_product_attribute}">
+                <p>🆔 {$producto.id_product}</p>
+                <p>📦 {$producto.name}</p>
+                <p>🔖 {$producto.reference}</p>
+                <p>📆 {l s='Sin fecha de llegada' mod='gestorproduccion'}</p>
+            </div>
+        {/foreach}
     </div>
+{else}
+    <p>🎉 {l s='No hay productos sin stock' mod='gestorproduccion'}</p>
+{/if}
 
-    </form>
+<!-- Botón general para aplicar selección -->
+<div id="button-container">
+    <button type="submit" id="btn-aplicar" class="btn btn-success" style="display:none;">
+        🔄 {l s='Habilitar reservas para seleccionados' mod='gestorproduccion'}
+    </button>
+</div>
 
-<script>
-    const ajaxUrl = "{$link->getAdminLink('AdminGestorProduccion')|escape:'javascript':'UTF-8'}";
-    const csrfToken = "{$token|escape:'javascript':'UTF-8'}";
-</script>
+</form>
+
 
 {/block}
