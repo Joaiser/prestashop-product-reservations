@@ -30,7 +30,8 @@ class GestorProduccion extends Module
         || !InstallHelper::installReservationEnabledDB() 
         || !$this->installTab() 
         || !$this->registerHook('displayBackOfficeHeader') 
-        || !$this->registerHook('displayCustomerAccount')) {
+        || !$this->registerHook('displayCustomerAccount')
+        || !InstallHelper::installDBForNotesReservation()) {
         return false;
     }
     return true;
@@ -43,7 +44,8 @@ public function uninstall()
     if (!parent::uninstall() 
         || !InstallHelper::uninstallDB() 
         || !InstallHelper::uninstallReservationEnabledDB() 
-        || !$this->uninstallTab()) {
+        || !$this->uninstallTab()
+        || !InstallHelper::uninstallDBForNotesReservation()) {
         return false;
     }
     return true;
@@ -79,7 +81,6 @@ public function uninstall()
     public function hookDisplayBackOfficeHeader()
     {
         $this->context->controller->addCSS($this->_path.'views/css/gestorproduccionadmin.css');
-        $this->context->controller->addJS($this->_path.'views/js/adminGestorProduccionFilter.js');
         $this->context->controller->addJS($this->_path.'views/js/adminGestorProduccion.js');     
     }
 

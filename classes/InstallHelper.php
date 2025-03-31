@@ -46,4 +46,21 @@ class InstallHelper
     {
         return Db::getInstance()->execute('DROP TABLE IF EXISTS '._DB_PREFIX_.'product_reservation_enabled');
     }
+
+    public static function installDBForNotesReservation(){
+        $sql = "CREATE TABLE IF NOT EXISTS `notas_reservas` (
+            `id_nota` INT(11) NOT NULL AUTO_INCREMENT,
+            `id_user` INT(11) NOT NULL,
+            `nota` VARCHAR(2000) NOT NULL,
+            PRIMARY KEY (`id_nota`)
+        ) ENGINE=" . _MYSQL_ENGINE_ . " DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
+
+        return Db::getInstance()->execute($sql);
+    }
+
+    public static function uninstallDBForNotesReservation()
+    {
+        $sql = "DROP TABLE IF EXISTS `notas_reservas`;";
+        return Db::getInstance()->execute($sql);
+    }
 }

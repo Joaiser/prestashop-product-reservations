@@ -6,64 +6,104 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
 {
 
     public function initContent()
-{
-    parent::initContent();
-
-    $view = Tools::getValue('view', 'reserve'); // Por defecto, mostrar la reserva
-
-    $product_id = (int)Tools::getValue('product_id');
-    $reference = Tools::getValue('reference');
-    $id_product_attribute = (int)Tools::getValue('id_product_attribute', 0);
-    $id_comercial = (int)$this->context->customer->id; // ID del comercial logueado
-
-    // Obtener reservas activas por cliente
-    $reservas_por_cliente = $this->getReservasActivas($id_comercial);
-
-    $customers = Db::getInstance()->executeS('
-        SELECT id_customer, firstname, lastname 
-        FROM '._DB_PREFIX_.'customer 
-        WHERE id_comercial = '.(int)$id_comercial
-    );
-
-    // Obtener productos habilitados para reservar
-    $available_products = Db::getInstance()->executeS('
-        SELECT 
-            p.id_product, 
-            IFNULL(pa.reference, p.reference) AS reference,
-            pl.name, 
-            pre.id_product_attribute,
-            IFNULL(pa.reference, "") AS attribute_reference 
-        FROM '._DB_PREFIX_.'product p
-        JOIN '._DB_PREFIX_.'product_reservation_enabled pre ON p.id_product = pre.id_product
-        LEFT JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product 
-            AND pl.id_lang = '.(int)$this->context->language->id.'
-        LEFT JOIN '._DB_PREFIX_.'product_attribute pa ON pre.id_product_attribute = pa.id_product_attribute
-        WHERE pre.is_enabled = 1
-    ');
-
-    // Verificar si hay productos disponibles para mostrar
-    $no_products_message = empty($available_products) ? 'No hay productos disponibles para reservar en este momento.' : '';
-
-    // Asignar variables al template
-    $this->context->smarty->assign(array(
-        'product_id' => $product_id,
-        'reference' => $reference,
-        'id_product_attribute' => $id_product_attribute,
-        'customers' => $customers,
-        'available_products' => $available_products,
-        'reservas_por_cliente' => $reservas_por_cliente,
-        'no_products_message' => $no_products_message,
-        'token' => Tools::getToken(),
-        'url_for_submission' => $this->context->link->getModuleLink('gestorproduccion', 'ProductReservation'),
-    ));
-
-    // Definir qué plantilla cargar según el parámetro "view"
-    if ($view === 'reservations') {
-        $this->setTemplate('module:gestorproduccion/views/templates/front/view_my_reservations.tpl');
-    } else {
-        $this->setTemplate('module:gestorproduccion/views/templates/front/product_reservation.tpl');
+    {
+        parent::initContent();
+    
+        $view = Tools::getValue('view', 'reserve'); // Por defecto, mostrar la reserva
+    
+        $product_id = (int)Tools::getValue('product_id');
+        $reference = Tools::getValue('reference');
+        $id_product_attribute = (int)Tools::getValue('id_product_attribute', 0);
+        $id_comercial = (int)$this->context->customer->id; // ID del comercial logueado
+    
+        // Obtener reservas activas por cliente
+        $reservas_por_cliente = $this->getReservasActivas($id_comercial);
+        
+        // Obtener notas solo si hay reservas
+        $notas_clientes = !empty($reservas_por_cliente) 
+            ? $this->getNotasClientes(array_keys($reservas_por_cliente))
+            : [];
+    
+        $customers = Db::getInstance()->executeS('
+            SELECT id_customer, firstname, lastname 
+            FROM '._DB_PREFIX_.'customer 
+            WHERE id_comercial = '.(int)$id_comercial
+        );
+    
+        // Obtener productos habilitados para reservar
+        $available_products = Db::getInstance()->executeS('
+            SELECT 
+                p.id_product, 
+                IFNULL(pa.reference, p.reference) AS reference,
+                pl.name, 
+                pre.id_product_attribute,
+                IFNULL(pa.reference, "") AS attribute_reference 
+            FROM '._DB_PREFIX_.'product p
+            JOIN '._DB_PREFIX_.'product_reservation_enabled pre ON p.id_product = pre.id_product
+            LEFT JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product 
+                AND pl.id_lang = '.(int)$this->context->language->id.'
+            LEFT JOIN '._DB_PREFIX_.'product_attribute pa ON pre.id_product_attribute = pa.id_product_attribute
+            WHERE pre.is_enabled = 1
+        ');
+    
+        // Verificar si hay productos disponibles para mostrar
+        $no_products_message = empty($available_products) 
+            ? 'No hay productos disponibles para reservar en este momento.' 
+            : '';
+    
+        // Asignar variables al template
+        $this->context->smarty->assign([
+            'product_id' => $product_id,
+            'reference' => $reference,
+            'id_product_attribute' => $id_product_attribute,
+            'customers' => $customers,
+            'available_products' => $available_products,
+            'reservas_por_cliente' => $reservas_por_cliente,
+            'no_products_message' => $no_products_message,
+            'token' => Tools::getToken(),
+            'notas_clientes' => $notas_clientes, // Corregido el nombre de la variable
+            'url_for_submission' => $this->context->link->getModuleLink('gestorproduccion', 'ProductReservation'),
+        ]);
+    
+        // Definir qué plantilla cargar según el parámetro "view"
+        if ($view === 'reservations') {
+            $this->setTemplate('module:gestorproduccion/views/templates/front/view_my_reservations.tpl');
+        } else {
+            $this->setTemplate('module:gestorproduccion/views/templates/front/product_reservation.tpl');
+        }
     }
-}
+    
+    protected function getNotasClientes($ids_clientes)
+    {
+        if (empty($ids_clientes)) {
+            return [];
+        }
+    
+        // Prepara los IDs para la consulta SQL
+        $ids_limpios = array_map('intval', $ids_clientes);
+        $lista_ids = implode(',', $ids_limpios);
+    
+        $sql = 'SELECT id_user, nota 
+                FROM notas_reservas 
+                WHERE id_user IN ('.$lista_ids.')
+                ORDER BY id_nota DESC';
+        
+        $notas = Db::getInstance()->executeS($sql);
+        
+        if (empty($notas)) {
+            return [];
+        }
+        
+        $agrupadas = [];
+        foreach ($notas as $nota) {
+            if (!isset($agrupadas[$nota['id_user']])) {
+                $agrupadas[$nota['id_user']] = [];
+            }
+            $agrupadas[$nota['id_user']][] = $nota['nota'];
+        }
+        
+        return $agrupadas;
+    }
 
 
     // Lógica de procesamiento de la reserva (por AJAX)
