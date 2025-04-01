@@ -25,8 +25,8 @@
     /* Contenedor del checkbox */
     .producto-checkbox-container {
         position: absolute;
-        top: 10px;
-        left: 155px;
+        top: 5%;
+        left: 60%;
     }
 
     .producto-checkbox {
@@ -67,20 +67,6 @@
 
     .error-message {
         color: #d9534f;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .productos-grid {
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        }
-    }
-
-    @media (max-width: 480px) {
-        .productos-grid {
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 15px;
-        }
     }
 </style>
 
