@@ -281,7 +281,6 @@ class GestorProduccionProductReservationModuleFrontController extends ModuleFron
         foreach ($productosReservados as $producto) {
             // Verificar que los campos mínimos estén presentes
             if (!isset($producto['product_id'], $producto['quantity'], $producto['id_customer'])) {
-                PrestaShopLogger::addLog('Producto con datos incompletos: ' . print_r($producto, true), 2);
                 continue; // Saltar productos con datos incompletos
             }
 

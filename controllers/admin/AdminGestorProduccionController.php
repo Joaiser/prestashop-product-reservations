@@ -15,31 +15,62 @@ class AdminGestorProduccionController extends ModuleAdminController
     }
 
     public function initContent()
-    {
-        parent::initContent();
-        
-        $id_categoria = (int)Tools::getValue('id_categoria', 0);
-        
-        // Obtener productos iniciales (todas las categorías por defecto)
-        $productos_iniciales = $this->gestorProduccion->getProductosPorCategoria(0);
-        
-        $this->context->smarty->assign([
-            'productos_sin_stock_y_fecha' => $this->gestorProduccion->getProductosSinStockYFecha(),
-            'productos_con_fecha' => $this->gestorProduccion->getProductosConFecha(),
-            'reservas_pendientes' => $this->gestorProduccion->getReservasPendientes(),
-            'productos_habilitados' => $this->gestorProduccion->getProductosHabilitados(),
-            'CustomersQueHanReservado' => $this->gestorProduccion->getCustomersQueHanReservado(),
-            'categorias' => $this->gestorProduccion->getCategorias(),
-            'id_categoria_seleccionada' => $id_categoria,
-            'productos' => $productos_iniciales, // Asignamos productos iniciales
-        ]);
-        
-        if (!empty($_POST['cliente_nota']) && isset($_POST['comentario'])) {
-            $this->gestorProduccion->insertarNota($_POST['cliente_nota'], $_POST['comentario']);
-        }
+{
+    parent::initContent();
     
-        $this->setTemplate('gestorproduccion.tpl');
+    $id_categoria = (int)Tools::getValue('id_categoria', 0);
+    
+    // Obtener productos iniciales (todas las categorías por defecto)
+    $productos_iniciales = $this->gestorProduccion->getProductosPorCategoria(0);
+
+    $notas_con_reservas = $this->gestorProduccion->getNotasConReservas();
+    $notas = $this->eliminarDuplicadosNotas($notas_con_reservas);
+
+    // Obtener mensajes desde Smarty para las notas
+    $success_message = $this->context->smarty->getTemplateVars('success_message') ?? null;
+    $error_message = $this->context->smarty->getTemplateVars('error_message') ?? null;
+    
+    // Asignamos las variables necesarias a Smarty
+    $this->context->smarty->assign([
+        'productos_sin_stock_y_fecha' => $this->gestorProduccion->getProductosSinStockYFecha(),
+        'productos_con_fecha' => $this->gestorProduccion->getProductosConFecha(),
+        'reservas_pendientes' => $this->gestorProduccion->getReservasPendientes(),
+        'productos_habilitados' => $this->gestorProduccion->getProductosHabilitados(),
+        'CustomersQueHanReservado' => $this->gestorProduccion->getCustomersQueHanReservado(),
+        'categorias' => $this->gestorProduccion->getCategorias(),
+        'notas' => $notas,
+        'id_categoria_seleccionada' => $id_categoria,
+        'productos' => $productos_iniciales, 
+        'success_message' => $success_message,
+        'error_message' => $error_message
+    ]);
+
+    // Establecemos la plantilla para mostrar
+    $this->setTemplate('gestorproduccion.tpl');
+}
+
+//Funcion para manejar las duplicaciones delas notas
+public function eliminarDuplicadosNotas($notas)
+{
+    $notas_agrupadas = [];
+    
+    foreach ($notas as $nota) {
+        $cliente_id = $nota['id_user'];  
+
+        // Aseguramos que solo se agrega un cliente una vez
+        if (!isset($notas_agrupadas[$cliente_id])) {
+            $notas_agrupadas[$cliente_id] = [
+                'cliente_nombre' => $nota['cliente_nombre'],
+                'cliente_apellido' => $nota['cliente_apellido'],
+                'comercial_nombre' => $nota['comercial_nombre'],
+                'comercial_apellido' => $nota['comercial_apellido'],
+                'notas' => $nota['notas']  // Las notas ya están agrupadas
+            ];
+        }
     }
+    
+    return $notas_agrupadas;
+}
 
 
     public function postProcess()
@@ -117,5 +148,28 @@ class AdminGestorProduccionController extends ModuleAdminController
                 exit(json_encode(['success' => false, 'error_message' => $e->getMessage()]));
             }
         }
+
+            // Manejo de la inserción de notas
+    if (Tools::isSubmit('cliente_nota') && Tools::isSubmit('comentario')) {
+        $clienteNota = (int) Tools::getValue('cliente_nota'); // Convertir a entero
+        $comentario = trim(Tools::getValue('comentario')); // Eliminar espacios en blanco
+
+        if (empty($clienteNota) || $clienteNota <= 0) {
+            $this->context->smarty->assign('error_message', 'Selecciona un cliente válido.');
+        } elseif (empty($comentario)) {
+            $this->context->smarty->assign('error_message', 'El comentario no puede estar vacío.');
+        } elseif (strlen($comentario) > 500) {
+            $this->context->smarty->assign('error_message', 'El comentario es demasiado largo (máximo 500 caracteres).');
+        } else {
+            try {
+                $comentario = strip_tags($comentario); // Evitar etiquetas HTML
+                $this->gestorProduccion->insertarNota($clienteNota, $comentario);
+                $this->context->smarty->assign('success_message', 'Nota añadida correctamente.');
+            } catch (Exception $e) {
+                $this->context->smarty->assign('error_message', 'Error al añadir la nota: ' . $e->getMessage());
+            }
+        }
     }
+}
+
 }

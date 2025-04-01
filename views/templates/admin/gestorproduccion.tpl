@@ -13,18 +13,56 @@
 <h2 style="margin-bottom: 32px;">🚀 {l s='Gestor de Producción' mod='gestorproduccion'}</h2>
 
 <h3 style="margin: 0;">📝 {l s='Incluye la nota' mod='gestorproduccion'}</h3>
-    <form action="" method="post" style="padding-block: 2%;">
-        <label for="opciones">Selecciona una opción:</label><br>
-        <select id="opciones" name="cliente_nota">
-            {foreach from=$CustomersQueHanReservado item=reservation}
-                <option value="{$reservation.id_customer}">{$reservation.final_name}</option>
-            {/foreach}
-        </select>
-        <label for="comentario">Comentario:</label><br>
-        <textarea id="comentario" name="comentario" rows="4" cols="50" placeholder="Escribe tu comentario..."></textarea>
-        <br>
-        <input type="submit" value="Enviar">
-    </form>
+<form action="" method="post" style="padding-block: 2%;">
+    <label for="opciones">Selecciona una opción:</label><br>
+    <select id="opciones" name="cliente_nota">
+        {foreach from=$CustomersQueHanReservado item=reservation}
+            <option value="{$reservation.id_customer}">{$reservation.final_name}</option>
+        {/foreach}
+    </select>
+    <label for="comentario">Comentario:</label><br>
+    <textarea id="comentario" name="comentario" rows="4" cols="50" placeholder="Escribe tu comentario..."></textarea>
+    <br>
+    <input type="submit" value="Enviar">
+</form>
+
+{if isset($success_message)}
+    <p style="color: green;
+    font-weight: bold;
+    display: block !important;" class="succes">{$success_message}</p>
+{/if}
+{if isset($error_message)}
+    <p style="color: red;
+    font-weight: bold;
+    display: block !important;" class="error">{$error_message}</p>
+{/if}
+
+<div class="reservas-container">
+    {if $notas|@count > 0}
+        {foreach from=$notas item=nota}
+            <div class="nota-item">
+                <div class="nota-header">
+                    <p><strong>Cliente:</strong> {$nota.cliente_nombre} {$nota.cliente_apellido}</p>
+                    <p><strong>Comercial:</strong> {$nota.comercial_nombre} {$nota.comercial_apellido}</p>
+                </div>
+
+                <div class="nota-body">
+                    {foreach from=$nota.notas item=nota_texto}
+                        <p>{$nota_texto}</p>
+                    {/foreach}
+                </div>
+
+                <div class="nota-footer">
+                    <!-- Aqui se pondra modificar y borrar nota -->
+                </div>
+            </div>
+        {/foreach}
+    {else}
+        <p>No hay notas disponibles para mostrar.</p>
+    {/if}
+</div>
+
+
 
 
 
