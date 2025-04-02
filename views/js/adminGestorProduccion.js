@@ -1,21 +1,27 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", async function() {
     // Configuración global
-    const {ajaxUrl, csrfToken} = window.gestorProduccionVars || {};
+    const { ajaxUrl, csrfToken } = window.gestorProduccionVars || {};
     if (!ajaxUrl || !csrfToken) {
         console.error('Configuración AJAX no disponible');
         return;
     }
 
-    // Inicialización de módulos
-    import('./modules/productFilter.js')
-        .then(module => module.init(ajaxUrl, csrfToken))
-        .catch(err => console.error('Error cargando módulo de filtrado:', err));
+    try {
+        // Inicialización de módulos existentes
+        const productFilter = await import('./modules/productFilter.js');
+        productFilter.init(ajaxUrl, csrfToken);
 
-    import('./modules/reservationManager.js')
-        .then(module => module.init(ajaxUrl, csrfToken))
-        .catch(err => console.error('Error cargando módulo de reservas:', err));
+        const reservationManager = await import('./modules/reservationManager.js');
+        reservationManager.init(ajaxUrl, csrfToken);
 
-    import('./modules/uiManager.js')
-        .then(module => module.init())
-        .catch(err => console.error('Error cargando módulo de UI:', err));
+        const uiManager = await import('./modules/uiManager.js');
+        uiManager.init();
+
+        // 🔹 Importa e inicializa NotaEditor
+        const { NotaEditor } = await import('./modules/notaEditor/notaEditor.js');
+        new NotaEditor();  // 🔥 Instanciamos la clase para que empiece a escuchar eventos
+
+    } catch (err) {
+        console.error('Error cargando módulos:', err);
+    }
 });

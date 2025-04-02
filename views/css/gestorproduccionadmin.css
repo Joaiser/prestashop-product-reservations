@@ -239,10 +239,35 @@
     line-height: 1.6;
     color: #555;
     margin-bottom: 15px;
+    position: relative; 
 }
 
 .nota-body p {
     margin-bottom: 10px;
+    position: relative; 
+}
+
+/* Icono del lápiz al hacer hover sobre el texto */
+.nota-body p:hover::after {
+    content: '✏️'; /* Usamos el emoji de lápiz */
+    position: absolute;
+    right: -25px; /* Ajusta la posición según sea necesario */
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px; /* Tamaño del emoji */
+    cursor: pointer;
+    opacity: 1; /* Aparece solo en hover */
+    transition: opacity 0.3s ease;
+}
+
+/* Cambia el fondo al pasar el ratón por encima */
+.nota-body p:hover {
+    background-color: #f0f0f0; /* Fondo ligeramente gris cuando se pasa el mouse */
+}
+
+/* Cuando no hay hover sobre el texto, ocultamos el icono */
+.nota-body p::after {
+    opacity: 0;
 }
 
 /* Pie de la nota (opcional) */
@@ -256,6 +281,23 @@
 /* Colores de los textos destacados dentro de las notas */
 .nota-body strong {
     color: #333;
+}
+
+/* Estilos para los campos editables (puedes agregar un estilo para cambiar la apariencia al editar) */
+.nota-body input,
+.nota-body textarea {
+    display: none;
+    border: 1px solid #ddd;
+    padding: 5px;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 100%;
+}
+
+/* Mostrar campos editables cuando el usuario hace clic en el lápiz */
+.nota-body.editable input,
+.nota-body.editable textarea {
+    display: block;
 }
 
 /* Botón de eliminar o acciones adicionales */
@@ -277,5 +319,23 @@
 /* Efecto hover sobre el contenedor */
 .reservas-container .nota-item:hover {
     background-color: #f3f4f6; /* Fondo más claro al hacer hover */
+}
+
+.nota-edit {
+    display: none; /* Por defecto oculto */
+    position: absolute; /* Para que se superponga sobre el p */
+    width: 100%;
+    min-height: 50px;
+    z-index: 10; /* Asegurarnos de que esté por encima del texto */
+    background: #f0f0f0; /* Fondo gris claro */
+    border: 1px solid #ccc;
+    padding: 8px;
+    box-sizing: border-box;
+    border-radius: 4px;
+}
+
+.nota-body .nota-edit.visible {
+    display: block; /* Hacer visible cuando se edita */
+    z-index: 10; /* Asegurarnos de que no quede cubierto por otros elementos */
 }
 

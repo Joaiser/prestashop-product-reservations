@@ -157,28 +157,60 @@ class AdminGestorProduccion
         }
     }
 	
-	   public function insertarNota($customer_id,$notas_reservas)
-    {
-        $pdo = Db::getInstance()->getLink();
+    // Función para insertar una nueva nota
+public function insertarNota($customer_id, $notas_reservas)
+{
+    $pdo = Db::getInstance()->getLink();
 
-        try {
-            $pdo->beginTransaction();
+    try {
+        $pdo->beginTransaction();
 
-            $sqlReservationEnabled = 'INSERT INTO notas_reservas 
-                          (id_user, nota) 
-                          VALUES (' . (int)$customer_id . ', "' . pSQL($notas_reservas) . '")';
+        // Insertar la nueva nota
+        $sqlInsert = 'INSERT INTO notas_reservas 
+                      (id_user, nota) 
+                      VALUES (' . (int)$customer_id . ', "' . pSQL($notas_reservas) . '")';
+        Db::getInstance()->execute($sqlInsert);
 
-            Db::getInstance()->execute($sqlReservationEnabled);
-
-
-            $pdo->commit();
-        } catch (Exception $e) {
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-            throw new Exception("Error al habilitar las reservas: " . $e->getMessage());
+        $pdo->commit();
+    } catch (Exception $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
         }
+        throw new Exception("Error al insertar la nota: " . $e->getMessage());
     }
+}
+
+// Función para actualizar una nota existente
+public function actualizarNota($customer_id, $notas_reservas)
+{
+    $pdo = Db::getInstance()->getLink();
+
+    try {
+        $pdo->beginTransaction();
+
+        // Actualizar la nota
+        $sqlUpdate = 'UPDATE notas_reservas 
+                      SET nota = "' . pSQL($notas_reservas) . '" 
+                      WHERE id_user = ' . (int)$customer_id;
+        Db::getInstance()->execute($sqlUpdate);
+
+        $pdo->commit();
+    } catch (Exception $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw new Exception("Error al actualizar la nota: " . $e->getMessage());
+    }
+}
+
+// Función para comprobar si ya existe una nota
+public function existeNota($customer_id)
+{
+    $sqlCheck = 'SELECT COUNT(*) FROM notas_reservas WHERE id_user = ' . (int)$customer_id;
+    return Db::getInstance()->getValue($sqlCheck) > 0;
+}
+
+    
 	
 	public function getCustomersQueHanReservado()
     {
@@ -245,7 +277,7 @@ public static function getNotasConReservas()
                 c.lastname AS cliente_apellido,
                 c_comercial.firstname AS comercial_nombre,
                 c_comercial.lastname AS comercial_apellido,
-                GROUP_CONCAT(DISTINCT nr.nota SEPARATOR "<br>") AS notas  -- Aseguramos que las notas sean distintas
+                GROUP_CONCAT(DISTINCT nr.nota SEPARATOR "<br>") AS notas  
             FROM notas_reservas nr
             JOIN '._DB_PREFIX_.'product_reservations pr ON nr.id_user = pr.id_customer
             JOIN '._DB_PREFIX_.'customer c ON nr.id_user = c.id_customer
