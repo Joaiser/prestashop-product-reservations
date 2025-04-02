@@ -39,34 +39,35 @@
 
 <div class="reservas-container">
     {if $notas|@count > 0}
-    {foreach from=$notas item=nota}
-    <div class="nota-item" data-notaid="{$nota.id_user}" data-userid="{$nota.id_user}">
-        <div class="nota-header">
-            <p><strong>Cliente:</strong> {$nota.cliente_nombre} {$nota.cliente_apellido}</p>
-            <p><strong>Comercial:</strong> {$nota.comercial_nombre} {$nota.comercial_apellido}</p>
-        </div>
+        {foreach from=$notas item=nota}
+            <div class="nota-item" data-notaid="{$nota.id_user}" data-userid="{$nota.id_user}">
+                <div class="nota-header">
+                    <p><strong>Cliente:</strong> {$nota.cliente_nombre} {$nota.cliente_apellido}</p>
+                    <p><strong>Comercial:</strong> {$nota.comercial_nombre} {$nota.comercial_apellido}</p>
+                </div>
 
-        <div class="nota-body">
-            <!-- Mostrar las notas directamente como texto -->
-            <p id="nota-text-{$nota.id}">{$nota.notas}</p>
-
-            <!-- Lápiz para editar -->
-            <div class="edit-icon">
-                <span class="edit-lapiz">✏️</span>
+                <div class="nota-body">
+                    {foreach from=$nota.notas item=notaItem}
+                    <div class="nota-contenido" data-nota-id="{$notaItem.id_nota}" data-user-id="{$notaItem.id_user}">
+                        <p id="nota-text-{$notaItem.id_nota}" class="nota-texto">
+                            {$notaItem.nota}
+                            <span class="nota-edit-icon" id="edit-icon-{$notaItem.id_nota}">✏️</span>
+                            <span class="nota-save-icon" style="display: none;" id="save-icon-{$notaItem.id_nota}">💾</span>
+                        </p>
+                        <textarea id="nota-edit-{$notaItem.id_nota}" class="nota-edit" style="display:none;">
+                            {$notaItem.nota}
+                        </textarea>
+                    </div>
+                    {/foreach}
+                </div>
             </div>
-            <!-- Textarea que se muestra al editar -->
-            <textarea id="nota-edit-{$nota.id}" class="nota-edit" style="display:none;">{$nota.notas}</textarea>
-        </div>
-
-        <div class="nota-footer">
-            <!-- Aquí se pondrán los botones de modificar y borrar nota -->
-        </div>
-    </div>
-    {/foreach}
+        {/foreach}
     {else}
         <p>No hay notas disponibles para mostrar.</p>
     {/if}
 </div>
+
+
 
 
 

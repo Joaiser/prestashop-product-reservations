@@ -272,21 +272,23 @@ public function existeNota($customer_id)
 public static function getNotasConReservas()
 {
     $sql = 'SELECT 
-                nr.id_user,
-                c.firstname AS cliente_nombre,
-                c.lastname AS cliente_apellido,
-                c_comercial.firstname AS comercial_nombre,
-                c_comercial.lastname AS comercial_apellido,
-                GROUP_CONCAT(DISTINCT nr.nota SEPARATOR "<br>") AS notas  
-            FROM notas_reservas nr
-            JOIN '._DB_PREFIX_.'product_reservations pr ON nr.id_user = pr.id_customer
-            JOIN '._DB_PREFIX_.'customer c ON nr.id_user = c.id_customer
-            JOIN '._DB_PREFIX_.'customer c_comercial ON pr.id_comercial = c_comercial.id_customer
-            GROUP BY nr.id_user, pr.id_comercial
-            ORDER BY nr.id_user, nr.id_nota DESC';
+            nr.id_nota,  -- Añadir el id_nota para obtener el identificador de la nota
+            nr.id_user,
+            c.firstname AS cliente_nombre,
+            c.lastname AS cliente_apellido,
+            c_comercial.firstname AS comercial_nombre,
+            c_comercial.lastname AS comercial_apellido,
+            GROUP_CONCAT(DISTINCT nr.nota SEPARATOR "||") AS notas  
+    FROM notas_reservas nr
+    JOIN '._DB_PREFIX_.'product_reservations pr ON nr.id_user = pr.id_customer
+    JOIN '._DB_PREFIX_.'customer c ON nr.id_user = c.id_customer
+    JOIN '._DB_PREFIX_.'customer c_comercial ON pr.id_comercial = c_comercial.id_customer
+    GROUP BY nr.id_user, pr.id_comercial, nr.id_nota  -- Agrupar también por id_nota
+    ORDER BY nr.id_user, nr.id_nota DESC';
 
     return Db::getInstance()->executeS($sql);
 }
+
 
 
 }

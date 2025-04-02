@@ -57,23 +57,29 @@ public function eliminarDuplicadosNotas($notas)
     $notas_agrupadas = [];
     
     foreach ($notas as $nota) {
-        $cliente_id = $nota['id_user'];  // Aquí está el problema, necesitamos agregar esta clave en el array agrupado
+        $cliente_id = $nota['id_user'];  // Asegurarnos de que agrupamos por cliente
 
-        // Aseguramos que solo se agrega un cliente una vez
         if (!isset($notas_agrupadas[$cliente_id])) {
             $notas_agrupadas[$cliente_id] = [
-                'id_user' => $nota['id_user'],  // Añadimos id_user para que esté disponible
+                'id_user' => $nota['id_user'],
                 'cliente_nombre' => $nota['cliente_nombre'],
                 'cliente_apellido' => $nota['cliente_apellido'],
                 'comercial_nombre' => $nota['comercial_nombre'],
                 'comercial_apellido' => $nota['comercial_apellido'],
-                'notas' => $nota['notas']  // Las notas ya están agrupadas
+                'notas' => []  // Creamos un array vacío para las notas
             ];
         }
+
+        // Añadimos la nota a la lista de notas para ese cliente
+        $notas_agrupadas[$cliente_id]['notas'][] = [
+            'id_nota' => $nota['id_nota'],
+            'nota' => $nota['notas']
+        ];
     }
-    
+
     return $notas_agrupadas;
 }
+
 
 
 

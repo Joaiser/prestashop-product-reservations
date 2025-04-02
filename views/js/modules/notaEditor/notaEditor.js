@@ -9,39 +9,41 @@ export class NotaEditor {
 
     initHandlers() {
         console.log("Manejador de eventos inicializado");
-   
+
+        // Combinamos ambos manejadores de clic en uno solo
         document.addEventListener('click', (e) => {
             console.log("Objetivo del clic:", e.target);
-       
-            if (e.target.closest('.edit-lapiz')) {
-                console.log("Clic en el lápiz detectado");
+
+            // Verifica si el clic fue sobre un <p> que es editable
+            const pElement = e.target.closest('.nota-body p');
+            if (pElement && pElement.classList.contains('nota-texto')) {
+                console.log("Clic en el <p> editable detectado");
                 this.handleEditClick(e);
-            } else if (e.target.closest('.save-nota-btn')) {
+            } else if (e.target.closest('.nota-save-icon')) {
                 console.log("Clic en el botón de guardar detectado");
                 this.handleSaveClick(e);
             }
-       });
-       
+        });
+
+        // Manejo del evento 'notasCargadas'
         document.addEventListener('notasCargadas', () => this.initHandlers());
     }
-   
+
+    // Manejo del clic en el botón de guardar
     async handleSaveClick(event) {
         event.preventDefault();
-        const container = event.target.closest('.nota-texto-container');
-        const notaItem = container.closest('.nota-item');
-        
-        const notaId = notaItem.dataset.notaid;  // Obtenemos notaId desde el data attribute
-        const idUser = notaItem.dataset.userId; 
-        const textIndex = container.dataset.textid;
-        const newText = container.querySelector('.nota-texto').textContent;
+        const container = event.target.closest('.nota-contenido');
+        const notaId = container.dataset.notaId; 
+        const idUser = container.dataset.userId; 
+        const newText = container.querySelector('.nota-edit').value;
     
-        console.log("Guardando la nota con ID:", notaId, "y nuevo texto:", newText);
-        
+        console.log("Guardando la nota con ID:", notaId, "para el usuario:", idUser, "con nuevo texto:", newText);
+    
         this.toggleEditMode(container, false);
         this.showLoader(container, true);
     
         try {
-            await this.api.updateNota(notaId, idUser, newText, textIndex);  // Usamos notaId aquí
+            await this.api.updateNota(notaId, idUser, newText);
             this.showFeedback(container, 'success', 'Nota guardada con éxito');
         } catch (error) {
             this.showFeedback(container, 'error', 'Error al guardar la nota');
@@ -51,61 +53,96 @@ export class NotaEditor {
     }
     
 
-    // Helpers
-    toggleEditMode(container, isEditing) {
-        const notaId = container.closest('.nota-item').dataset.notaid;
-        const notaTextElement = document.getElementById(`nota-text-${notaId}`);
-        const textareaElement = document.getElementById(`nota-edit-${notaId}`);
+    // Alterna entre modo de edición y vista previa
+    toggleEditMode(notaItem, isEditing) {
+        const notaId = notaItem.dataset.notaId;
+        console.log("ID de la nota detectado:", notaId);
     
-        if (!textareaElement) {
-            console.log(`El textarea con id "nota-edit-${notaId}" no se encuentra en el DOM`);
+        if (!notaId) {
+            console.error("❌ Error: notaId no definido en el dataset de notaItem.");
             return;
         }
     
-        console.log(`Alternando el modo de edición para nota ${notaId}. Modo de edición: ${isEditing ? "Activado" : "Desactivado"}`);
+        const notaTextElement = document.getElementById(`nota-text-${notaId}`);
+        if (!notaTextElement) {
+            console.error(`❌ Error: No se encontró el elemento con ID "nota-text-${notaId}"`);
+            return;
+        }
+    
+        let textareaElement = document.getElementById(`nota-edit-${notaId}`);
+        const saveIcon = document.getElementById(`save-icon-${notaId}`);
+        const editIcon = document.getElementById(`edit-icon-${notaId}`);
+    
+        console.log(`Intentando alternar el modo de edición para la nota con ID: ${notaId}`);
     
         if (isEditing) {
-            // Hacer visible el textarea y ocultar el <p>
+            if (!textareaElement) {
+                textareaElement = document.createElement('textarea');
+                textareaElement.id = `nota-edit-${notaId}`;
+                textareaElement.classList.add('nota-edit');
+                textareaElement.value = notaTextElement.textContent;
+    
+                // Reemplaza el contenido del texto con el textarea
+                notaTextElement.replaceWith(textareaElement);
+            }
+    
+            console.log("Modo de edición: Activado");
             textareaElement.style.display = 'block';
-            textareaElement.classList.add('visible');
-            textareaElement.value = notaTextElement.textContent;  // Rellenamos el textarea con el texto
-            notaTextElement.style.display = 'none';  // Ocultamos el texto original
+            textareaElement.focus();
+    
+            saveIcon.style.display = 'inline';
+            editIcon.style.display = 'none';
         } else {
-            // Restablecer visibilidad
-            textareaElement.style.display = 'none';
-            textareaElement.classList.remove('visible');
-            notaTextElement.style.display = 'block';  // Volver a mostrar el texto original
+            console.log("Modo de edición: Desactivado");
+    
+            if (textareaElement) {
+                // Crear un nuevo párrafo para restaurar el texto
+                const newTextElement = document.createElement('p');
+                newTextElement.id = `nota-text-${notaId}`;
+                newTextElement.classList.add('nota-texto');
+                newTextElement.textContent = textareaElement.value;
+    
+                textareaElement.replaceWith(newTextElement);
+            }
+    
+            saveIcon.style.display = 'none';
+            editIcon.style.display = 'inline';
         }
     }
     
     
     
-    focusTextElement(container) {
-        const notaId = container.closest('.nota-item').dataset.notaid;
-        const textareaElement = document.getElementById(`nota-edit-${notaId}`);
-        textareaElement.focus();
 
-        // Mover cursor al final del texto
+    // Coloca el cursor al final del texto en el textarea
+    focusTextElement(notaItem) {
+        const notaId = notaItem.dataset.notaid;
+        const textareaElement = document.getElementById(`nota-edit-${notaId}`);
+        
+        // Verifica si el textarea existe
+        if (!textareaElement) {
+            console.log(`No se encontró el textarea con id "nota-edit-${notaId}"`);
+            return; // Salir si el textarea no está en el DOM
+        }
+    
+        console.log(`Enfocando el textarea de la nota con ID: ${notaId}`);
+        textareaElement.focus();
+    
         const range = document.createRange();
         range.selectNodeContents(textareaElement);
-        range.collapse(false); // false para mover el cursor al final
+        range.collapse(false); // Mueve el cursor al final
         const sel = window.getSelection();
-        sel.removeAllRanges(); // Limpiar selecciones anteriores
-        sel.addRange(range); // Seleccionar el rango
+        sel.removeAllRanges(); // Limpia selecciones previas
+        sel.addRange(range); // Agrega el nuevo rango
     }
+    
 
-    getIds(container) {
-        return {
-            notaId: container.closest('.nota-item').dataset.notaid,
-            textId: container.dataset.textid
-        };
-    }
-
+    // Muestra un loader durante la actualización
     showLoader(container, show) {
         const loader = container.querySelector('.nota-loader') || this.createLoader(container);
         loader.style.display = show ? 'block' : 'none';
     }
 
+    // Crea un loader si no existe
     createLoader(container) {
         const loader = document.createElement('div');
         loader.className = 'nota-loader';
@@ -114,6 +151,7 @@ export class NotaEditor {
         return loader;
     }
 
+    // Muestra un feedback después de guardar
     showFeedback(container, type, message) {
         const feedback = document.createElement('div');
         feedback.className = `nota-feedback nota-feedback--${type}`;
@@ -125,25 +163,28 @@ export class NotaEditor {
         }, 2000);
     }
 
-    // Gestionar el clic en el emoji de lápiz
+    // Gestiona el clic en el lápiz para activar la edición
     handleEditClick(event) {
-        const spanElement = event.target.closest('.edit-lapiz');
-        
-        if (!spanElement || spanElement.style.display === 'none') {
-            console.log("El lápiz no está visible o no se hizo clic en el lápiz.");
+        const editIcon = event.target.closest('.nota-edit-icon');
+        if (!editIcon) return;
+    
+        const notaItem = editIcon.closest('.nota-contenido');
+        if (!notaItem) {
+            console.error("❌ Error: No se encontró el contenedor de la nota.");
             return;
         }
     
-        const container = spanElement.closest('.nota-body');
-        console.log("Contenedor de nota encontrado:", container);
-    
-        if (container) {
-            console.log("Clic en el lápiz detectado para nota:", container.closest('.nota-item').dataset.notaid);
-            this.toggleEditMode(container, true);
-            this.focusTextElement(container);
-        } else {
-            console.log("No se encontró el contenedor .nota-body");
+        const notaId = notaItem.dataset.notaId;
+        if (!notaId) {
+            console.error("❌ Error: No se encontró el atributo data-nota-id en notaItem.");
+            return;
         }
-    } 
+    
+        console.log("Contenedor de nota encontrado:", notaItem);
+        console.log("Nota ID detectada:", notaId);
+    
+        this.toggleEditMode(notaItem, true);
+        this.focusTextElement(notaItem);
+    }
     
 }
