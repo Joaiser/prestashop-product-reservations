@@ -1,155 +1,270 @@
 import { NotaApi } from './notaApi.js';
-console.log("NotaEditor.js cargado");
 
 export class NotaEditor {
     constructor() {
         this.api = new NotaApi();
+        this.isSaving = false;
         this.initHandlers();
+        this.initNewNoteForm();
     }
 
     initHandlers() {
-        console.log("Manejador de eventos inicializado");
-
-        // Combinamos ambos manejadores de clic en uno solo
+        // Handlers para notas existentes (edición)
         document.addEventListener('click', (e) => {
-            console.log("Objetivo del clic:", e.target);
-
-            // Verifica si el clic fue sobre un <p> que es editable
-            const pElement = e.target.closest('.nota-body p');
-            if (pElement && pElement.classList.contains('nota-texto')) {
-                console.log("Clic en el <p> editable detectado");
+            if (e.target.closest('.nota-edit-icon')) {
                 this.handleEditClick(e);
             } else if (e.target.closest('.nota-save-icon')) {
-                console.log("Clic en el botón de guardar detectado");
                 this.handleSaveClick(e);
             }
         });
 
-        // Manejo del evento 'notasCargadas'
-        document.addEventListener('notasCargadas', () => this.initHandlers());
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.closest('.nota-edit') && !e.shiftKey) {
+                e.preventDefault();
+                this.handleSaveClick(e);
+            }
+        });
+    }
+
+    initNewNoteForm() {
+        // Handler para el formulario de nueva nota
+        const newNoteForm = document.querySelector('.ajax-form-container');
+        if (!newNoteForm) return;
+
+        newNoteForm.addEventListener('click', (e) => {
+            if (e.target.classList.contains('ajax-submit-nota')) {
+                this.handleNewNoteSubmit(e);
+            }
+        });
+    }
+
+    async handleNewNoteSubmit(event) {
+        event.preventDefault();
+        
+        if (this.isSaving) return;
+        this.isSaving = true;
+
+        const clienteSelect = document.querySelector('.ajax-cliente-nota');
+        const textoTextarea = document.querySelector('.ajax-texto-nota');
+        const messagesContainer = document.getElementById('ajax-messages');
+
+        const idUser = clienteSelect.value;
+        const newText = textoTextarea.value.trim();
+
+        // Validación básica
+        if (!newText) {
+            this.showMessage(messagesContainer, 'error', 'El comentario no puede estar vacío');
+            this.isSaving = false;
+            return;
+        }
+
+        try {
+            const response = await this.api.insertarNota(idUser, newText);
+            this.showMessage(messagesContainer, 'success', 'Nota creada correctamente');
+            
+            // Limpiar el formulario
+            textoTextarea.value = '';
+            
+            // Recargar las notas (implementar según tu necesidad)
+            this.reloadNotes();
+        } catch (error) {
+            this.showMessage(messagesContainer, 'error', error.message || 'Error al crear la nota');
+            console.error("Error al crear nota:", error);
+        } finally {
+            this.isSaving = false;
+        }
+    }
+
+    async reloadNotes() {
+        // Implementa la recarga de notas según tu backend
+        // Puedes usar fetch directamente o añadir un método a NotaApi
+        try {
+            const response = await fetch(window.gestorProduccionVars.ajaxUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `action=load_notas&token=${window.gestorProduccionVars.csrfToken}`
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                document.getElementById('notas-container').innerHTML = data.html;
+            }
+        } catch (error) {
+            console.error('Error recargando notas:', error);
+        }
+    }
+
+    showMessage(container, type, message) {
+        // Limpiar mensajes anteriores
+        container.querySelectorAll('.ajax-message').forEach(el => el.remove());
+        
+        const messageEl = document.createElement('p');
+        messageEl.className = `ajax-message ${type}`;
+        messageEl.textContent = message;
+        messageEl.style.display = 'block';
+        messageEl.style.color = type === 'success' ? 'green' : 'red';
+        messageEl.style.fontWeight = 'bold';
+        
+        container.appendChild(messageEl);
+        
+        if (type === 'success') {
+            setTimeout(() => {
+                messageEl.remove();
+            }, 3000);
+        }
     }
 
     // Manejo del clic en el botón de guardar
     async handleSaveClick(event) {
         event.preventDefault();
-        const container = event.target.closest('.nota-contenido');
-        const notaId = container.dataset.notaId; 
-        const idUser = container.dataset.userId; 
-        const newText = container.querySelector('.nota-edit').value;
+        event.stopPropagation();
     
-        console.log("Guardando la nota con ID:", notaId, "para el usuario:", idUser, "con nuevo texto:", newText);
+        if (this.isSaving) return;
+        this.isSaving = true;
     
-        this.toggleEditMode(container, false);
-        this.showLoader(container, true);
+        const target = event.target;
+        const notaData = this.getNotaData(target);
+        if (!notaData) {
+            this.isSaving = false;
+            return;
+        }
     
+        const { notaId, newText, container } = notaData;
+        
         try {
-            await this.api.updateNota(notaId, idUser, newText);
-            this.showFeedback(container, 'success', 'Nota guardada con éxito');
+            console.log("Guardando la nota con ID:", notaId, "con texto:", newText);
+            if (notaId > 0) {
+                // Nota existente - actualizar
+                await this.api.updateNota(notaId, newText);
+                this.showFeedback(container, 'success', 'Nota actualizada correctamente');
+            } else {
+                // Nueva nota - insertar
+                const idUser = container.dataset.userId; // Obtener id_user del contenedor
+                if (!idUser) {
+                    throw new Error("No se encontró el usuario asociado");
+                }
+                await this.api.insertarNota(idUser, newText);
+                this.showFeedback(container, 'success', 'Nota creada correctamente');
+                // Recargar o actualizar la interfaz según sea necesario
+            }
         } catch (error) {
-            this.showFeedback(container, 'error', 'Error al guardar la nota');
+            this.showFeedback(container, 'error', error.message || 'Error al guardar la nota');
+            console.error("Error al guardar la nota:", error);
+            this.toggleEditMode(container, true); // Volver a modo edición si falla
         } finally {
-            this.showLoader(container, false);
+            this.isSaving = false;
         }
     }
-    
+
+    getNotaData(target) {
+        console.log("target en getNotaData:", target);
+        
+        // Buscar el contenedor de diferentes maneras según el target
+        let container = target.closest('.nota-contenido');
+        
+        // Si no encontramos el contenedor directamente, puede ser un textarea
+        if (!container && target.classList.contains('nota-edit')) {
+            // Buscar el contenedor padre del textarea
+            container = target.closest('div[data-nota-id]');
+        }
+        
+        console.log("Contenedor encontrado:", container);
+        
+        if (!container) {
+            console.error("❌ Error: Contenedor de la nota no encontrado.");
+            return null;
+        }
+        
+        const notaId = container.dataset.notaId;
+        const newText = container.querySelector('.nota-edit') ? 
+                       container.querySelector('.nota-edit').value.trim() : 
+                       target.value.trim(); // En caso de que el target sea el textarea
+        
+        if (!notaId) {
+            console.error("❌ Error: ID de nota no encontrado.");
+            return null;
+        }
+        
+        if (!newText) {
+            console.error("❌ Error: Texto de nota vacío.");
+            return null;
+        }
+        
+        return { notaId, newText, container }; // Eliminamos idUser del return
+    }
+
+
+
 
     // Alterna entre modo de edición y vista previa
-    toggleEditMode(notaItem, isEditing) {
+    toggleEditMode(notaItem, isEditing, newText = null) {
         const notaId = notaItem.dataset.notaId;
         console.log("ID de la nota detectado:", notaId);
-    
+        
         if (!notaId) {
             console.error("❌ Error: notaId no definido en el dataset de notaItem.");
             return;
         }
-    
+        
         const notaTextElement = document.getElementById(`nota-text-${notaId}`);
         if (!notaTextElement) {
             console.error(`❌ Error: No se encontró el elemento con ID "nota-text-${notaId}"`);
             return;
         }
-    
+        
         let textareaElement = document.getElementById(`nota-edit-${notaId}`);
         const saveIcon = document.getElementById(`save-icon-${notaId}`);
         const editIcon = document.getElementById(`edit-icon-${notaId}`);
-    
+        
         console.log(`Intentando alternar el modo de edición para la nota con ID: ${notaId}`);
-    
+        
         if (isEditing) {
-            if (!textareaElement) {
-                textareaElement = document.createElement('textarea');
-                textareaElement.id = `nota-edit-${notaId}`;
-                textareaElement.classList.add('nota-edit');
-                textareaElement.value = notaTextElement.textContent;
-    
-                // Reemplaza el contenido del texto con el textarea
-                notaTextElement.replaceWith(textareaElement);
-            }
-    
             console.log("Modo de edición: Activado");
+            notaTextElement.style.display = 'none';
             textareaElement.style.display = 'block';
             textareaElement.focus();
-    
+            
             saveIcon.style.display = 'inline';
             editIcon.style.display = 'none';
         } else {
             console.log("Modo de edición: Desactivado");
-    
-            if (textareaElement) {
-                // Crear un nuevo párrafo para restaurar el texto
-                const newTextElement = document.createElement('p');
-                newTextElement.id = `nota-text-${notaId}`;
-                newTextElement.classList.add('nota-texto');
-                newTextElement.textContent = textareaElement.value;
-    
-                textareaElement.replaceWith(newTextElement);
+            notaTextElement.style.display = 'block';
+            textareaElement.style.display = 'none';
+            
+            // Actualizar el texto si se proporciona
+            if (newText) {
+                notaTextElement.textContent = newText;
             }
-    
+            
             saveIcon.style.display = 'none';
             editIcon.style.display = 'inline';
         }
     }
     
-    
-    
 
-    // Coloca el cursor al final del texto en el textarea
-    focusTextElement(notaItem) {
-        const notaId = notaItem.dataset.notaid;
-        const textareaElement = document.getElementById(`nota-edit-${notaId}`);
-        
-        // Verifica si el textarea existe
-        if (!textareaElement) {
-            console.log(`No se encontró el textarea con id "nota-edit-${notaId}"`);
-            return; // Salir si el textarea no está en el DOM
-        }
+    // Focus al final del textarea
+focusTextElement(notaItem) {
+    const notaId = notaItem.dataset.notaId;
+    const textareaElement = document.getElementById(`nota-edit-${notaId}`);
     
-        console.log(`Enfocando el textarea de la nota con ID: ${notaId}`);
-        textareaElement.focus();
-    
-        const range = document.createRange();
-        range.selectNodeContents(textareaElement);
-        range.collapse(false); // Mueve el cursor al final
-        const sel = window.getSelection();
-        sel.removeAllRanges(); // Limpia selecciones previas
-        sel.addRange(range); // Agrega el nuevo rango
+    // Verifica si el textarea existe
+    if (!textareaElement) {
+        console.log(`No se encontró el textarea con id "nota-edit-${notaId}"`);
+        return; // Salir si el textarea no está en el DOM
     }
     
-
-    // Muestra un loader durante la actualización
-    showLoader(container, show) {
-        const loader = container.querySelector('.nota-loader') || this.createLoader(container);
-        loader.style.display = show ? 'block' : 'none';
-    }
-
-    // Crea un loader si no existe
-    createLoader(container) {
-        const loader = document.createElement('div');
-        loader.className = 'nota-loader';
-        loader.innerHTML = '⏳';
-        container.querySelector('.nota-actions').appendChild(loader);
-        return loader;
-    }
+    console.log(`Enfocando el textarea de la nota con ID: ${notaId}`);
+    textareaElement.focus();
+    
+    const range = document.createRange();
+    range.selectNodeContents(textareaElement);
+    range.collapse(false); // Mueve el cursor al final
+    const sel = window.getSelection();
+    sel.removeAllRanges(); // Limpia selecciones previas
+    sel.addRange(range); // Agrega el nuevo rango
+} 
 
     // Muestra un feedback después de guardar
     showFeedback(container, type, message) {
@@ -168,23 +283,12 @@ export class NotaEditor {
         const editIcon = event.target.closest('.nota-edit-icon');
         if (!editIcon) return;
     
-        const notaItem = editIcon.closest('.nota-contenido');
-        if (!notaItem) {
-            console.error("❌ Error: No se encontró el contenedor de la nota.");
-            return;
-        }
+        const notaData = this.getNotaData(editIcon);
+        if (!notaData) return;
     
-        const notaId = notaItem.dataset.notaId;
-        if (!notaId) {
-            console.error("❌ Error: No se encontró el atributo data-nota-id en notaItem.");
-            return;
-        }
-    
-        console.log("Contenedor de nota encontrado:", notaItem);
-        console.log("Nota ID detectada:", notaId);
-    
-        this.toggleEditMode(notaItem, true);
-        this.focusTextElement(notaItem);
+        const { container } = notaData;
+        this.toggleEditMode(container, true);
+        this.focusTextElement(container);
     }
     
 }

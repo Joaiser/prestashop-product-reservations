@@ -13,62 +13,31 @@
 <h2 style="margin-bottom: 32px;">🚀 {l s='Gestor de Producción' mod='gestorproduccion'}</h2>
 
 <h3 style="margin: 0;">📝 {l s='Incluye la nota' mod='gestorproduccion'}</h3>
-<form action="" method="post" style="padding-block: 2%;">
-    <label for="opciones">Selecciona una opción:</label><br>
-    <select id="opciones" name="cliente_nota">
+
+<!-- Nuevo formulario AJAX -->
+<div class="ajax-form-container" style="padding-block: 2%;">
+    <label for="ajax-opciones">Selecciona una opción:</label><br>
+    <select id="ajax-opciones" class="ajax-cliente-nota">
         {foreach from=$CustomersQueHanReservado item=reservation}
             <option value="{$reservation.id_customer}">{$reservation.final_name}</option>
         {/foreach}
     </select>
-    <label for="comentario">Comentario:</label><br>
-    <textarea id="comentario" name="comentario" rows="4" cols="50" placeholder="Escribe tu comentario..."></textarea>
+    <label for="ajax-comentario">Comentario:</label><br>
+    <textarea id="ajax-comentario" class="ajax-texto-nota" rows="4" cols="50" placeholder="Escribe tu comentario..."></textarea>
     <br>
-    <input type="submit" value="Enviar">
-</form>
-
-{if isset($success_message)}
-    <p style="color: green;
-    font-weight: bold;
-    display: block !important;" class="succes">{$success_message}</p>
-{/if}
-{if isset($error_message)}
-    <p style="color: red;
-    font-weight: bold;
-    display: block !important;" class="error">{$error_message}</p>
-{/if}
-
-<div class="reservas-container">
-    {if $notas|@count > 0}
-        {foreach from=$notas item=nota}
-            <div class="nota-item" data-notaid="{$nota.id_user}" data-userid="{$nota.id_user}">
-                <div class="nota-header">
-                    <p><strong>Cliente:</strong> {$nota.cliente_nombre} {$nota.cliente_apellido}</p>
-                    <p><strong>Comercial:</strong> {$nota.comercial_nombre} {$nota.comercial_apellido}</p>
-                </div>
-
-                <div class="nota-body">
-                    {foreach from=$nota.notas item=notaItem}
-                    <div class="nota-contenido" data-nota-id="{$notaItem.id_nota}" data-user-id="{$notaItem.id_user}">
-                        <p id="nota-text-{$notaItem.id_nota}" class="nota-texto">
-                            {$notaItem.nota}
-                            <span class="nota-edit-icon" id="edit-icon-{$notaItem.id_nota}">✏️</span>
-                            <span class="nota-save-icon" style="display: none;" id="save-icon-{$notaItem.id_nota}">💾</span>
-                        </p>
-                        <textarea id="nota-edit-{$notaItem.id_nota}" class="nota-edit" style="display:none;">
-                            {$notaItem.nota}
-                        </textarea>
-                    </div>
-                    {/foreach}
-                </div>
-            </div>
-        {/foreach}
-    {else}
-        <p>No hay notas disponibles para mostrar.</p>
-    {/if}
+    <button id="ajax-submit-btn" class="ajax-submit-nota">Enviar</button>
 </div>
 
+<!-- Contenedor para mensajes AJAX -->
+<div id="ajax-messages" style="display: none;">
+    <p id="ajax-success-message" style="color: green; font-weight: bold;"></p>
+    <p id="ajax-error-message" style="color: red; font-weight: bold;"></p>
+</div>
 
-
+<!-- Listado de notas (se actualizará via AJAX) -->
+<div class="reservas-container" id="notas-container">
+    {include file='./_partials/notas_list.tpl'}
+</div>
 
 
 <!-- Sección de reservas pendientes -->

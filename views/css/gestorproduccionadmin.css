@@ -321,6 +321,22 @@
     z-index: 10; /* Asegurarnos de que no quede cubierto por otros elementos */
 }
 
-.nota-edit-icon .nota-save-icon{
+.nota-edit-icon{
     cursor: pointer;
+}
+
+.nota-save-icon{
+    cursor: pointer;
+}
+
+.textarea-nota{
+    position: absolute;
+    z-index: 9999;
+}
+
+.nota-texto{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
 }

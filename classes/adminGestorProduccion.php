@@ -181,19 +181,18 @@ public function insertarNota($customer_id, $notas_reservas)
 }
 
 // Función para actualizar una nota existente
-public function actualizarNota($customer_id, $notas_reservas)
+public function actualizarNota($nota_id, $notas_reservas)
 {
     $pdo = Db::getInstance()->getLink();
 
     try {
         $pdo->beginTransaction();
 
-        // Actualizar la nota
         $sqlUpdate = 'UPDATE notas_reservas 
                       SET nota = "' . pSQL($notas_reservas) . '" 
-                      WHERE id_user = ' . (int)$customer_id;
+                      WHERE id_nota = ' . (int)$nota_id;
+        
         Db::getInstance()->execute($sqlUpdate);
-
         $pdo->commit();
     } catch (Exception $e) {
         if ($pdo->inTransaction()) {
@@ -203,12 +202,25 @@ public function actualizarNota($customer_id, $notas_reservas)
     }
 }
 
+
 // Función para comprobar si ya existe una nota
-public function existeNota($customer_id)
+public function existeNota($nota_id)
 {
-    $sqlCheck = 'SELECT COUNT(*) FROM notas_reservas WHERE id_user = ' . (int)$customer_id;
-    return Db::getInstance()->getValue($sqlCheck) > 0;
+    $pdo = Db::getInstance()->getLink();
+
+    // Consulta para verificar si la nota existe
+    $sql = 'SELECT COUNT(*) 
+            FROM notas_reservas 
+            WHERE id_nota = ' . (int)$nota_id;
+
+    // Usamos executeS para ejecutar la consulta
+    $result = Db::getInstance()->getValue($sql); 
+
+    // Si el resultado es mayor que 0, la nota existe
+    return (int)$result > 0;
 }
+
+
 
     
 	

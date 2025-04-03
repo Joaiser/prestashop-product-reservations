@@ -31,7 +31,7 @@ class AdminGestorProduccionController extends ModuleAdminController
     $success_message = $this->context->smarty->getTemplateVars('success_message') ?? null;
     $error_message = $this->context->smarty->getTemplateVars('error_message') ?? null;
 
-    
+   
     // Asignamos las variables necesarias a Smarty
     $this->context->smarty->assign([
         'productos_sin_stock_y_fecha' => $this->gestorProduccion->getProductosSinStockYFecha(),
@@ -160,13 +160,43 @@ public function eliminarDuplicadosNotas($notas)
             }
         }
 
-           // Manejo de inserción de notas
-           if (Tools::isSubmit('cliente_nota') && Tools::isSubmit('comentario')) {
-            $clienteNota = (int) Tools::getValue('cliente_nota');
-            $comentario = trim(Tools::getValue('comentario'));
-        
+        if (Tools::isSubmit('action') && Tools::getValue('action') == 'update_nota_text') {
+            // Manejo de AJAX
+            $notaId = (int)Tools::getValue('nota_id');
+            $comentario = trim(Tools::getValue('new_text'));
+            $idUser = (int)Tools::getValue('id_user');
+            
             // Validaciones
-            if (empty($clienteNota) || $clienteNota <= 0) {
+            if (empty($comentario)) {
+                die(json_encode(['success' => false, 'message' => 'El comentario no puede estar vacío.']));
+            } elseif (strlen($comentario) > 500) {
+                die(json_encode(['success' => false, 'message' => 'El comentario es demasiado largo (máximo 500 caracteres).']));
+            }
+        
+            try {
+                $comentario = strip_tags($comentario);
+                
+                if ($notaId > 0 && $this->gestorProduccion->existeNota($notaId)) {
+                    $this->gestorProduccion->actualizarNota($notaId, $comentario);
+                    die(json_encode(['success' => true, 'message' => 'Nota actualizada correctamente.']));
+                } else {
+                    if (empty($idUser)) {
+                        die(json_encode(['success' => false, 'message' => 'Usuario no válido.']));
+                    }
+                    $this->gestorProduccion->insertarNota($idUser, $comentario);
+                    die(json_encode(['success' => true, 'message' => 'Nota añadida correctamente.']));
+                }
+            } catch (Exception $e) {
+                die(json_encode(['success' => false, 'message' => 'Error al añadir/actualizar la nota: ' . $e->getMessage()]));
+            }
+        }
+        elseif (Tools::isSubmit('cliente_nota')) {
+            // Manejo del formulario tradicional
+            $idUser = (int)Tools::getValue('cliente_nota');
+            $comentario = trim(Tools::getValue('comentario'));
+            
+            // Validaciones
+            if (empty($idUser)) {
                 $this->context->smarty->assign('error_message', 'Selecciona un cliente válido.');
             } elseif (empty($comentario)) {
                 $this->context->smarty->assign('error_message', 'El comentario no puede estar vacío.');
@@ -174,20 +204,11 @@ public function eliminarDuplicadosNotas($notas)
                 $this->context->smarty->assign('error_message', 'El comentario es demasiado largo (máximo 500 caracteres).');
             } else {
                 try {
-                    $comentario = strip_tags($comentario); // Evitar etiquetas HTML
-        
-                    // Verificar si la nota existe
-                    if ($this->gestorProduccion->existeNota($clienteNota)) {
-                        // Si existe, actualizar la nota
-                        $this->gestorProduccion->actualizarNota($clienteNota, $comentario);
-                        $this->context->smarty->assign('success_message', 'Nota actualizada correctamente.');
-                    } else {
-                        // Si no existe, insertar la nueva nota
-                        $this->gestorProduccion->insertarNota($clienteNota, $comentario);
-                        $this->context->smarty->assign('success_message', 'Nota añadida correctamente.');
-                    }
+                    $comentario = strip_tags($comentario);
+                    $this->gestorProduccion->insertarNota($idUser, $comentario);
+                    $this->context->smarty->assign('success_message', 'Nota añadida correctamente.');
                 } catch (Exception $e) {
-                    $this->context->smarty->assign('error_message', 'Error al añadir/actualizar la nota: ' . $e->getMessage());
+                    $this->context->smarty->assign('error_message', 'Error al añadir la nota: ' . $e->getMessage());
                 }
             }
         }

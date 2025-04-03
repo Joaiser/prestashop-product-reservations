@@ -19,7 +19,9 @@ document.addEventListener("DOMContentLoaded", async function() {
 
         // 🔹 Importa e inicializa NotaEditor
         const { NotaEditor } = await import('./modules/notaEditor/notaEditor.js');
-        new NotaEditor();  // 🔥 Instanciamos la clase para que empiece a escuchar eventos
+        const notaEditor = new NotaEditor();
+        notaEditor.initHandlers();  
+
 
     } catch (err) {
         console.error('Error cargando módulos:', err);
