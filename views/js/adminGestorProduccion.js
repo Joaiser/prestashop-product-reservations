@@ -17,10 +17,9 @@ document.addEventListener("DOMContentLoaded", async function() {
         const uiManager = await import('./modules/uiManager.js');
         uiManager.init();
 
-        // 🔹 Importa e inicializa NotaEditor
-        const { NotaEditor } = await import('./modules/notaEditor/notaEditor.js');
+         const { NotaEditor } = await import('./modules/notaEditor/notaEditor.js');
         const notaEditor = new NotaEditor();
-        notaEditor.initHandlers();  
+        notaEditor.init();
 
 
     } catch (err) {
