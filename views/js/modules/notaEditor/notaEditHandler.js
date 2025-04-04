@@ -1,6 +1,6 @@
 export class NotaEditHandler {
     constructor(notaEditor) {
-        this.editor = notaEditor; // Recibimos la instancia principal
+        this.editor = notaEditor; 
         this.isSaving = false;
     }
 
@@ -10,9 +10,11 @@ export class NotaEditHandler {
                 this.handleEditClick(e);
             } else if (e.target.closest('.nota-save-icon')) {
                 this.handleSaveClick(e);
+            } else if (e.target.closest('.nota-delete-icon')) {
+                this.handleDeleteClick(e); // Nuevo método específico para eliminar
             }
         });
-
+    
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && e.target.closest('.nota-edit') && !e.shiftKey) {
                 e.preventDefault();
@@ -20,6 +22,7 @@ export class NotaEditHandler {
             }
         });
     }
+    
 
     getNotaData(target) {
         console.log("target en getNotaData:", target);
@@ -99,5 +102,43 @@ export class NotaEditHandler {
         const { notaId, container } = notaData;
         this.editor.ui.toggleEditMode(notaId, true);
         this.editor.ui.focusTextElement(notaId);
+    }
+
+    async handleDeleteClick(event) {
+        event.preventDefault();
+        event.stopPropagation();
+    
+        const deleteIcon = event.target.closest('.nota-delete-icon');
+        if (!deleteIcon) return;
+    
+        const container = deleteIcon.closest('.nota-contenido');
+        if (!container) {
+            console.error("Contenedor de nota no encontrado");
+            return;
+        }
+    
+        const notaId = container.dataset.notaId;
+        if (!notaId) {
+            console.error("ID de nota no encontrado");
+            return;
+        }
+    
+        if (confirm('¿Estás seguro de que quieres eliminar esta nota?')) {
+            try {
+                await this.editor.api.eliminarNota(notaId);
+                
+                // Eliminar el elemento del DOM
+                const notaItem = container.closest('.nota-item');
+                if (notaItem) {
+                    notaItem.remove();
+                }
+                
+                // Mostrar feedback
+                this.editor.ui.showMessage('success', 'Nota eliminada correctamente');
+            } catch (error) {
+                console.error("Error al eliminar nota:", error);
+                this.editor.ui.showMessage('error', error.message || 'Error al eliminar la nota');
+            }
+        }
     }
 }

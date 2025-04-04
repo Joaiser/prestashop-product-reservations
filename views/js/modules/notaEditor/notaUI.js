@@ -37,11 +37,44 @@ export class NotaUI {
         }
     }
 
+    
     focusTextElement(notaId) {
         const textarea = document.getElementById(`nota-edit-${notaId}`);
-        if (!textarea) return;
-        
-        textarea.focus();
-        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        if (textarea) {
+            textarea.focus();
+            textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+            
+            // Scroll suave al textarea si es necesario
+            textarea.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'nearest',
+                inline: 'nearest'
+            });
+        }
+    }
+
+    
+    showMessage(type, message) {
+        const container = document.getElementById('ajax-messages');
+        if (!container) return;
+
+        container.innerHTML = '';
+        container.style.display = 'block';
+
+        const messageEl = document.createElement('p');
+        messageEl.className = `ajax-message ${type}`;
+        messageEl.textContent = message;
+        messageEl.style.color = type === 'success' ? 'green' : 'red';
+        messageEl.style.fontWeight = 'bold';
+        messageEl.style.marginTop = '10px';
+
+        container.appendChild(messageEl);
+
+        if (type === 'success') {
+            setTimeout(() => {
+                messageEl.remove();
+                container.style.display = 'none';
+            }, 3000);
+        }
     }
 }

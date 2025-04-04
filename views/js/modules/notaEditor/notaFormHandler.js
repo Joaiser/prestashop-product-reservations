@@ -44,4 +44,28 @@ export class NotaFormHandler {
             this.editor.isSaving = false;
         }
     }
+
+
+async handleDelete(event, notaId) {
+    if (!notaId) {
+        console.error("ID de nota no encontrado");
+        return;
+    }
+
+    try {
+        const result = await this.editor.api.eliminarNota(notaId);  
+
+        this.editor.ui.showMessage('success', 'Nota eliminada correctamente');
+   
+        const notaItem = event.target.closest('.nota-item');  // Asumimos que cada nota tiene la clase .nota-item
+        if (notaItem) {
+            notaItem.remove();
+        }
+    } catch (error) {
+        console.error("Error al eliminar la nota:", error);
+        this.editor.ui.showMessage('error', 'Error al eliminar la nota');
+    }
+}
+
+    
 }

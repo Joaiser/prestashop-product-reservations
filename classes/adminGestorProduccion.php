@@ -220,10 +220,31 @@ public function existeNota($nota_id)
     return (int)$result > 0;
 }
 
+public function deleteNota($nota_id)
+{
+    $pdo = Db::getInstance()->getLink();
 
+    try {
+        $pdo->beginTransaction();
 
-    
-	
+        $sqlDelete = 'DELETE FROM notas_reservas WHERE id_nota = ' . (int)$nota_id;
+        $result = Db::getInstance()->execute($sqlDelete);
+
+        if (!$result) {
+            throw new Exception("No se pudo eliminar la nota.");
+        }
+
+        $pdo->commit();
+        return true; 
+    } catch (Exception $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw new Exception("Error al eliminar la nota: " . $e->getMessage());
+    }
+}
+
+    	
 	public function getCustomersQueHanReservado()
     {
 		$sql = 'SELECT DISTINCT c.id_customer, CONCAT(c.firstname, " ", c.lastname) AS final_name 

@@ -83,135 +83,212 @@ public function eliminarDuplicadosNotas($notas)
 
 
 
-    public function postProcess()
-    {
-        
+public function postProcess()
+{
+    if (Tools::isSubmit('ajax') && Tools::getValue('action') == 'filterProducts') {
+        return $this->processFilterProducts();
+    }
 
-        if (Tools::isSubmit('ajax') && Tools::getValue('action') == 'filterProducts') {
-            $id_categoria = (int)Tools::getValue('id_categoria', 0);
-            $productos = $this->gestorProduccion->getProductosPorCategoria($id_categoria);
-            
-            $this->context->smarty->assign([
-                'productos' => $productos
-            ]);
-            
-            $html = $this->context->smarty->fetch(
-                'module:gestorproduccion/views/templates/admin/_partials/productos.tpl'
-            );
-            
-            die(json_encode([
-                'success' => true,
-                'html' => $html
-            ]));
-        }
+    if ((int)Tools::getValue('delete_reservation')) {
+        return $this->processDeleteReservation();
+    }
 
-        // Manejo de eliminación de reservas
-        $id_reservation = (int) Tools::getValue('delete_reservation');
-        if ($id_reservation) {
-            try {
-                $this->gestorProduccion->borrarReserva($id_reservation);
-                exit(json_encode(['success' => true, 'message' => 'Reserva eliminada con éxito.']));
-            } catch (Exception $e) {
-                exit(json_encode(['success' => false, 'error_message' => $e->getMessage()]));
-            }
-        }
+    if (Tools::isSubmit('submit')) {
+        return $this->processEnableProducts();
+    }
 
-        // Manejo de habilitación de productos para reserva
-        if (Tools::isSubmit('submit')) {
-            try {
-                $json_data = Tools::getValue('products');
-                if (!$json_data) {
-                    throw new Exception("No se recibieron datos de productos.");
-                }
+    if (Tools::getValue('deshabilitarProducto')) {
+        return $this->processDisableProduct();
+    }
 
-                $products = json_decode($json_data, true);
-                if (!is_array($products)) {
-                    throw new Exception("Los datos del producto no son válidos.");
-                }
+    if (Tools::isSubmit('action')) {
+        return $this->processNotaActions();
+    }
 
-                foreach ($products as $product) {
-                    $this->gestorProduccion->habilitarReservas(
-                        (int) $product['id_product'],
-                        (int) $product['id_product_attribute'],
-                        pSQL($product['reference'])
-                    );
-                }
-
-                exit(json_encode(['success' => true, 'message' => 'Productos habilitados para reserva.']));
-            } catch (Exception $e) {
-                exit(json_encode(['success' => false, 'error_message' => $e->getMessage()]));
-            }
-        }
-
-        // Manejo de deshabilitación de productos
-        $action = Tools::getValue('deshabilitarProducto');
-        if ($action) {
-            try {
-                $product_id = (int) $action;
-
-                if ($this->gestorProduccion->tieneReservasActivas($product_id)) {
-                    throw new Exception("No se puede deshabilitar el producto $product_id porque tiene reservas activas.");
-                }
-
-                $this->gestorProduccion->deshabilitarProducto($product_id);
-                exit(json_encode(['success' => true, 'message' => 'Producto deshabilitado con éxito.']));
-            } catch (Exception $e) {
-                exit(json_encode(['success' => false, 'error_message' => $e->getMessage()]));
-            }
-        }
-
-        if (Tools::isSubmit('action') && Tools::getValue('action') == 'update_nota_text') {
-            // Manejo de AJAX
-            $notaId = (int)Tools::getValue('nota_id');
-            $comentario = trim(Tools::getValue('new_text'));
-            $idUser = (int)Tools::getValue('id_user');
-            
-            // Validaciones
-            if (empty($comentario)) {
-                die(json_encode(['success' => false, 'message' => 'El comentario no puede estar vacío.']));
-            } elseif (strlen($comentario) > 500) {
-                die(json_encode(['success' => false, 'message' => 'El comentario es demasiado largo (máximo 500 caracteres).']));
-            }
-        
-            try {
-                $comentario = strip_tags($comentario);
-                
-                if ($notaId > 0 && $this->gestorProduccion->existeNota($notaId)) {
-                    $this->gestorProduccion->actualizarNota($notaId, $comentario);
-                    die(json_encode(['success' => true, 'message' => 'Nota actualizada correctamente.']));
-                } else {
-                    if (empty($idUser)) {
-                        die(json_encode(['success' => false, 'message' => 'Usuario no válido.']));
-                    }
-                    $this->gestorProduccion->insertarNota($idUser, $comentario);
-                    die(json_encode(['success' => true, 'message' => 'Nota añadida correctamente.']));
-                }
-            } catch (Exception $e) {
-                die(json_encode(['success' => false, 'message' => 'Error al añadir/actualizar la nota: ' . $e->getMessage()]));
-            }
-        }
-        elseif (Tools::isSubmit('cliente_nota')) {
-            // Manejo del formulario tradicional
-            $idUser = (int)Tools::getValue('cliente_nota');
-            $comentario = trim(Tools::getValue('comentario'));
-            
-            // Validaciones
-            if (empty($idUser)) {
-                $this->context->smarty->assign('error_message', 'Selecciona un cliente válido.');
-            } elseif (empty($comentario)) {
-                $this->context->smarty->assign('error_message', 'El comentario no puede estar vacío.');
-            } elseif (strlen($comentario) > 500) {
-                $this->context->smarty->assign('error_message', 'El comentario es demasiado largo (máximo 500 caracteres).');
-            } else {
-                try {
-                    $comentario = strip_tags($comentario);
-                    $this->gestorProduccion->insertarNota($idUser, $comentario);
-                    $this->context->smarty->assign('success_message', 'Nota añadida correctamente.');
-                } catch (Exception $e) {
-                    $this->context->smarty->assign('error_message', 'Error al añadir la nota: ' . $e->getMessage());
-                }
-            }
-        }
-        
+    if (Tools::isSubmit('cliente_nota')) {
+        return $this->processClienteNota();
+    }
 }
+
+protected function processFilterProducts()
+{
+    $id_categoria = (int)Tools::getValue('id_categoria', 0);
+    $productos = $this->gestorProduccion->getProductosPorCategoria($id_categoria);
+    
+    $this->context->smarty->assign([
+        'productos' => $productos
+    ]);
+    
+    $html = $this->context->smarty->fetch(
+        'module:gestorproduccion/views/templates/admin/_partials/productos.tpl'
+    );
+    
+    die(json_encode([
+        'success' => true,
+        'html' => $html
+    ]));
+}
+
+protected function processDeleteReservation()
+{
+    $id_reservation = (int)Tools::getValue('delete_reservation');
+    try {
+        $this->gestorProduccion->borrarReserva($id_reservation);
+        exit(json_encode(['success' => true, 'message' => 'Reserva eliminada con éxito.']));
+    } catch (Exception $e) {
+        exit(json_encode(['success' => false, 'error_message' => $e->getMessage()]));
+    }
+}
+
+protected function processEnableProducts()
+{
+    try {
+        $json_data = Tools::getValue('products');
+        if (!$json_data) {
+            throw new Exception("No se recibieron datos de productos.");
+        }
+
+        $products = json_decode($json_data, true);
+        if (!is_array($products)) {
+            throw new Exception("Los datos del producto no son válidos.");
+        }
+
+        foreach ($products as $product) {
+            $this->gestorProduccion->habilitarReservas(
+                (int)$product['id_product'],
+                (int)$product['id_product_attribute'],
+                pSQL($product['reference'])
+            );
+        }
+
+        exit(json_encode(['success' => true, 'message' => 'Productos habilitados para reserva.']));
+    } catch (Exception $e) {
+        exit(json_encode(['success' => false, 'error_message' => $e->getMessage()]));
+    }
+}
+
+protected function processDisableProduct()
+{
+    try {
+        $product_id = (int)Tools::getValue('deshabilitarProducto');
+
+        if ($this->gestorProduccion->tieneReservasActivas($product_id)) {
+            throw new Exception("No se puede deshabilitar el producto $product_id porque tiene reservas activas.");
+        }
+
+        $this->gestorProduccion->deshabilitarProducto($product_id);
+        exit(json_encode(['success' => true, 'message' => 'Producto deshabilitado con éxito.']));
+    } catch (Exception $e) {
+        exit(json_encode(['success' => false, 'error_message' => $e->getMessage()]));
+    }
+}
+
+protected function processNotaActions()
+{
+    header('Content-Type: application/json');
+    
+    try {
+        $action = Tools::getValue('action');
+        
+        switch ($action) {
+            case 'update_nota_text':
+                return $this->processUpdateNota();
+            case 'delete_nota':
+                return $this->processDeleteNota();
+            default:
+                throw new Exception('Acción no reconocida.');
+        }
+    } catch (Exception $e) {
+        die(json_encode(['success' => false, 'message' => $e->getMessage()]));
+    }
+}
+
+protected function processUpdateNota()
+{
+    $notaId = (int)Tools::getValue('nota_id');
+    $comentario = trim(Tools::getValue('new_text'));
+    $idUser = (int)Tools::getValue('id_user');
+    
+    // Validaciones
+    if (empty($comentario)) {
+        throw new Exception('El comentario no puede estar vacío.');
+    } elseif (strlen($comentario) > 500) {
+        throw new Exception('El comentario es demasiado largo (máximo 500 caracteres).');
+    }
+    
+    $comentario = strip_tags($comentario);
+    
+    if ($notaId > 0 && $this->gestorProduccion->existeNota($notaId)) {
+        $this->gestorProduccion->actualizarNota($notaId, $comentario);
+        die(json_encode(['success' => true, 'message' => 'Nota actualizada correctamente.']));
+    } else {
+        if (empty($idUser)) {
+            throw new Exception('Usuario no válido.');
+        }
+        $this->gestorProduccion->insertarNota($idUser, $comentario);
+        die(json_encode(['success' => true, 'message' => 'Nota añadida correctamente.']));
+    }
+}
+
+protected function processDeleteNota()
+{
+    $notaId = (int)Tools::getValue('nota_id');
+    
+    if ($notaId <= 0 || !$this->gestorProduccion->existeNota($notaId)) {
+        throw new Exception('La nota no existe o el ID es inválido.');
+    }
+    
+    $this->gestorProduccion->deleteNota($notaId);
+    die(json_encode(['success' => true, 'message' => 'Nota eliminada correctamente.']));
+}
+
+protected function processClienteNota()
+{
+    $idUser = (int)Tools::getValue('cliente_nota');
+    $comentario = trim(Tools::getValue('comentario'));
+    
+    // Validaciones
+    if (empty($idUser)) {
+        $this->context->smarty->assign('error_message', 'Selecciona un cliente válido.');
+    } elseif (empty($comentario)) {
+        $this->context->smarty->assign('error_message', 'El comentario no puede estar vacío.');
+    } elseif (strlen($comentario) > 500) {
+        $this->context->smarty->assign('error_message', 'El comentario es demasiado largo (máximo 500 caracteres).');
+    } else {
+        try {
+            $comentario = strip_tags($comentario);
+            $this->gestorProduccion->insertarNota($idUser, $comentario);
+            $this->context->smarty->assign('success_message', 'Nota añadida correctamente.');
+        } catch (Exception $e) {
+            $this->context->smarty->assign('error_message', 'Error al añadir la nota: ' . $e->getMessage());
+        }
+    }
+}
+        
+
+public function ajaxProcessLoadNotas()
+{
+    try {
+        $notas_con_reservas = $this->gestorProduccion->getNotasConReservas();
+        $notas = $this->eliminarDuplicadosNotas($notas_con_reservas);
+        
+        $this->context->smarty->assign('notas', $notas);
+        
+        $html = $this->context->smarty->fetch(
+            _PS_MODULE_DIR_.'gestorproduccion/views/templates/admin/_partials/notas_list.tpl'
+        );
+        
+        die(json_encode([
+            'success' => true,
+            'html' => $html
+        ]));
+    } catch (Exception $e) {
+        die(json_encode([
+            'success' => false,
+            'message' => 'Error al cargar notas: ' . $e->getMessage()
+        ]));
+    }
+}
+
+
 }

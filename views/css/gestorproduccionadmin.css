@@ -71,7 +71,7 @@
 .reservas-container {
     display: grid;
     gap: 40px;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
     padding: 50px 0 50px 0;
 }
 
@@ -194,149 +194,247 @@
     background-color: #0056b3;
 }
 
-/* Contenedor de las reservas */
-.reservas-container {
+/* Contenedores principales */
+.reservas-container,
+.productos-habilitados-container {
     display: grid;
-    gap: 40px;
+    gap: 25px;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    padding: 50px 0;
-    background-color: #f4f7fc; /* Fondo suave */
+    padding: 30px 0;
+    background-color: #f8f9fa;
 }
 
-/* Cada nota */
+/* Tarjetas comunes */
+.reserva,
+.producto-habilitado,
 .nota-item {
-    border: 1px solid #ddd;
+    background: #fff;
     padding: 20px;
     border-radius: 8px;
-    background-color: #fff;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
-    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Efecto de hover suave */
-    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
 }
 
-/* Efecto al hacer hover */
+.reserva:hover,
+.producto-habilitado:hover,
 .nota-item:hover {
-    transform: translateY(-5px); /* Levanta el contenedor */
-    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); /* Más sombra en hover */
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-color: #dee2e6;
 }
 
-/* Encabezado de la nota (Cliente y Comercial) */
+/* Encabezados */
+.reserva-id,
+.producto-habilitado-id,
 .nota-header {
-    font-weight: bold;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 10px;
     font-size: 16px;
-    color: #333;
-    margin-bottom: 15px;
+}
+
+.nota-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid #eee;
+    border-bottom: 1px solid #e9ecef;
     padding-bottom: 10px;
 }
 
-/* Cuerpo de la nota (Notas) */
-.nota-body {
-    font-size: 14px;
-    line-height: 1.6;
-    color: #555;
-    margin-bottom: 15px;
-    position: relative;
-}
-
-.nota-body p {
-    margin-bottom: 10px;
-    position: relative;
-}
-
-/* Cambia el fondo al pasar el ratón por encima */
-.nota-body p:hover {
-    background-color: #f0f0f0; /* Fondo ligeramente gris cuando se pasa el mouse */
-}
-
-/* Pie de la nota (opcional) */
-.nota-footer {
-    margin-top: 15px;
-    text-align: right;
-    font-size: 14px;
-    color: #888;
-}
-
-/* Colores de los textos destacados dentro de las notas */
+/* Textos principales */
+.reserva-producto,
+.producto-habilitado-nombre,
 .nota-body strong {
-    color: #333;
-}
-
-/* Estilos para los campos editables */
-.nota-body input,
-.nota-body textarea {
-    display: none;
-    border: 1px solid #ddd;
-    padding: 5px;
-    border-radius: 4px;
-    font-size: 14px;
-    width: 100%;
-}
-
-/* Mostrar campos editables cuando el usuario hace clic en el lápiz */
-.nota-body.editable input,
-.nota-body.editable textarea {
+    font-weight: 500;
+    color: #343a40;
     display: block;
+    margin-bottom: 5px;
 }
 
-/* Botón de eliminar o acciones adicionales */
-.nota-item .btn-danger {
-    background-color: #e74c3c;
-    color: #fff;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+/* Textos secundarios */
+.reserva-cliente,
+.reserva-fecha,
+.producto-habilitado-reference,
+.nota-body,
+.nota-footer {
+    color: #6c757d;
+    font-size: 14px;
+    line-height: 1.5;
 }
 
-/* Hover sobre el botón */
-.nota-item .btn-danger:hover {
-    background-color: #c0392b; /* Rojo más oscuro */
+/* Estados */
+.reserva-estado {
+    color: #0d6efd;
+    font-weight: 500;
 }
 
-/* Efecto hover sobre el contenedor */
-.reservas-container .nota-item:hover {
-    background-color: #f3f4f6; /* Fondo más claro al hacer hover */
+.producto-habilitado-estado {
+    color: #198754;
+    font-weight: 500;
 }
 
-.nota-edit {
-    display: none; /* Por defecto oculto */
-    position: absolute; /* Para que se superponga sobre el p */
-    width: 100%;
-    min-height: 50px;
-    z-index: 10; /* Asegurarnos de que esté por encima del texto */
-    background: #f0f0f0; /* Fondo gris claro */
-    border: 1px solid #ccc;
-    padding: 8px;
-    box-sizing: border-box;
-    border-radius: 4px;
+/* Contenedor de nota específico */
+.nota-contenido {
+    position: relative;
+    min-height: 60px;
+    margin: 10px 0;
+    padding: 15px;
+    background: #fff;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
 }
 
-.nota-body .nota-edit.visible {
-    display: block; /* Hacer visible cuando se edita */
-    z-index: 10; /* Asegurarnos de que no quede cubierto por otros elementos */
-}
-
-.nota-edit-icon{
-    cursor: pointer;
-}
-
-.nota-save-icon{
-    cursor: pointer;
-}
-
-.textarea-nota{
-    position: absolute;
-    z-index: 9999;
-}
-
-.nota-texto{
+/* Texto y botones de nota */
+.nota-texto {
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
+    margin: 0;
+    padding-right: 70px; /* Espacio para botones */
+    position: relative;
+    min-height: 24px;
+}
+
+/* Botones de acción */
+.nota-edit-icon,
+.nota-delete-icon,
+.nota-save-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.nota-delete-icon {
+    right: 50px;
+    color: #dc3545;
+}
+
+.nota-save-icon {
+    display: none;
+    background: #198754;
+    color: #fff;
+    border-color: #198754;
+}
+
+.nota-edit-icon:hover,
+.nota-delete-icon:hover {
+    background: #f8f9fa;
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* Área de edición */
+.nota-edit {
+    display: none;
+    width: 100%;
+    min-height: 80px;
+    padding: 10px;
+    margin-top: 10px;
+    border: 1px solid #0d6efd;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+}
+
+.nota-edit.visible {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Botones principales */
+#btn-aplicar,
+#btn-ver-mas {
+    width: 200px;
+    height: 40px;
+    background-color: #212529;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: block;
+    margin: 30px auto 0;
+}
+
+#btn-ver-mas {
+    background-color: #0d6efd;
+}
+
+#btn-aplicar:hover {
+    background-color: #343a40;
+}
+
+#btn-ver-mas:hover {
+    background-color: #0b5ed7;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .reservas-container,
+    .productos-habilitados-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 20px 0;
+    }
+    
+    .reserva,
+    .producto-habilitado,
+    .nota-item {
+        padding: 15px;
+    }
+    
+    .nota-texto {
+        padding-right: 60px;
+    }
+    
+    .nota-edit-icon,
+    .nota-delete-icon {
+        width: 26px;
+        height: 26px;
+        font-size: 12px;
+    }
+    
+    .nota-delete-icon {
+        right: 45px;
+    }
+}
+
+/* Mensajes y estados */
+.ajax-message {
+    padding: 10px 15px;
+    margin: 10px 0;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.ajax-message.success {
+    background-color: #d1e7dd;
+    color: #0f5132;
+    border: 1px solid #badbcc;
+}
+
+.ajax-message.error {
+    background-color: #f8d7da;
+    color: #842029;
+    border: 1px solid #f5c2c7;
 }
