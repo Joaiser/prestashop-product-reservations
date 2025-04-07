@@ -172,9 +172,9 @@ protected function processDisableProduct()
     try {
         $product_id = (int)Tools::getValue('deshabilitarProducto');
 
-        if ($this->gestorProduccion->tieneReservasActivas($product_id)) {
-            throw new Exception("No se puede deshabilitar el producto $product_id porque tiene reservas activas.");
-        }
+        // if ($this->gestorProduccion->tieneReservasActivas($product_id)) {
+        //     throw new Exception("No se puede deshabilitar el producto $product_id porque tiene reservas activas.");
+        // }
 
         $this->gestorProduccion->deshabilitarProducto($product_id);
         exit(json_encode(['success' => true, 'message' => 'Producto deshabilitado con éxito.']));

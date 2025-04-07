@@ -127,12 +127,12 @@ class AdminGestorProduccion
         }
     }
 
-    public function tieneReservasActivas($product_id)
-    {
-        $sql = 'SELECT COUNT(*) FROM '._DB_PREFIX_.'product_reservations 
-                WHERE id_product = '.(int)$product_id;
-        return (bool)Db::getInstance()->getValue($sql);
-    }
+    // public function tieneReservasActivas($product_id)
+    // {
+    //     $sql = 'SELECT COUNT(*) FROM '._DB_PREFIX_.'product_reservations 
+    //             WHERE id_product = '.(int)$product_id;
+    //     return (bool)Db::getInstance()->getValue($sql);
+    // }
 
     public function deshabilitarProducto($product_id)
     {
