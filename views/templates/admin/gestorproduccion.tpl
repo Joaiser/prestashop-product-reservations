@@ -121,9 +121,9 @@
 </div>
 
 <!-- Sección de productos con fecha de llegada -->
-<h4 style="font-weight:bold;">📅 {l s='Con fecha de llegada' mod='gestorproduccion'}</h4>
+<h4 style="font-weight:bold; display: none;">📅 {l s='Con fecha de llegada' mod='gestorproduccion'}</h4>
 {if $productos_con_fecha}
-    <form id="productosForm">
+    <form id="productosForm" style="display: none;">
         <div class="productos-container">
             {foreach from=$productos_con_fecha item=producto}
                 <div class="producto">
@@ -142,10 +142,10 @@
     <p>⏳ {l s='No hay productos con fecha de llegada' mod='gestorproduccion'}</p>
 {/if}
 
-<!-- Sección de productos sin fecha de llegada -->
-<h4 style="font-weight:bold;">❌ {l s='Sin fecha de llegada' mod='gestorproduccion'}</h4>
+ <!-- Sección de productos sin fecha de llegada -->
+ <h4 style="font-weight:bold;  display: none">❌ {l s='Sin fecha de llegada' mod='gestorproduccion'}</h4>
 {if $productos_sin_stock_y_fecha}
-    <div class="productos-container">
+    <div class="productos-container" style="display: none;">
         {foreach from=$productos_sin_stock_y_fecha item=producto}
             <div class="producto">
                 <input type="checkbox" class="producto-checkbox" name="productos[]" 
@@ -159,18 +159,18 @@
             </div>
         {/foreach}
     </div>
+    </form>
 {else}
     <p>🎉 {l s='No hay productos sin stock' mod='gestorproduccion'}</p>
 {/if}
 
 <!-- Botón general para aplicar selección -->
 <div id="button-container">
-    <button type="submit" id="btn-aplicar" class="btn btn-success" style="display:none;">
+    <button type="button" id="btn-aplicar" class="btn btn-success">
         🔄 {l s='Habilitar reservas para seleccionados' mod='gestorproduccion'}
     </button>
 </div>
 
-</form>
 
 
 {/block}

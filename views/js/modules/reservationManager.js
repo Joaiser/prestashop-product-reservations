@@ -6,6 +6,10 @@ export function init(ajaxUrl, csrfToken) {
             return;
         }
 
+        if (!confirm(`¿Estás seguro de habilitar reservas para ${products.length} producto(s)?`)) {
+            return;
+        }
+
         fetch(ajaxUrl, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -78,23 +82,12 @@ export function init(ajaxUrl, csrfToken) {
             });
     }
 
-    // Eventos
-    document.getElementById("productosForm")?.addEventListener("submit", function(e) {
-        e.preventDefault();
-        const selectedProducts = Array.from(document.querySelectorAll('.producto-checkbox:checked'))
-            .map(c => ({
-                id_product: c.value,
-                id_product_attribute: c.dataset.idProductAttribute || 0,
-                reference: c.dataset.reference || null
-            }));
-
-        if (selectedProducts.length > 0) {
-            habilitarReserva(selectedProducts);
-        } else {
-            alert("Por favor, selecciona al menos un producto.");
-        }
+    // Evento para habilitar reservas
+    document.addEventListener('habilitarReservas', function(e) {
+        habilitarReserva(e.detail.products);
     });
 
+    // Evento para borrar reservas 
     document.querySelectorAll('.btn-borrar-reserva').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
@@ -103,6 +96,7 @@ export function init(ajaxUrl, csrfToken) {
         });
     });
 
+    // Evento para deshabilitar productos
     document.querySelectorAll('.form-deshabilitar-producto').forEach(form => {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -110,4 +104,22 @@ export function init(ajaxUrl, csrfToken) {
             if (button) deshabilitarProducto({ target: button });
         });
     });
+
+    
+    // document.getElementById("productosForm")?.addEventListener("submit", function(e) {
+    //     e.preventDefault();
+    //     const selectedProducts = Array.from(document.querySelectorAll('.producto-checkbox:checked'))
+    //         .map(c => ({
+    //             id_product: c.value,
+    //             id_product_attribute: c.dataset.idProductAttribute || 0,
+    //             reference: c.dataset.reference || null
+    //         }));
+
+    //     if (selectedProducts.length > 0) {
+    //         habilitarReserva(selectedProducts);
+    //     } else {
+    //         alert("Por favor, selecciona al menos un producto.");
+    //     }
+    // });
+
 }

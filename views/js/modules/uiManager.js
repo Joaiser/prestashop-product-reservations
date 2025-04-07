@@ -1,5 +1,7 @@
+// Versión final de uiManager.js
 export function init() {
-    // Configuración de checkboxes
+    console.log('UI Manager inicializado');
+    
     function setupCheckboxEvents() {
         const checkboxes = document.querySelectorAll('.producto-checkbox');
         const btnAplicar = document.getElementById('btn-aplicar');
@@ -13,19 +15,36 @@ export function init() {
                 }
                 
                 if (btnAplicar) {
-                    btnAplicar.style.display = [...checkboxes].some(c => c.checked) ? 'flex' : 'none';
-                    btnAplicar.style.alignItems = 'center';
-                    btnAplicar.style.justifyContent = 'center';
-                    btnAplicar.style.gap = '8px';
-                    
+                    btnAplicar.classList.toggle('visible', [...checkboxes].some(c => c.checked));
                 }
             });
         });
+
+        if (btnAplicar) {
+            btnAplicar.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopImmediatePropagation(); 
+                
+                const selectedProducts = Array.from(document.querySelectorAll('.producto-checkbox:checked'))
+                    .map(c => ({
+                        id_product: c.value,
+                        id_product_attribute: c.dataset.idProductAttribute || 0,
+                        reference: c.dataset.reference || null
+                    }));
+        
+                if (selectedProducts.length > 0) {
+                    const event = new CustomEvent('habilitarReservas', { 
+                        detail: { products: selectedProducts },
+                        bubbles: false
+                    });
+                    document.dispatchEvent(event);
+                } else {
+                    alert("Por favor, selecciona al menos un producto.");
+                }
+            });
+        }
     }
 
-    // Escuchar evento de productos cargados
-    document.addEventListener('productosCargados', setupCheckboxEvents);
-    
-    // Configuración inicial
     setupCheckboxEvents();
+    document.addEventListener('productosCargados', setupCheckboxEvents);
 }

@@ -61,7 +61,7 @@ public function uninstall()
         $tab->name = [];
 
         foreach (Language::getLanguages() as $lang) {
-            $tab->name[$lang['id_lang']] = 'Gestor de Producción';
+            $tab->name[$lang['id_lang']] = 'Gestor Reservas';
         }
 
         return $tab->add();
