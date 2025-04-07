@@ -267,8 +267,10 @@
 }
 
 .nota-delete-icon {
+    right: 50px;
     color: #dc3545;
 }
+
 
 .nota-save-icon {
     display: none;

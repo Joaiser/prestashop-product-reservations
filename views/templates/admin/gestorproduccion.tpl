@@ -68,6 +68,11 @@
     <p>⏳ {l s='No hay reservas pendientes' mod='gestorproduccion'}</p>
 {/if}
 
+<form action="{$link->getAdminLink('AdminGestorProduccion')}" method="post">
+    <input type="hidden" name="update_products_without_stock" value="1">
+    <button type="submit" class="btn btn-primary">Habilitar productos sin stock</button>
+</form>
+
 <!-- Sección de productos habilitados -->
 <h4 style="font-weight:bold;">✅ {l s='Productos Habilitados' mod='gestorproduccion'}</h4>
 

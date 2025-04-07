@@ -18,6 +18,11 @@ class AdminGestorProduccionController extends ModuleAdminController
 {
     parent::initContent();
     
+    // Verificar si se debe actualizar los productos sin stock
+    if (Tools::getValue('update_products_without_stock')) {
+        $this->processUpdateProductsWithoutStock();
+    }
+
     $id_categoria = (int)Tools::getValue('id_categoria', 0);
     
     // Obtener productos iniciales (todas las categorías por defecto)
@@ -31,7 +36,6 @@ class AdminGestorProduccionController extends ModuleAdminController
     $success_message = $this->context->smarty->getTemplateVars('success_message') ?? null;
     $error_message = $this->context->smarty->getTemplateVars('error_message') ?? null;
 
-   
     // Asignamos las variables necesarias a Smarty
     $this->context->smarty->assign([
         'productos_sin_stock_y_fecha' => $this->gestorProduccion->getProductosSinStockYFecha(),
@@ -109,6 +113,48 @@ public function postProcess()
         return $this->processClienteNota();
     }
 }
+
+//nueva funcion que habilitara todos los productos sin stock
+protected function processUpdateProductsWithoutStock()
+{
+    try {
+        // Obtener los productos sin stock y con fecha de disponibilidad
+        $productosSinStockYFecha = $this->gestorProduccion->getProductosSinStockYFecha();
+        $productosConFecha = $this->gestorProduccion->getProductosConFecha();
+
+        // Fusionar ambos conjuntos de productos
+        $productos = array_merge($productosSinStockYFecha, $productosConFecha);
+
+        // Si no hay productos, lanzar una excepción
+        if (empty($productos)) {
+            throw new Exception("No se encontraron productos sin stock ni fecha de disponibilidad.");
+        }
+
+        // Habilitar reservas para cada producto
+        foreach ($productos as $producto) {
+            $this->gestorProduccion->habilitarReservas(
+                (int)$producto['id_product'],
+                (int)$producto['id_product_attribute'],
+                pSQL($producto['reference'])
+            );
+        }
+
+        // Respuesta exitosa
+        exit(json_encode([
+            'success' => true,
+            'message' => 'Productos sin stock habilitados para reserva.'
+        ]));
+
+    } catch (Exception $e) {
+        // Respuesta en caso de error
+        exit(json_encode([
+            'success' => false,
+            'error_message' => $e->getMessage()
+        ]));
+    }
+}
+
+
 
 protected function processFilterProducts()
 {
