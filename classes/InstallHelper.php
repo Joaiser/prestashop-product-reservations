@@ -36,11 +36,13 @@ class InstallHelper
                 reference VARCHAR(64) DEFAULT NULL, 
                 is_enabled TINYINT(1) NOT NULL DEFAULT 0, 
                 date_enabled DATETIME NOT NULL,     
-                PRIMARY KEY (id_product, id_product_attribute, reference) 
+                PRIMARY KEY (id_product, id_product_attribute)
             ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
-
+    
         return Db::getInstance()->execute($sql);
     }
+    
+
 
     public static function uninstallReservationEnabledDB()
     {

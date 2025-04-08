@@ -118,47 +118,53 @@ class AdminGestorProduccion
 
 
     public function getProductosHabilitados()
-    {
-        $sql = 'SELECT p.id_product, pa.id_product_attribute, pl.name AS product_name, 
-                       IFNULL(pa.reference, p.reference) AS reference
-                FROM '._DB_PREFIX_.'product_reservation_enabled pre
-                LEFT JOIN '._DB_PREFIX_.'product p ON pre.id_product = p.id_product
-                LEFT JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product
-                LEFT JOIN '._DB_PREFIX_.'product_attribute pa ON p.id_product = pa.id_product
-                WHERE pl.id_lang = '.(int)$this->context->language->id.' 
-                AND pre.is_enabled = 1';
+{
+    $sql = 'SELECT 
+                pre.id_product, 
+                pre.id_product_attribute,
+                pl.name AS product_name,
+                pre.reference
+            FROM '._DB_PREFIX_.'product_reservation_enabled pre
+            LEFT JOIN '._DB_PREFIX_.'product_lang pl 
+                ON pre.id_product = pl.id_product AND pl.id_lang = '.(int)$this->context->language->id.'
+            WHERE pre.is_enabled = 1';
 
-        return Db::getInstance()->executeS($sql);
-    }
+    return Db::getInstance()->executeS($sql);
+}
+
 
     public function habilitarReservas($product_id, $id_product_attribute, $reference)
-    {
-        $pdo = Db::getInstance()->getLink();
+{
+    $pdo = Db::getInstance()->getLink();
 
-        try {
-            $pdo->beginTransaction();
+    try {
+        $pdo->beginTransaction();
 
-            $sqlReservationEnabled = 'INSERT INTO '._DB_PREFIX_.'product_reservation_enabled 
-                                      (id_product, id_product_attribute, reference, is_enabled, date_enabled) 
-                                      VALUES (
-                                          '.(int)$product_id.', 
-                                          '.(int)$id_product_attribute.', 
-                                          "'.pSQL($reference).'", 
-                                          1, 
-                                          NOW()
-                                      ) 
-                                      ON DUPLICATE KEY UPDATE 
-                                      is_enabled = 1, date_enabled = NOW()';
-            Db::getInstance()->execute($sqlReservationEnabled);
+        // Si no hay combinación, usar 0
+        $id_product_attribute = $id_product_attribute ?: 0;
 
-            $pdo->commit();
-        } catch (Exception $e) {
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-            throw new Exception("Error al habilitar las reservas: " . $e->getMessage());
+        $sqlReservationEnabled = 'INSERT INTO '._DB_PREFIX_.'product_reservation_enabled 
+                                  (id_product, id_product_attribute, reference, is_enabled, date_enabled) 
+                                  VALUES (
+                                      '.(int)$product_id.', 
+                                      '.(int)$id_product_attribute.', 
+                                      "'.pSQL($reference).'", 
+                                      1, 
+                                      NOW()
+                                  ) 
+                                  ON DUPLICATE KEY UPDATE 
+                                  is_enabled = 1, date_enabled = NOW()';
+        Db::getInstance()->execute($sqlReservationEnabled);
+
+        $pdo->commit();
+    } catch (Exception $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
         }
+        throw new Exception("Error al habilitar las reservas: " . $e->getMessage());
     }
+}
+
 
     public function borrarReserva($id_reservation)
     {

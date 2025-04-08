@@ -161,7 +161,7 @@
 .productos-habilitados-container {
     display: grid;
     gap: 25px;
-    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(900px, 1fr));
     padding: 30px 0;
     background-color: #f8f9fa;
 }

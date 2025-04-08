@@ -240,7 +240,7 @@ protected function processEnableProducts()
         if (!is_array($products)) {
             throw new Exception("Los datos del producto no son válidos.");
         }
-
+        
         foreach ($products as $product) {
             $this->gestorProduccion->habilitarReservas(
                 (int)$product['id_product'],

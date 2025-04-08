@@ -67,7 +67,7 @@
                         </thead>
                         <tbody>
                             {foreach from=$grupo.productos item=producto}
-                                <tr style="border-bottom: 1px solid #eee;">
+                                <tr style="border-bottom: 1px solid #eee;" class="producto-reservado">
                                     <td style="padding: 8px;">📦 {$producto.product_name}</td>
                                     <td style="padding: 8px;">🔖 {$producto.reference}</td>
                                     <td style="padding: 8px;">

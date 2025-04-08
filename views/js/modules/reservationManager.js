@@ -24,7 +24,6 @@ export function init(ajaxUrl, csrfToken) {
         .then(data => {
             if (data.success) {
                 showSuccess("✅ Reservas habilitadas correctamente");
-                window.location.reload();
             } else {
                 showError("❌ Error al habilitar las reservas: " + (data.error_message || "Desconocido"));
             }
@@ -55,13 +54,17 @@ export function init(ajaxUrl, csrfToken) {
         }
     }
 
-    function deshabilitarProducto(event) {
-        const button = event.target;
-        const productId = button.dataset.id;
+    function deshabilitarProducto(event, button) {
+        // Ya no necesitamos preventDefault aquí porque ya se hizo en el listener
+        
+        // Obtenemos el ID del producto
+        const productId = button.dataset.id || 
+                         button.closest('form').querySelector('input[name="id_reservation"]').value;
+        
         const url = `${ajaxUrl}&deshabilitarProducto=${productId}&token=${csrfToken}`;
-
+    
         if (!confirm(`¿Seguro que deseas deshabilitar el producto con 🆔:${productId}?`)) return;
-
+    
         fetch(url)
             .then(response => {
                 if (!response.ok) throw new Error("Error en la respuesta del servidor");
@@ -69,8 +72,7 @@ export function init(ajaxUrl, csrfToken) {
             })
             .then(data => {
                 if (data.success) {
-                    showSuccess("✅ Producto deshabilitado correctamente.");
-                    window.location.reload();
+                    showSuccess("✅ Producto deshabilitado correctamente, recargue la página.");
                 } else {
                     showError("❌ Error al deshabilitar: " + (data.error_message || "Desconocido"));
                 }
@@ -80,6 +82,7 @@ export function init(ajaxUrl, csrfToken) {
                 showError("❌ Hubo un error al procesar la solicitud.");
             });
     }
+    
 
     async function actualizarCantidadReserva(idReserva, nuevaCantidad) {
         const params = new URLSearchParams();
@@ -164,7 +167,7 @@ export function init(ajaxUrl, csrfToken) {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             const button = this.querySelector('.btn-deshabilitar');
-            if (button) deshabilitarProducto({ target: button });
+            if (button) deshabilitarProducto(e, button); 
         });
     });
 }
