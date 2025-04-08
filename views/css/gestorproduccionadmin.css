@@ -157,13 +157,22 @@
 }
 
 /* Contenedores principales */
-.reservas-container,
+
 .productos-habilitados-container {
     display: grid;
     gap: 25px;
     grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
     padding: 30px 0;
     background-color: #f8f9fa;
+}
+
+.reservas-container{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 30px 0;
+    background-color: #f8f9fa;
+
 }
 
 /* Tarjetas comunes */

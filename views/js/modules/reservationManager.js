@@ -1,8 +1,9 @@
+import { showSuccess, showError } from './uiManager.js';
+
 export function init(ajaxUrl, csrfToken) {
-    // Función para habilitar reservas
     function habilitarReserva(products) {
         if (products.length === 0) {
-            alert("No se encontraron productos válidos para habilitar reservas.");
+            showError("No se encontraron productos válidos para habilitar reservas.");
             return;
         }
 
@@ -22,19 +23,18 @@ export function init(ajaxUrl, csrfToken) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert("✅ Reservas habilitadas correctamente");
+                showSuccess("✅ Reservas habilitadas correctamente");
                 window.location.reload();
             } else {
-                alert("❌ Error al habilitar las reservas: " + (data.error_message || "Desconocido"));
+                showError("❌ Error al habilitar las reservas: " + (data.error_message || "Desconocido"));
             }
         })
         .catch(error => {
             console.error("Error:", error);
-            alert("❌ Hubo un error al procesar la solicitud.");
+            showError("❌ Hubo un error al procesar la solicitud.");
         });
     }
 
-    // Función para borrar reserva
     function borrarReserva(idReservation) {
         const url = `${ajaxUrl}&delete_reservation=${idReservation}&token=${csrfToken}`;
         if (confirm(`¿Seguro que deseas borrar la reserva ID ${idReservation}?`)) {
@@ -42,20 +42,19 @@ export function init(ajaxUrl, csrfToken) {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert("✅ Reserva eliminada correctamente.");
-                    window.location.reload();
+                    showSuccess("✅ Reserva eliminada correctamente.");
+                    document.querySelector(`button[data-id="${idReservation}"]`).closest('tr').remove();
                 } else {
-                    alert("❌ Error al borrar la reserva: " + (data.error_message || "Desconocido"));
+                    showError("❌ Error al borrar la reserva: " + (data.error_message || "Desconocido"));
                 }
             })
             .catch(error => {
                 console.error("Error:", error);
-                alert("❌ Hubo un error al procesar la solicitud.");
+                showError("❌ Hubo un error al procesar la solicitud.");
             });
         }
     }
 
-    // Función para deshabilitar producto
     function deshabilitarProducto(event) {
         const button = event.target;
         const productId = button.dataset.id;
@@ -70,33 +69,97 @@ export function init(ajaxUrl, csrfToken) {
             })
             .then(data => {
                 if (data.success) {
-                    alert("✅ Producto deshabilitado correctamente.");
+                    showSuccess("✅ Producto deshabilitado correctamente.");
                     window.location.reload();
                 } else {
-                    alert("❌ Error al deshabilitar: " + (data.error_message || "Desconocido"));
+                    showError("❌ Error al deshabilitar: " + (data.error_message || "Desconocido"));
                 }
             })
             .catch(error => {
                 console.error("Error:", error);
-                alert("❌ Hubo un error al procesar la solicitud.");
+                showError("❌ Hubo un error al procesar la solicitud.");
             });
     }
 
-    // Evento para habilitar reservas
+    async function actualizarCantidadReserva(idReserva, nuevaCantidad) {
+        const params = new URLSearchParams();
+        params.append('action', 'editarCantidadReserva');
+        params.append('id_reservation', idReserva);
+        params.append('nueva_cantidad', nuevaCantidad);
+        params.append('ajax', '1');
+        params.append('token', csrfToken);
+    
+        const response = await fetch(ajaxUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: params
+        });
+        return await response.json();
+    }
+
+    document.querySelectorAll('.btn-editar-cantidad').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const idReserva = this.dataset.id;
+            const tr = this.closest('tr');
+            this.style.display = 'none';
+            tr.querySelector('.input-cantidad').style.display = 'inline-block';
+            tr.querySelector('.btn-guardar-cantidad').style.display = 'inline-block';
+        });
+    });
+
+    document.querySelectorAll('.btn-guardar-cantidad').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const idReserva = this.dataset.id;
+            const tr = this.closest('tr');
+            const input = tr.querySelector('.input-cantidad');
+            const nuevaCantidad = parseInt(input.value);
+
+            if (isNaN(nuevaCantidad) || nuevaCantidad < 0) {
+                showError('❌ Cantidad no válida');
+                return;
+            }
+
+            this.innerHTML = '⌛';
+            this.disabled = true;
+
+            actualizarCantidadReserva(idReserva, nuevaCantidad)
+                .then(data => {
+                    if (data.success) {
+                        tr.querySelector('.cantidad-reserva').textContent = `🛒 ${nuevaCantidad}`;
+                        input.style.display = 'none';
+                        this.style.display = 'none';
+                        tr.querySelector('.btn-editar-cantidad').style.display = 'inline-block';
+                        showSuccess('✅ Cantidad actualizada');
+                    } else {
+                        showError(`❌ ${data.message || 'Error al actualizar'}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showError('❌ Error de conexión');
+                })
+                .finally(() => {
+                    this.innerHTML = '✔️';
+                    this.disabled = false;
+                });
+        });
+    });
+
     document.addEventListener('habilitarReservas', function(e) {
         habilitarReserva(e.detail.products);
     });
 
-    // Evento para borrar reservas 
     document.querySelectorAll('.btn-borrar-reserva').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
-            const idReservation = this.closest('form').id.split('-')[3];
+            const idReservation = this.closest('form').querySelector('input[name="id_reservation"]').value;
             borrarReserva(idReservation);
         });
     });
 
-    // Evento para deshabilitar productos
     document.querySelectorAll('.form-deshabilitar-producto').forEach(form => {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -104,6 +167,8 @@ export function init(ajaxUrl, csrfToken) {
             if (button) deshabilitarProducto({ target: button });
         });
     });
+}
+
 
     
     // document.getElementById("productosForm")?.addEventListener("submit", function(e) {
@@ -121,5 +186,3 @@ export function init(ajaxUrl, csrfToken) {
     //         alert("Por favor, selecciona al menos un producto.");
     //     }
     // });
-
-}

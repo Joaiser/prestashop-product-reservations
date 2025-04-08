@@ -42,25 +42,56 @@
 
 <!-- Sección de reservas pendientes -->
 <h4 style="font-weight:bold;">🛒 {l s='Reservas Pendientes' mod='gestorproduccion'}</h4>
-{if $reservas_pendientes}
-    <div class="reservas-container">
-        {foreach from=$reservas_pendientes item=reservation}
-            <div class="reserva">
-                <p class="reserva-id">🆔 Reserva ID: {$reservation.id_reservation}</p>
-                <p class="reserva-producto">📦 Producto: {$reservation.product_name}</p>
-                <p class="reserva-cliente">👤 Cliente: {$reservation.customer_firstname} {$reservation.customer_lastname}</p>
-                <p class="reserva-comercial">🧑‍💼 Comercial: {$reservation.comercial_firstname} {$reservation.comercial_lastname}</p>
-                <p class="reserva-reference">🔖 Referencia: {$reservation.reference}</p>
-                <p class="reserva-fecha">🗓 Fecha de reserva: {$reservation.date_added|date_format:"%d-%m-%Y"}</p>
-                <p class="reserva-estado">🔄 Estado: {$reservation.status|capitalize}</p>
-                <p>🛒 Cantidad reservada: {$reservation.reserved_stock}</p>
 
-                <!-- Formulario para borrar reserva -->
-                <form id="form-borrar-reserva-{$reservation.id_reservation}" class="form-borrar-reserva">
-                    <button type="submit" class="btn-borrar-reserva">
-                        ❌ Borrar reserva
-                    </button>
-                </form>
+{if $reservas_agrupadas}
+    <div class="reservas-container">
+        {foreach from=$reservas_agrupadas key=id_cliente item=grupo}
+            <div class="reserva-cliente" style="margin-bottom: 30px; border: 1px solid #ddd; padding: 15px; border-radius: 5px; width: 100%;">
+                <div class="cliente-header" style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <div>
+                        <h5 style="margin: 0;">👤 Cliente: {$grupo.cliente}</h5>
+                        <p style="margin: 5px 0 0 0;">🧑‍💼 Comercial: {$grupo.comercial}</p>
+                    </div>
+                </div>
+                
+                <div class="productos-reservados">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background-color: #f5f5f5;">
+                                <th style="padding: 8px; text-align: left;">Producto</th>
+                                <th style="padding: 8px; text-align: left;">Referencia</th>
+                                <th style="padding: 8px; text-align: left;">Cantidad</th>
+                                <th style="padding: 8px; text-align: left;">Fecha</th>
+                                <th style="padding: 8px; text-align: left;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {foreach from=$grupo.productos item=producto}
+                                <tr style="border-bottom: 1px solid #eee;">
+                                    <td style="padding: 8px;">📦 {$producto.product_name}</td>
+                                    <td style="padding: 8px;">🔖 {$producto.reference}</td>
+                                    <td style="padding: 8px;">
+                                        <span class="cantidad-reserva">🛒 {$producto.reserved_stock}</span>
+                                        <input type="number" class="input-cantidad" value="{$producto.reserved_stock}" min="0" 
+                                               style="display: none; width: 60px; margin-right: 5px;">
+                                        <button type="button" class="btn-editar-cantidad" data-id="{$producto.id_reservation}"
+                                                style="background: none; border: none; cursor: pointer;">✏️</button>
+                                        <button type="button" class="btn-guardar-cantidad" data-id="{$producto.id_reservation}"
+                                                style="display: none; background: none; border: none; cursor: pointer; color: green;">✔️</button>
+                                    </td>
+                                    <td style="padding: 8px;">🗓 {$producto.date_added|date_format:"%d-%m-%Y"}</td>
+                                    <td style="padding: 8px;">
+                                        <form class="form-borrar-reserva" style="display: inline;">
+                                            <input type="hidden" name="id_reservation" value="{$producto.id_reservation}">
+                                            <button type="submit" class="btn-borrar-reserva"
+                                                    style="background: none; border: none; cursor: pointer; color: red;">❌ Borrar</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {/foreach}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         {/foreach}
     </div>
@@ -68,10 +99,7 @@
     <p>⏳ {l s='No hay reservas pendientes' mod='gestorproduccion'}</p>
 {/if}
 
-<form action="{$link->getAdminLink('AdminGestorProduccion')}" method="post">
-    <input type="hidden" name="update_products_without_stock" value="1">
-    <button type="submit" class="btn btn-primary">Habilitar productos sin stock</button>
-</form>
+
 
 <!-- Sección de productos habilitados -->
 <h4 style="font-weight:bold;">✅ {l s='Productos Habilitados' mod='gestorproduccion'}</h4>

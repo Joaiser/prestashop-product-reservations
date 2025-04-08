@@ -40,7 +40,7 @@ class AdminGestorProduccionController extends ModuleAdminController
     $this->context->smarty->assign([
         'productos_sin_stock_y_fecha' => $this->gestorProduccion->getProductosSinStockYFecha(),
         'productos_con_fecha' => $this->gestorProduccion->getProductosConFecha(),
-        'reservas_pendientes' => $this->gestorProduccion->getReservasPendientes(),
+        'reservas_agrupadas' => $this->gestorProduccion->getReservasAgrupadas(),
         'productos_habilitados' => $this->gestorProduccion->getProductosHabilitados(),
         'CustomersQueHanReservado' => $this->gestorProduccion->getCustomersQueHanReservado(),
         'categorias' => $this->gestorProduccion->getCategorias(),
@@ -89,6 +89,16 @@ public function eliminarDuplicadosNotas($notas)
 
 public function postProcess()
 {
+
+    if (
+        isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest' &&
+        Tools::getValue('action') == 'editarCantidadReserva'
+    ) {
+        return $this->processEditarCantidadReserva();
+    }
+    
+
     if (Tools::isSubmit('ajax') && Tools::getValue('action') == 'filterProducts') {
         return $this->processFilterProducts();
     }
@@ -112,7 +122,39 @@ public function postProcess()
     if (Tools::isSubmit('cliente_nota')) {
         return $this->processClienteNota();
     }
+    
 }
+
+protected function processEditarCantidadReserva()
+{
+    // Validación de que es una petición AJAX
+    if (!(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')) {
+        die(json_encode(['success' => false, 'message' => 'Acceso no autorizado']));
+    }
+
+    $idReservation = (int)Tools::getValue('id_reservation');
+    $nuevaCantidad = (int)Tools::getValue('nueva_cantidad');
+
+    // Validaciones
+    if ($idReservation <= 0 || $nuevaCantidad < 0) {
+        die(json_encode(['success' => false, 'message' => 'Parámetros inválidos']));
+    }
+
+    try {
+        $resultado = $this->gestorProduccion->editarCantidadReserva($idReservation, $nuevaCantidad);
+
+        die(json_encode([
+            'success' => $resultado['success'],
+            'message' => $resultado['success'] ? 'Cantidad actualizada' : ($resultado['error_message'] ?? 'Error al actualizar')
+        ]));
+    } catch (Exception $e) {
+        die(json_encode([
+            'success' => false,
+            'message' => 'Error interno: ' . $e->getMessage()
+        ]));
+    }
+}
+
 
 //nueva funcion que habilitara todos los productos sin stock
 protected function processUpdateProductsWithoutStock()

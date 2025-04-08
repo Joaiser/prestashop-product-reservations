@@ -42,14 +42,16 @@ class AdminGestorProduccion
         return Db::getInstance()->executeS($sql);
     }
 
-    public function getReservasPendientes()
+    public function getReservasAgrupadas()
     {
         $sql = 'SELECT pr.*, 
                        pl.name AS product_name, 
                        c.firstname AS customer_firstname, 
                        c.lastname AS customer_lastname,
+                       c.id_customer,
                        com.firstname AS comercial_firstname, 
-                       com.lastname AS comercial_lastname
+                       com.lastname AS comercial_lastname,
+                       com.id_customer AS id_comercial
                 FROM '._DB_PREFIX_.'product_reservations pr
                 LEFT JOIN '._DB_PREFIX_.'product p ON pr.id_product = p.id_product
                 LEFT JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product
@@ -57,9 +59,63 @@ class AdminGestorProduccion
                 LEFT JOIN '._DB_PREFIX_.'customer com ON c.id_comercial = com.id_customer
                 WHERE pr.status = "pendiente" 
                 AND pl.id_lang = '.(int)$this->context->language->id;
-
-        return Db::getInstance()->executeS($sql);
+    
+        $reservas = Db::getInstance()->executeS($sql);
+        
+        // Agrupamos por cliente
+        $agrupadas = [];
+        foreach ($reservas as $reserva) {
+            $id_cliente = $reserva['id_customer'];
+            if (!isset($agrupadas[$id_cliente])) {
+                $agrupadas[$id_cliente] = [
+                    'cliente' => $reserva['customer_firstname'].' '.$reserva['customer_lastname'],
+                    'comercial' => $reserva['comercial_firstname'].' '.$reserva['comercial_lastname'],
+                    'id_comercial' => $reserva['id_comercial'],
+                    'productos' => []
+                ];
+            }
+            $agrupadas[$id_cliente]['productos'][] = [
+                'id_reservation' => $reserva['id_reservation'],
+                'product_name' => $reserva['product_name'],
+                'reference' => $reserva['reference'],
+                'reserved_stock' => $reserva['reserved_stock'],
+                'date_added' => $reserva['date_added']
+            ];
+        }
+        
+        return $agrupadas;
     }
+
+    public function editarCantidadReserva($idReservation, $nuevaCantidad)
+    {
+        // Validaciones básicas para asegurarse de que los datos son válidos
+        if (!is_numeric($idReservation) || $idReservation <= 0) {
+            return ['success' => false, 'error_message' => 'ID de reserva inválido'];
+        }
+    
+        if (!is_numeric($nuevaCantidad) || $nuevaCantidad < 0) {
+            return ['success' => false, 'error_message' => 'Cantidad inválida'];
+        }
+    
+        try {
+            $sql = 'UPDATE '._DB_PREFIX_.'product_reservations 
+                    SET reserved_stock = '.(int)$nuevaCantidad.'
+                    WHERE id_reservation = '.(int)$idReservation;
+    
+            $resultado = Db::getInstance()->execute($sql);
+    
+            return [
+                'success' => (bool)$resultado,
+                'error_message' => $resultado ? null : 'No se pudo actualizar la reserva'
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'error_message' => 'Error en la base de datos: '.$e->getMessage()
+            ];
+        }
+    }
+
 
     public function getProductosHabilitados()
     {
