@@ -24,6 +24,7 @@ export function init(ajaxUrl, csrfToken) {
         .then(data => {
             if (data.success) {
                 showSuccess("✅ Reservas habilitadas correctamente");
+                window.location.reload();
             } else {
                 showError("❌ Error al habilitar las reservas: " + (data.error_message || "Desconocido"));
             }

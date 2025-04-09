@@ -21,6 +21,10 @@ export function showError(message) {
     messageContainer.classList.remove('alert-success');
     messageContainer.classList.add('alert-danger');
     messageContainer.style.display = 'block';
+
+    setTimeout(() => {
+        messageContainer.style.display = 'none';
+    }, 5000); 
 }
 
 // Función para mostrar mensaje de éxito
@@ -30,4 +34,8 @@ export function showSuccess(message) {
     messageContainer.classList.remove('alert-danger');
     messageContainer.classList.add('alert-success');
     messageContainer.style.display = 'block';
+
+    setTimeout(() => {
+        messageContainer.style.display = 'none';
+    }, 5000);
 }

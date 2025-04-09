@@ -54,6 +54,7 @@ export function initializeFormHandlers(reservationForm) {
             }
 
             addReservationItem();
+            reindexReservationItems();
         });
     }
 }
@@ -66,6 +67,11 @@ function reindexReservationItems() {
     
     items.forEach((item, index) => {
         item.setAttribute('data-index', index);
+
+        const numberLabel = item.querySelector('.reservation_number');
+        if(numberLabel){
+            numberLabel.innerText = `#${index + 1}`;
+        }
         
         item.querySelectorAll('[name*="["]').forEach(field => {
             const name = field.getAttribute('name');
@@ -96,7 +102,7 @@ function addReservationItem() {
         background-color: #f0f0f0;
         box-shadow: 3px 3px 5px rgba(0,0,0,0.2);
         border-radius: 8px;
-        padding: 10px;
+        padding: 21px;
         margin-bottom: 10px;
         position: relative;
         opacity: 0;
@@ -104,14 +110,31 @@ function addReservationItem() {
         transition: opacity 0.3s ease-out, transform 0.3s ease-out;
     `;
 
+    //añadir el numero de contenedor (número visual para guiar al usuario)
+    const numerLabel = document.createElement('div');
+    numerLabel.className = 'reservation_number';
+    numerLabel.innerText = `#${container.querySelectorAll('.reservation_item').length + 1}`; 
+    numerLabel.style.cssText = `
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        font-weight: bold;
+        color: #333;`;
+    newReservation.appendChild(numerLabel);
+
     // Botón de eliminar
     const removeButton = document.createElement('button');
     removeButton.type = 'button';
     removeButton.className = 'remove_reservation btn btn-danger btn-sm';
     removeButton.innerHTML = '×';
     removeButton.addEventListener('click', () => {
-        newReservation.remove();
-        reindexReservationItems();
+        newReservation.style.opacity = '0';
+        newReservation.style.transform = 'translateY(-10px)';
+        
+        setTimeout(() => {
+            newReservation.remove();
+            reindexReservationItems();
+        }, 300); // Coincide con la duración de la transición CSS
     });
 
     const removeButtonContainer = document.createElement('div');
@@ -213,6 +236,7 @@ function addReservationItem() {
 
     toggleCustomerField();
     initializeDynamicChoices(newReservation);
+    reindexReservationItems();
 }
 
 function resetForm() {
@@ -224,5 +248,13 @@ function resetForm() {
 
     const reservationContainer = document.getElementById('product_reservation_container');
     const extraReservations = reservationContainer?.querySelectorAll('.reservation_item:not([data-index="0"])') || [];
-    extraReservations.forEach(reservation => reservation.remove());
+    
+    extraReservations.forEach(reservation => {
+        reservation.style.opacity = '0';
+        reservation.style.transform = 'translateY(-10px)';
+        setTimeout(() => reservation.remove(), 300);
+    });
+    
+    // Reindexar después de eliminar
+    setTimeout(() => reindexReservationItems(), 350);
 }

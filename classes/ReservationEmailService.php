@@ -73,7 +73,6 @@ class ReservationEmailService
             );
 
         } catch (Exception $e) {
-            PrestaShopLogger::addLog('Error en sendReservationEmails: '.$e->getMessage(), 3);
             throw $e;
         }
     }

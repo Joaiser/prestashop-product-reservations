@@ -25,7 +25,6 @@ export class NotaEditHandler {
     
 
     getNotaData(target) {
-        console.log("target en getNotaData:", target);
         
         let container = target.closest('.nota-contenido');
         
@@ -70,7 +69,6 @@ export class NotaEditHandler {
         const { notaId, newText, container } = notaData;
         
         try {
-            console.log("Guardando la nota con ID:", notaId);
             if (notaId > 0) {
                 await this.editor.api.updateNota(notaId, newText);
                 this.editor.ui.showFeedback(container, 'success', 'Nota actualizada correctamente');
