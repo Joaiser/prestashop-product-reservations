@@ -262,28 +262,39 @@ public function getReservasAgrupadas()
     //     return (bool)Db::getInstance()->getValue($sql);
     // }
 
-    public function deshabilitarProducto($product_id)
-    {
-        $pdo = Db::getInstance()->getLink();
+    public function deshabilitarProducto($product_id, $product_attribute_id = null)
+{
+    $pdo = Db::getInstance()->getLink();
 
-        try {
-            $pdo->beginTransaction();
+    try {
+        $pdo->beginTransaction();
 
-            $sql = 'DELETE FROM '._DB_PREFIX_.'product_reservation_enabled 
-                    WHERE id_product = '.(int)$product_id;
-
-            if (!Db::getInstance()->execute($sql)) {
-                throw new Exception("No se pudo eliminar el producto.");
-            }
-
-            $pdo->commit();
-        } catch (Exception $e) {
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-            throw new Exception("Error al deshabilitar el producto: " . $e->getMessage());
+        // Consulta base
+        $sql = 'DELETE FROM '._DB_PREFIX_.'product_reservation_enabled 
+                WHERE id_product = '.(int)$product_id;
+        
+        // Manejo de combinaciones
+        if ($product_attribute_id !== null) {
+            $sql .= ' AND id_product_attribute = '.(int)$product_attribute_id;
+        } else {
+            // Si no se especifica, eliminar todas las combinaciones
+            $sql .= ' AND (id_product_attribute = 0 OR id_product_attribute IS NULL)';
         }
+
+        if (!Db::getInstance()->execute($sql)) {
+            throw new Exception("No se pudo deshabilitar el producto.");
+        }
+
+        $pdo->commit();
+        
+        return true;
+    } catch (Exception $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw new Exception("Error al deshabilitar: " . $e->getMessage());
     }
+}
 	
     // Función para insertar una nueva nota
 public function insertarNota($customer_id, $notas_reservas)

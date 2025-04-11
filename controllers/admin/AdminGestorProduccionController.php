@@ -241,15 +241,25 @@ protected function processDisableProduct()
 {
     try {
         $product_id = (int)Tools::getValue('deshabilitarProducto');
+        $product_attribute_id = (int)Tools::getValue('product_attribute_id', 0);
 
         // if ($this->gestorProduccion->tieneReservasActivas($product_id)) {
         //     throw new Exception("No se puede deshabilitar el producto $product_id porque tiene reservas activas.");
         // }
 
-        $this->gestorProduccion->deshabilitarProducto($product_id);
-        exit(json_encode(['success' => true, 'message' => 'Producto deshabilitado con éxito.']));
+        $this->gestorProduccion->deshabilitarProducto($product_id, $product_attribute_id);
+        
+        exit(json_encode([
+            'success' => true, 
+            'message' => $product_attribute_id > 0 
+                ? 'Combinación deshabilitada con éxito.' 
+                : 'Producto deshabilitado con éxito.'
+        ]));
     } catch (Exception $e) {
-        exit(json_encode(['success' => false, 'error_message' => $e->getMessage()]));
+        exit(json_encode([
+            'success' => false, 
+            'error_message' => $e->getMessage()
+        ]));
     }
 }
 

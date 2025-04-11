@@ -116,13 +116,22 @@
         {foreach from=$productos_habilitados item=producto}
             <div class="producto-habilitado">
                 <p class="producto-habilitado-id">🆔 Producto ID: {$producto.id_product}</p>
+                {if $producto.id_product_attribute > 0}
+                    <p class="producto-habilitado-combinacion">🔄 Combinación ID: {$producto.id_product_attribute}</p>
+                {/if}
                 <p class="producto-habilitado-reference">🔖 Referencia: {$producto.reference}</p>
                 <p class="producto-habilitado-estado">✔ Estado: Habilitado</p>
                 
                 <!-- Formulario para deshabilitar producto -->
-                <form id="form-deshabilitar-producto-{$producto.id_product}" class="form-deshabilitar-producto">
-                    <button type="submit" class="btn-deshabilitar" data-id="{$producto.id_product}">
-                        ❌ Deshabilitar
+                <form class="form-deshabilitar-producto">
+                    <input type="hidden" name="id_product" value="{$producto.id_product}">
+                    {if $producto.id_product_attribute > 0}
+                        <input type="hidden" name="id_product_attribute" value="{$producto.id_product_attribute}">
+                    {/if}
+                    <button type="submit" class="btn-deshabilitar" 
+                            data-product-id="{$producto.id_product}" 
+                            data-attribute-id="{$producto.id_product_attribute|default:0}">
+                        ❌ {if $producto.id_product_attribute > 0}Deshabilitar Combinación{else}Deshabilitar Producto{/if}
                     </button>
                 </form>
             </div>
@@ -154,50 +163,6 @@
 <div id="productos-container">
     {include file='module:gestorproduccion/views/templates/admin/_partials/productos.tpl' productos=$productos}
 </div>
-
-<!-- Sección de productos con fecha de llegada -->
-<h4 style="font-weight:bold; display: none;">📅 {l s='Con fecha de llegada' mod='gestorproduccion'}</h4>
-{if $productos_con_fecha}
-    <form id="productosForm" style="display: none;">
-        <div class="productos-container">
-            {foreach from=$productos_con_fecha item=producto}
-                <div class="producto">
-                    <input type="checkbox" class="producto-checkbox" name="productos[]" 
-                           value="{$producto.id_product}" 
-                           data-reference="{$producto.reference}" 
-                           data-id-product-attribute="{$producto.id_product_attribute}">
-                    <p>🆔 {$producto.id_product}</p>
-                    <p>📦 {$producto.name}</p>
-                    <p>🔖 {$producto.reference}</p>
-                    <p>📆 {$producto.available_date|date_format:"%d-%m-%Y"}</p>
-                </div>
-            {/foreach}
-        </div>
-{else}
-    <p>⏳ {l s='No hay productos con fecha de llegada' mod='gestorproduccion'}</p>
-{/if}
-
- <!-- Sección de productos sin fecha de llegada -->
- <h4 style="font-weight:bold;  display: none">❌ {l s='Sin fecha de llegada' mod='gestorproduccion'}</h4>
-{if $productos_sin_stock_y_fecha}
-    <div class="productos-container" style="display: none;">
-        {foreach from=$productos_sin_stock_y_fecha item=producto}
-            <div class="producto">
-                <input type="checkbox" class="producto-checkbox" name="productos[]" 
-                       value="{$producto.id_product}" 
-                       data-reference="{$producto.reference}" 
-                       data-id-product-attribute="{$producto.id_product_attribute}">
-                <p>🆔 {$producto.id_product}</p>
-                <p>📦 {$producto.name}</p>
-                <p>🔖 {$producto.reference}</p>
-                <p>📆 {l s='Sin fecha de llegada' mod='gestorproduccion'}</p>
-            </div>
-        {/foreach}
-    </div>
-    </form>
-{else}
-    <p>🎉 {l s='No hay productos sin stock' mod='gestorproduccion'}</p>
-{/if}
 
 <!-- Botón general para aplicar selección -->
 <div id="button-container">

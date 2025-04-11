@@ -55,31 +55,74 @@ export function init(ajaxUrl, csrfToken) {
         }
     }
 
-    function deshabilitarProducto(event, button) {    
-        // Obtenemos el ID del producto
-        const productId = button.dataset.id || 
-                         button.closest('form').querySelector('input[name="id_reservation"]').value;
-        
-        const url = `${ajaxUrl}&deshabilitarProducto=${productId}&token=${csrfToken}`;
-    
-        if (!confirm(`¿Seguro que deseas deshabilitar el producto con 🆔:${productId}?`)) return;
-    
-        fetch(url)
-            .then(response => {
-                if (!response.ok) throw new Error("Error en la respuesta del servidor");
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    showSuccess("✅ Producto deshabilitado correctamente, recargue la página.");
-                } else {
-                    showError("❌ Error al deshabilitar: " + (data.error_message || "Desconocido"));
+    function removeRow(element) {
+        if(element && element.parentNode) {
+            element.style.opacity = '0';
+            setTimeout(() =>{
+                element.remove();
+
+                const container = document.querySelector('.productos-habilitados-container');
+
+                if (container && container.children.length === 0) {
+                    container.insertAdjacentHTML('afterend', '<p>⏳ No hay productos habilitados</p>');
                 }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                showError("❌ Hubo un error al procesar la solicitud.");
-            });
+            }, 300); 
+        }
+    }
+
+    function deshabilitarProducto(event, button) {    
+        // Obtenemos los IDs del producto y atributo
+        const productId = button.dataset.productId || 
+                         button.closest('form').querySelector('input[name="id_product"]').value;
+        
+        const attributeId = button.dataset.attributeId || 
+                          (button.closest('form').querySelector('input[name="id_product_attribute"]')?.value || 0);
+        
+        // Preparamos la URL con ambos parámetros
+        const url = `${ajaxUrl}`;
+        
+        // Mensaje de confirmación más descriptivo
+        const message = attributeId > 0 
+            ? `¿Seguro que deseas deshabilitar la combinación ${attributeId} del producto ${productId}?`
+            : `¿Seguro que deseas deshabilitar el producto con ID: ${productId}?`;
+        
+        if (!confirm(message)) return;
+    
+        // Usamos FormData para enviar los datos
+        const formData = new FormData();
+        formData.append('deshabilitarProducto', productId);
+        formData.append('product_attribute_id', attributeId);
+        formData.append('token', csrfToken);
+        formData.append('ajax', '1');
+    
+        fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("Error en la respuesta del servidor");
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showSuccess(data.message || "✅ Operación realizada correctamente");
+                const productDiv = button.closest('.producto-habilitado');
+                if (productDiv) {
+                    removeRow(productDiv);
+                }  
+            } else {
+                showError("❌ Error: " + (data.error_message || "Desconocido"));
+                button.disabled = false; // Rehabilitamos el botón en caso de error
+                button.innerHTML = attributeId > 0 ? 'Deshabilitar combinación' : 'Deshabilitar producto';
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            showError("❌ Hubo un error al procesar la solicitud.");
+        });
     }
     
 
