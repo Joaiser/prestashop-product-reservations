@@ -17,10 +17,15 @@ class AdminGestorProduccionController extends ModuleAdminController
     public function initContent()
 {
     parent::initContent();
-    
-    // Verificar si se debe actualizar los productos sin stock
-    if (Tools::getValue('update_products_without_stock')) {
-        $this->processUpdateProductsWithoutStock();
+
+    if (Tools::isSubmit('update_products_without_stock')) {
+        $response = $this->processUpdateProductsWithoutStock();
+        
+        if (!Tools::getValue('ajax')) {
+            Tools::redirectAdmin($this->context->link->getAdminLink('AdminGestorProduccion'));
+        } else {
+            die($response);
+        }
     }
 
     $id_categoria = (int)Tools::getValue('id_categoria', 0);
@@ -29,7 +34,6 @@ class AdminGestorProduccionController extends ModuleAdminController
     $productos_iniciales = $this->gestorProduccion->getProductosPorCategoria(0);
 
     $notas_con_reservas = $this->gestorProduccion->getNotasConReservas();
-
     $notas = $this->eliminarDuplicadosNotas($notas_con_reservas);
 
     // Obtener mensajes desde Smarty para las notas
@@ -38,8 +42,9 @@ class AdminGestorProduccionController extends ModuleAdminController
 
     // Asignamos las variables necesarias a Smarty
     $this->context->smarty->assign([
-        'productos_sin_stock_y_fecha' => $this->gestorProduccion->getProductosSinStockYFecha(),
-        'productos_con_fecha' => $this->gestorProduccion->getProductosConFecha(),
+        // Solo mostrar productos ya habilitados (sin ejecutar las funciones problemáticas)
+        'productos_sin_stock_y_fecha' => [],
+        'productos_con_fecha' => [],
         'reservas_agrupadas' => $this->gestorProduccion->getReservasAgrupadas(),
         'productos_habilitados' => $this->gestorProduccion->getProductosHabilitados(),
         'CustomersQueHanReservado' => $this->gestorProduccion->getCustomersQueHanReservado(),
@@ -51,7 +56,6 @@ class AdminGestorProduccionController extends ModuleAdminController
         'error_message' => $error_message
     ]);
 
-    // Establecemos la plantilla para mostrar
     $this->setTemplate('gestorproduccion.tpl');
 }
 
@@ -155,47 +159,25 @@ protected function processEditarCantidadReserva()
     }
 }
 
-
-//nueva funcion que habilitara todos los productos sin stock
 protected function processUpdateProductsWithoutStock()
 {
     try {
-        // Obtener los productos sin stock y con fecha de disponibilidad
-        $productosSinStockYFecha = $this->gestorProduccion->getProductosSinStockYFecha();
-        $productosConFecha = $this->gestorProduccion->getProductosConFecha();
+        $sinStock = $this->gestorProduccion->getProductosSinStockYFecha(true);
+        $conFecha = $this->gestorProduccion->getProductosConFecha(true);
 
-        // Fusionar ambos conjuntos de productos
-        $productos = array_merge($productosSinStockYFecha, $productosConFecha);
-
-        // Si no hay productos, lanzar una excepción
-        if (empty($productos)) {
-            throw new Exception("No se encontraron productos sin stock ni fecha de disponibilidad.");
-        }
-
-        // Habilitar reservas para cada producto
-        foreach ($productos as $producto) {
-            $this->gestorProduccion->habilitarReservas(
-                (int)$producto['id_product'],
-                (int)$producto['id_product_attribute'],
-                pSQL($producto['reference'])
-            );
-        }
-
-        // Respuesta exitosa
-        exit(json_encode([
+        return json_encode([
             'success' => true,
-            'message' => 'Productos sin stock habilitados para reserva.'
-        ]));
-
+            'message' => 'Productos actualizados correctamente',
+            'count_sin_stock' => count($sinStock),
+            'count_con_fecha' => count($conFecha)
+        ]);
     } catch (Exception $e) {
-        // Respuesta en caso de error
-        exit(json_encode([
+        return json_encode([
             'success' => false,
             'error_message' => $e->getMessage()
-        ]));
+        ]);
     }
 }
-
 
 
 protected function processFilterProducts()

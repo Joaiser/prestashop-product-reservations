@@ -55,9 +55,7 @@ export function init(ajaxUrl, csrfToken) {
         }
     }
 
-    function deshabilitarProducto(event, button) {
-        // Ya no necesitamos preventDefault aquí porque ya se hizo en el listener
-        
+    function deshabilitarProducto(event, button) {    
         // Obtenemos el ID del producto
         const productId = button.dataset.id || 
                          button.closest('form').querySelector('input[name="id_reservation"]').value;
@@ -103,6 +101,42 @@ export function init(ajaxUrl, csrfToken) {
         });
         return await response.json();
     }
+
+    function habilitarProductosSinStock(event){
+        event.preventDefault();
+        
+
+        const form = event.target;
+        const actionUrl = form.action;
+        const formData = new FormData(form);
+
+        formData.append('ajax', '1');
+
+
+        fetch(actionUrl, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-Token': csrfToken
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccess("✅ Productos habilitados correctamente."); 
+            } else {
+                showError("❌ Error al habilitar productos: " + (data.error_message || "Desconocido"));
+            }
+        })
+        .catch(error => {
+            showError("❌ Hubo un error al procesar la solicitud.");
+        });
+    }
+
+    document.querySelectorAll('.form-habilitar-sin-stock').forEach(form =>{
+        form.addEventListener('submit', habilitarProductosSinStock);
+    })
 
     document.querySelectorAll('.btn-editar-cantidad').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -171,6 +205,7 @@ export function init(ajaxUrl, csrfToken) {
             if (button) deshabilitarProducto(e, button); 
         });
     });
+
 }
 
 

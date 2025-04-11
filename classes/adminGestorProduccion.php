@@ -8,83 +8,149 @@ class AdminGestorProduccion
     {
         $this->context = $context;
     }
-
-    public function getProductosSinStockYFecha()
-    {
-        $sql = 'SELECT p.id_product, pa.id_product_attribute, pl.name, 
-                       IFNULL(pa.reference, p.reference) AS reference
-                FROM '._DB_PREFIX_.'product p
-                INNER JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product
-                LEFT JOIN '._DB_PREFIX_.'product_attribute pa ON p.id_product = pa.id_product
-                LEFT JOIN '._DB_PREFIX_.'stock_available sa 
-                    ON (p.id_product = sa.id_product AND (pa.id_product_attribute = sa.id_product_attribute OR pa.id_product_attribute IS NULL))
-                WHERE pl.id_lang = '.(int)$this->context->language->id.'
-                AND (sa.quantity <= 0 OR sa.quantity IS NULL)
-                AND (p.available_date IS NULL OR p.available_date = "0000-00-00")';
-
-        return Db::getInstance()->executeS($sql);
-    }
-
-    public function getProductosConFecha()
-    {
-        $sql = 'SELECT p.id_product, pa.id_product_attribute, pl.name, 
-                       IFNULL(pa.reference, p.reference) AS reference,
-                       p.available_date
-                FROM '._DB_PREFIX_.'product p
-                INNER JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product
-                LEFT JOIN '._DB_PREFIX_.'product_attribute pa ON p.id_product = pa.id_product
-                LEFT JOIN '._DB_PREFIX_.'stock_available sa 
-                    ON (p.id_product = sa.id_product AND (pa.id_product_attribute = sa.id_product_attribute OR pa.id_product_attribute IS NULL))
-                WHERE pl.id_lang = '.(int)$this->context->language->id.'
-                AND (sa.quantity <= 0 OR sa.quantity IS NULL)
-                AND (p.available_date IS NOT NULL AND p.available_date != "0000-00-00")';
-
-        return Db::getInstance()->executeS($sql);
-    }
-
-    public function getReservasAgrupadas()
-    {
-        $sql = 'SELECT pr.*, 
-                       pl.name AS product_name, 
-                       c.firstname AS customer_firstname, 
-                       c.lastname AS customer_lastname,
-                       c.id_customer,
-                       com.firstname AS comercial_firstname, 
-                       com.lastname AS comercial_lastname,
-                       com.id_customer AS id_comercial
-                FROM '._DB_PREFIX_.'product_reservations pr
-                LEFT JOIN '._DB_PREFIX_.'product p ON pr.id_product = p.id_product
-                LEFT JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product
-                LEFT JOIN '._DB_PREFIX_.'customer c ON pr.id_customer = c.id_customer
-                LEFT JOIN '._DB_PREFIX_.'customer com ON c.id_comercial = com.id_customer
-                WHERE pr.status = "pendiente" 
-                AND pl.id_lang = '.(int)$this->context->language->id;
+    public function getProductosSinStockYFecha($autoInsert = false )
+{
+    $this->limpiarReservasInvalidas();
     
-        $reservas = Db::getInstance()->executeS($sql);
-        
-        // Agrupamos por cliente
-        $agrupadas = [];
-        foreach ($reservas as $reserva) {
-            $id_cliente = $reserva['id_customer'];
-            if (!isset($agrupadas[$id_cliente])) {
-                $agrupadas[$id_cliente] = [
-                    'cliente' => $reserva['customer_firstname'].' '.$reserva['customer_lastname'],
-                    'comercial' => $reserva['comercial_firstname'].' '.$reserva['comercial_lastname'],
-                    'id_comercial' => $reserva['id_comercial'],
-                    'productos' => []
-                ];
-            }
-            $agrupadas[$id_cliente]['productos'][] = [
-                'id_reservation' => $reserva['id_reservation'],
-                'product_name' => $reserva['product_name'],
-                'reference' => $reserva['reference'],
-                'reserved_stock' => $reserva['reserved_stock'],
-                'date_added' => $reserva['date_added']
+    $sql = 'SELECT DISTINCT p.id_product, 
+                   COALESCE(pa.id_product_attribute, 0) AS id_product_attribute,
+                   IFNULL(pa.reference, p.reference) AS reference,
+                   pl.name AS name,
+                   pl.name AS product_name 
+            FROM '._DB_PREFIX_.'product p
+            INNER JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product
+            LEFT JOIN '._DB_PREFIX_.'product_attribute pa ON p.id_product = pa.id_product
+            LEFT JOIN '._DB_PREFIX_.'stock_available sa ON (
+                p.id_product = sa.id_product AND 
+                (pa.id_product_attribute = sa.id_product_attribute OR 
+                (pa.id_product_attribute IS NULL AND sa.id_product_attribute = 0))
+            )
+            WHERE pl.id_lang = '.(int)$this->context->language->id.'
+            AND p.active = 1
+            AND p.available_for_order = 1
+            AND (sa.quantity <= 0 OR sa.quantity IS NULL)
+            AND (p.available_date IS NULL OR p.available_date = "0000-00-00")';
+
+    $productos = Db::getInstance()->executeS($sql);
+
+    if ($autoInsert) {
+        foreach ($productos as $producto) {
+            Db::getInstance()->insert('product_reservation_enabled', [
+                'id_product' => (int)$producto['id_product'],
+                'id_product_attribute' => (int)$producto['id_product_attribute'],
+                'reference' => pSQL($producto['reference']),
+                'is_enabled' => 1,
+                'date_enabled' => date('Y-m-d H:i:s')
+            ], false, true, Db::REPLACE);
+        }
+    }
+   
+
+    return $productos;
+}
+
+public function getProductosConFecha( $autoInsert = false)
+{
+    $this->limpiarReservasInvalidas();
+    
+    $sql = 'SELECT DISTINCT p.id_product, 
+                   COALESCE(pa.id_product_attribute, 0) AS id_product_attribute,
+                   IFNULL(pa.reference, p.reference) AS reference,
+                   p.available_date,
+                   pl.name AS name,
+                   pl.name AS product_name  
+            FROM '._DB_PREFIX_.'product p
+            INNER JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product
+            LEFT JOIN '._DB_PREFIX_.'product_attribute pa ON p.id_product = pa.id_product
+            LEFT JOIN '._DB_PREFIX_.'stock_available sa ON (
+                p.id_product = sa.id_product AND 
+                (pa.id_product_attribute = sa.id_product_attribute OR 
+                (pa.id_product_attribute IS NULL AND sa.id_product_attribute = 0))
+            )
+            WHERE pl.id_lang = '.(int)$this->context->language->id.'
+            AND p.active = 1
+            AND p.available_for_order = 1
+            AND (sa.quantity <= 0 OR sa.quantity IS NULL)
+            AND (p.available_date IS NOT NULL AND p.available_date != "0000-00-00")';
+
+    $productos = Db::getInstance()->executeS($sql);
+
+    if ($autoInsert) {
+        foreach ($productos as $producto) {
+            Db::getInstance()->insert('product_reservation_enabled', [
+                'id_product' => (int)$producto['id_product'],
+                'id_product_attribute' => (int)$producto['id_product_attribute'],
+                'reference' => pSQL($producto['reference']),
+                'is_enabled' => 1,
+                'date_enabled' => date('Y-m-d H:i:s')
+            ], false, true, Db::REPLACE);
+    }
+    
+    }
+
+    return $productos;
+}
+
+protected function limpiarReservasInvalidas()
+{
+    Db::getInstance()->execute('
+        DELETE pre FROM `'._DB_PREFIX_.'product_reservation_enabled` pre
+        LEFT JOIN `'._DB_PREFIX_.'product` p ON pre.id_product = p.id_product
+        LEFT JOIN `'._DB_PREFIX_.'stock_available` sa ON (
+            p.id_product = sa.id_product AND
+            (pre.id_product_attribute = sa.id_product_attribute OR 
+            (pre.id_product_attribute = 0 AND sa.id_product_attribute = 0))
+        )
+        WHERE p.id_product IS NULL 
+        OR p.active = 0 
+        OR p.available_for_order = 0
+        OR (sa.quantity > 0 AND sa.quantity IS NOT NULL)
+    ');
+}
+
+public function getReservasAgrupadas()
+{
+    $sql = 'SELECT pr.*, 
+                   pl.name AS product_name, 
+                   c.firstname AS customer_firstname, 
+                   c.lastname AS customer_lastname,
+                   c.id_customer,
+                   com.firstname AS comercial_firstname, 
+                   com.lastname AS comercial_lastname,
+                   com.id_customer AS id_comercial
+            FROM '._DB_PREFIX_.'product_reservations pr
+            LEFT JOIN '._DB_PREFIX_.'product p ON pr.id_product = p.id_product
+            LEFT JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product
+            LEFT JOIN '._DB_PREFIX_.'customer c ON pr.id_customer = c.id_customer
+            LEFT JOIN '._DB_PREFIX_.'customer com ON c.id_comercial = com.id_customer
+            WHERE pr.status = "pendiente" 
+            AND pl.id_lang = '.(int)$this->context->language->id;
+
+    $reservas = Db::getInstance()->executeS($sql);
+    
+    // Agrupamos por cliente
+    $agrupadas = [];
+    foreach ($reservas as $reserva) {
+        $id_cliente = $reserva['id_customer'];
+        if (!isset($agrupadas[$id_cliente])) {
+            $agrupadas[$id_cliente] = [
+                'cliente' => $reserva['customer_firstname'].' '.$reserva['customer_lastname'],
+                'comercial' => $reserva['comercial_firstname'].' '.$reserva['comercial_lastname'],
+                'id_comercial' => $reserva['id_comercial'],
+                'productos' => []
             ];
         }
-        
-        return $agrupadas;
+        $agrupadas[$id_cliente]['productos'][] = [
+            'id_reservation' => $reserva['id_reservation'],
+            'product_name' => $reserva['product_name'],
+            'reference' => $reserva['reference'],
+            'reserved_stock' => $reserva['reserved_stock'],
+            'date_added' => $reserva['date_added'] 
+        ];
     }
+    
+    return $agrupadas;
+}
 
     public function editarCantidadReserva($idReservation, $nuevaCantidad)
     {

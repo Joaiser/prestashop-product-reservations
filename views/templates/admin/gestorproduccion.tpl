@@ -39,6 +39,13 @@
     {include file='./_partials/notas_list.tpl'}
 </div>
 
+<form action="{$link->getAdminLink('AdminGestorProduccion')}" method="post" class="form-habilitar-sin-stock">
+    <input type="hidden" name="update_products_without_stock" value="1">
+    <button class="btn btn-primary" data-action="update_products_without_stock">Habilitar productos sin stock</button>
+</form>
+
+
+
 
 <!-- Sección de reservas pendientes -->
 <h4 style="font-weight:bold;">🛒 {l s='Reservas Pendientes' mod='gestorproduccion'}</h4>
