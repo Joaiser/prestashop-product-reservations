@@ -11,7 +11,7 @@ export class NotaEditHandler {
             } else if (e.target.closest('.nota-save-icon')) {
                 this.handleSaveClick(e);
             } else if (e.target.closest('.nota-delete-icon')) {
-                this.handleDeleteClick(e); // Nuevo método específico para eliminar
+                this.handleDeleteClick(e); 
             }
         });
     
@@ -71,18 +71,18 @@ export class NotaEditHandler {
         try {
             if (notaId > 0) {
                 await this.editor.api.updateNota(notaId, newText);
-                this.editor.ui.showFeedback(container, 'success', 'Nota actualizada correctamente');
+                this.editor.ui.showMessage('success', 'Nota actualizada correctamente');
                 this.editor.ui.toggleEditMode(notaId, false, newText);
             } else {
                 const idUser = container.dataset.userId;
                 if (!idUser) throw new Error("No se encontró el usuario asociado");
                 
                 await this.editor.api.insertarNota(idUser, newText);
-                this.editor.ui.showFeedback(container, 'success', 'Nota creada correctamente');
+                this.editor.ui.showMessage('success', 'Nota creada correctamente');
                 await this.editor.reloadNotes();
             }
         } catch (error) {
-            this.editor.ui.showFeedback(container, 'error', error.message || 'Error al guardar la nota');
+            this.editor.ui.showMessage('error', error.message || 'Error al guardar la nota');
             console.error("Error al guardar la nota:", error);
             this.editor.ui.toggleEditMode(notaId, true);
         } finally {
@@ -126,11 +126,7 @@ export class NotaEditHandler {
                 await this.editor.api.eliminarNota(notaId);
                 
                 // Eliminar el elemento del DOM
-                const notaItem = container.closest('.nota-item');
-                if (notaItem) {
-                    notaItem.remove();
-                }
-                
+                container.remove();
                 // Mostrar feedback
                 this.editor.ui.showMessage('success', 'Nota eliminada correctamente');
             } catch (error) {

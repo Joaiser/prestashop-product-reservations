@@ -10,7 +10,7 @@
 </script>
 
 
-<h2 style="margin-bottom: 32px;">🚀 {l s='Gestor de Producción' mod='gestorproduccion'}</h2>
+<h2 style="margin-bottom: 32px;">🚀 {l s='Gestor de Reservas' mod='gestorproduccion'}</h2>
 
 <h3 style="margin: 0;">📝 {l s='Incluye la nota' mod='gestorproduccion'}</h3>
 
@@ -39,7 +39,7 @@
     {include file='./_partials/notas_list.tpl'}
 </div>
 
-<form action="{$link->getAdminLink('AdminGestorProduccion')}" method="post" class="form-habilitar-sin-stock">
+<form action="{$link->getAdminLink('AdminGestorProduccion')}" method="post" class="form-habilitar-sin-stock" style="margin-block: 50px;">
     <input type="hidden" name="update_products_without_stock" value="1">
     <button class="btn btn-primary" data-action="update_products_without_stock">Habilitar productos sin stock</button>
 </form>

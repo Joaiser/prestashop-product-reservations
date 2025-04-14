@@ -12,12 +12,12 @@
                     <p id="nota-text-{$notaItem.id_nota}" class="nota-texto">
                         {$notaItem.nota}
                         <button class="nota-edit-icon" id="edit-icon-{$notaItem.id_nota}">✏️</button>
-                        <button class="nota-save-icon" style="display: none;" id="save-icon-{$notaItem.id_nota}">💾</button>
                         <button class="nota-delete-icon" id="delete-icon-{$notaItem.id_nota}">🗑️</button>
                     </p>
                     <textarea id="nota-edit-{$notaItem.id_nota}" class="nota-edit textarea-nota" style="display:none;">
                         {$notaItem.nota}
                     </textarea>
+                    <button class="nota-save-icon" id="save-icon-{$notaItem.id_nota}">💾</button>
                 </div>
                 {/foreach}
             </div>

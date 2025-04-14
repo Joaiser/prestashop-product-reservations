@@ -161,7 +161,7 @@
 .productos-habilitados-container {
     display: grid;
     gap: 25px;
-    grid-template-columns: repeat(auto-fit, minmax(900px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(385px, 1fr));
     padding: 30px 0;
     background-color: #f8f9fa;
 }
@@ -289,9 +289,7 @@
 
 .nota-save-icon {
     display: none;
-    background: #198754;
-    color: #fff;
-    border-color: #198754;
+    margin-right: 1%;
 }
 
 .nota-edit-icon:hover,

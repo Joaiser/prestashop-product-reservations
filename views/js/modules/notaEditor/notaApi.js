@@ -49,7 +49,7 @@ export class NotaApi {
 
     async insertarNota(idUser, newText) {
         const formData = new FormData();
-        formData.append('action', 'update_nota_text'); // Mismo endpoint
+        formData.append('action', 'update_nota_text'); 
         formData.append('id_user', idUser);
         formData.append('new_text', newText.trim());
         formData.append('token', this.token);

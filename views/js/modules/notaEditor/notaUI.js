@@ -1,41 +1,45 @@
 export class NotaUI {
-    showFeedback(container, type, message) {
-        const feedback = document.createElement('div');
-        feedback.className = `nota-feedback nota-feedback--${type}`;
-        feedback.textContent = message;
-        container.appendChild(feedback);
-        
-        setTimeout(() => feedback.remove(), 2000);
-    }
-
+    
     toggleEditMode(notaId, isEditing, newText = null) {
-        const notaTextElement = document.getElementById(`nota-text-${notaId}`);
-        const textareaElement = document.getElementById(`nota-edit-${notaId}`);
-        const saveIcon = document.getElementById(`save-icon-${notaId}`);
-        const editIcon = document.getElementById(`edit-icon-${notaId}`);
-
-        if (!notaTextElement || !textareaElement || !saveIcon || !editIcon) {
+        const elements = {
+            notaTextElement: document.getElementById(`nota-text-${notaId}`),
+            textareaElement: document.getElementById(`nota-edit-${notaId}`),
+            saveIcon: document.getElementById(`save-icon-${notaId}`),
+            editIcon: document.getElementById(`edit-icon-${notaId}`),
+            deleteIcon: document.getElementById(`delete-icon-${notaId}`)
+        };
+    
+        // Comprobar si todos los elementos existen
+        if (!elements.notaTextElement || !elements.textareaElement || !elements.saveIcon || !elements.editIcon || !elements.deleteIcon) {
             console.error(`Elementos no encontrados para nota ${notaId}`);
             return;
         }
-
+    
+        // Forzar un reflow (recalcular estilo)
+        elements.notaTextElement.offsetHeight;
+    
         if (isEditing) {
-            notaTextElement.style.display = 'none';
-            textareaElement.style.display = 'block';
-            saveIcon.style.display = 'inline';
-            editIcon.style.display = 'none';
+            elements.notaTextElement.style.display = 'none';
+            elements.textareaElement.style.display = 'block';
+            elements.saveIcon.style.display = 'inline';
+            elements.editIcon.style.display = 'none';
+            elements.deleteIcon.style.display = 'none';
             this.focusTextElement(notaId);
         } else {
-            notaTextElement.style.display = 'block';
-            textareaElement.style.display = 'none';
-            saveIcon.style.display = 'none';
-            editIcon.style.display = 'inline';
-            
+            elements.notaTextElement.style.display = 'block';
+            elements.textareaElement.style.display = 'none';
+            elements.saveIcon.style.display = 'none';
+            elements.editIcon.style.display = 'inline';
+            elements.deleteIcon.style.display = 'inline';
+    
             if (newText) {
-                notaTextElement.textContent = newText;
+                elements.notaTextElement.innerHTML = `${newText}
+                 <button class="nota-edit-icon" id="edit-icon-${notaId}">✏️</button>
+                <button class="nota-delete-icon" id="delete-icon-${notaId}">🗑️</button>`; 
             }
         }
     }
+    
 
     
     focusTextElement(notaId) {
