@@ -1,177 +1,178 @@
 /* Estilos generales para productos */
 .productos-container {
-    display: grid;
-    gap: 40px;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    padding: 50px 0 50px 0;
+  display: grid;
+  gap: 40px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  padding: 50px 0 50px 0;
 }
 
 .producto {
-    background: #f5f5f5;
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    align-items: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+  background: #f5f5f5;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .producto-id {
-    font-weight: bold;
-    display: block;
+  font-weight: bold;
+  display: block;
 }
 
 .producto-nombre {
-    color: #333;
+  color: #333;
 }
 
 .productos-lista {
-    list-style: none;
-    padding: 0;
+  list-style: none;
+  padding: 0;
 }
 
 .producto-item {
-    background: #f5f5f5;
-    margin: 5px 0;
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  background: #f5f5f5;
+  margin: 5px 0;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .producto-reference {
-    font-weight: bold;
-    color: #333;
+  font-weight: bold;
+  color: #333;
 }
 
 .producto-checkbox {
-    position: relative;
-    left: 55px;
-    width: 24px;
-    height: 19px;
+  position: relative;
+  left: 55px;
+  width: 24px;
+  height: 19px;
 }
 
 #button-container {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 0 0 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0 0 0;
 }
 
 .reserva {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .reserva-id {
-    font-weight: bold;
-    display: block;
+  font-weight: bold;
+  display: block;
 }
 
 .reserva-producto {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 .reserva-cliente {
-    margin-bottom: 10px;
+  margin-bottom: 10px;
 }
 
 .reserva-estado {
-    font-weight: bold;
-    color: #007bff;
-    margin-top: 10px;
-    font-weight: 500;
+  font-weight: bold;
+  color: #007bff;
+  margin-top: 10px;
+  font-weight: 500;
 }
 
 .reserva-fecha {
-    color: #777;
+  color: #777;
 }
 
 #btn-aplicar {
-    width: 50%;
-    height: 40px;
-    background-color: black;
-    color: white;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-    text-align: center;
-    line-height: 40px;
-    margin: 20px auto;
-    display: none;
+  width: 50%;
+  height: 40px;
+  background-color: black;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  text-align: center;
+  line-height: 40px;
+  margin: 20px auto;
+  display: none;
 }
 
 #btn-aplicar:hover {
-    background-color: #333;
+  background-color: #333;
 }
 
 #btn-aplicar.visible {
-    display: block !important; 
+  display: block !important;
 }
 
 .producto-habilitado {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .producto-habilitado-id {
-    font-weight: bold;
-    display: block;
+  font-weight: bold;
+  display: block;
 }
 
 .producto-habilitado-nombre {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 .producto-habilitado-estado {
-    font-weight: bold;
-    color: #28a745; /* Color verde para habilitado */
-    margin-top: 10px;
+  font-weight: bold;
+  color: #28a745;
+  /* Color verde para habilitado */
+  margin-top: 10px;
 }
 
 .producto-habilitado-reference {
-    margin-bottom: 10px;
+  margin-bottom: 10px;
 }
 
 #btn-ver-mas {
-    width: 40%;
-    height: 40px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-    text-align: center;
-    line-height: 40px;
-    margin-top: 20px;
+  width: 40%;
+  height: 40px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  text-align: center;
+  line-height: 40px;
+  margin-top: 20px;
 }
 
 #btn-ver-mas:hover {
-    background-color: #0056b3;
+  background-color: #0056b3;
 }
 
 /* Contenedores principales */
 
 .productos-habilitados-container {
-    display: grid;
-    gap: 25px;
-    grid-template-columns: repeat(auto-fit, minmax(385px, 1fr));
-    padding: 30px 0;
-    background-color: #f8f9fa;
+  display: grid;
+  gap: 25px;
+  grid-template-columns: repeat(auto-fit, minmax(385px, 1fr));
+  padding: 30px 0;
+  background-color: #f8f9fa;
 }
 
-.reservas-container{
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    padding: 30px 0;
-    background-color: #f8f9fa;
+.reservas-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 30px 0;
+  background-color: #f8f9fa;
 
 }
 
@@ -179,48 +180,48 @@
 .reserva,
 .producto-habilitado,
 .nota-item {
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-    border: 1px solid #e9ecef;
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border: 1px solid #e9ecef;
 }
 
 .reserva:hover,
 .producto-habilitado:hover,
 .nota-item:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    border-color: #dee2e6;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  border-color: #dee2e6;
 }
 
 /* Encabezados */
 .reserva-id,
 .producto-habilitado-id,
 .nota-header {
-    font-weight: 600;
-    color: #212529;
-    margin-bottom: 10px;
-    font-size: 16px;
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 10px;
+  font-size: 16px;
 }
 
 .nota-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #e9ecef;
-    padding-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 10px;
 }
 
 /* Textos principales */
 .reserva-producto,
 .producto-habilitado-nombre,
 .nota-body strong {
-    font-weight: 500;
-    color: #343a40;
-    display: block;
-    margin-bottom: 5px;
+  font-weight: 500;
+  color: #343a40;
+  display: block;
+  margin-bottom: 5px;
 }
 
 /* Textos secundarios */
@@ -229,148 +230,157 @@
 .producto-habilitado-reference,
 .nota-body,
 .nota-footer {
-    color: #6c757d;
-    font-size: 14px;
-    line-height: 1.5;
+  color: #6c757d;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .producto-habilitado-estado {
-    font-weight: 500;
+  font-weight: 500;
 }
 
 /* Contenedor de nota específico */
 .nota-contenido {
-    position: relative;
-    min-height: 60px;
-    margin: 10px 0;
-    padding: 15px;
-    background: #fff;
-    border-radius: 6px;
-    border: 1px solid #e9ecef;
+  position: relative;
+  min-height: 60px;
+  margin: 10px 0;
+  padding: 15px;
+  background: #fff;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
 }
 
 /* Texto y botones de nota */
 .nota-texto {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    margin: 0;
-    padding-right: 70px; /* Espacio para botones */
-    position: relative;
-    min-height: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin: 0;
+  padding-right: 70px;
+  /* Espacio para botones */
+  position: relative;
+  min-height: 24px;
 }
 
 /* Botones de acción */
 .nota-edit-icon,
 .nota-delete-icon,
 .nota-save-icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    background: #fff;
-    border: 1px solid #dee2e6;
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .nota-delete-icon {
-    right: 50px;
-    color: #dc3545;
+  right: 50px;
+  color: #dc3545;
 }
 
 
 .nota-save-icon {
-    display: none;
-    margin-right: 1%;
+  display: none;
+  margin-right: 1%;
 }
 
 .nota-edit-icon:hover,
 .nota-delete-icon:hover {
-    background: #f8f9fa;
-    transform: translateY(-50%) scale(1.1);
+  background: #f8f9fa;
+  transform: translateY(-50%) scale(1.1);
 }
 
 /* Área de edición */
 .nota-edit {
-    display: none;
-    width: 100%;
-    min-height: 80px;
-    padding: 10px;
-    margin-top: 10px;
-    border: 1px solid #0d6efd;
-    border-radius: 4px;
-    font-family: inherit;
-    font-size: 14px;
-    resize: vertical;
+  display: none;
+  width: 100%;
+  min-height: 80px;
+  padding: 10px;
+  margin-top: 10px;
+  border: 1px solid #0d6efd;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
 }
 
 .nota-edit.visible {
-    display: block;
-    animation: fadeIn 0.3s ease;
+  display: block;
+  animation: fadeIn 0.3s ease;
 }
 
 
 /* Animaciones */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .reservas-container,
-    .productos-habilitados-container {
-        grid-template-columns: 1fr;
-        gap: 20px;
-        padding: 20px 0;
-    }
-    
-    .reserva,
-    .producto-habilitado,
-    .nota-item {
-        padding: 15px;
-    }
-    
-    .nota-texto {
-        padding-right: 60px;
-    }
-    
-    .nota-edit-icon,
-    .nota-delete-icon {
-        width: 26px;
-        height: 26px;
-        font-size: 12px;
-    }
-    
-    .nota-delete-icon {
-        right: 45px;
-    }
+
+  .reservas-container,
+  .productos-habilitados-container {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 20px 0;
+  }
+
+  .reserva,
+  .producto-habilitado,
+  .nota-item {
+    padding: 15px;
+  }
+
+  .nota-texto {
+    padding-right: 60px;
+  }
+
+  .nota-edit-icon,
+  .nota-delete-icon {
+    width: 26px;
+    height: 26px;
+    font-size: 12px;
+  }
+
+  .nota-delete-icon {
+    right: 45px;
+  }
 }
 
 /* Mensajes y estados */
 .ajax-message {
-    padding: 10px 15px;
-    margin: 10px 0;
-    border-radius: 4px;
-    font-size: 14px;
+  padding: 10px 15px;
+  margin: 10px 0;
+  border-radius: 4px;
+  font-size: 14px;
 }
 
 .ajax-message.success {
-    background-color: #d1e7dd;
-    color: #0f5132;
-    border: 1px solid #badbcc;
+  background-color: #d1e7dd;
+  color: #0f5132;
+  border: 1px solid #badbcc;
 }
 
 .ajax-message.error {
-    background-color: #f8d7da;
-    color: #842029;
-    border: 1px solid #f5c2c7;
+  background-color: #f8d7da;
+  color: #842029;
+  border: 1px solid #f5c2c7;
 }

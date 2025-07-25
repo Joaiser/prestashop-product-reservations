@@ -4,32 +4,32 @@ require_once __DIR__ . '/../../classes/adminGestorProduccion.php';
 
 class AdminGestorProduccionController extends ModuleAdminController
 {
-    protected $gestorProduccion;
+  protected $gestorProduccion;
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->bootstrap = true;
-        $this->meta_title = $this->l('Gestor de Producción');
-        $this->gestorProduccion = new AdminGestorProduccion($this->context);
-    }
+  public function __construct()
+  {
+    parent::__construct();
+    $this->bootstrap = true;
+    $this->meta_title = $this->l('Gestor de Producción');
+    $this->gestorProduccion = new AdminGestorProduccion($this->context);
+  }
 
-    public function initContent()
-{
+  public function initContent()
+  {
     parent::initContent();
 
     if (Tools::isSubmit('update_products_without_stock')) {
-        $response = $this->processUpdateProductsWithoutStock();
-        
-        if (!Tools::getValue('ajax')) {
-            Tools::redirectAdmin($this->context->link->getAdminLink('AdminGestorProduccion'));
-        } else {
-            die($response);
-        }
+      $response = $this->processUpdateProductsWithoutStock();
+
+      if (!Tools::getValue('ajax')) {
+        Tools::redirectAdmin($this->context->link->getAdminLink('AdminGestorProduccion'));
+      } else {
+        die($response);
+      }
     }
 
     $id_categoria = (int)Tools::getValue('id_categoria', 0);
-    
+
     // Obtener productos iniciales (todas las categorías por defecto)
     $productos_iniciales = $this->gestorProduccion->getProductosPorCategoria(0);
 
@@ -42,98 +42,97 @@ class AdminGestorProduccionController extends ModuleAdminController
 
     // Asignamos las variables necesarias a Smarty
     $this->context->smarty->assign([
-        // Solo mostrar productos ya habilitados (sin ejecutar las funciones problemáticas)
-        'productos_sin_stock_y_fecha' => [],
-        'productos_con_fecha' => [],
-        'reservas_agrupadas' => $this->gestorProduccion->getReservasAgrupadas(),
-        'productos_habilitados' => $this->gestorProduccion->getProductosHabilitados(),
-        'CustomersQueHanReservado' => $this->gestorProduccion->getCustomersQueHanReservado(),
-        'categorias' => $this->gestorProduccion->getCategorias(),
-        'notas' => $notas,
-        'id_categoria_seleccionada' => $id_categoria,
-        'productos' => $productos_iniciales, 
-        'success_message' => $success_message,
-        'error_message' => $error_message
+      // Solo mostrar productos ya habilitados (sin ejecutar las funciones problemáticas)
+      'productos_sin_stock_y_fecha' => [],
+      'productos_con_fecha' => [],
+      'reservas_agrupadas' => $this->gestorProduccion->getReservasAgrupadas(),
+      'productos_habilitados' => $this->gestorProduccion->getProductosHabilitados(),
+      'CustomersQueHanReservado' => $this->gestorProduccion->getCustomersQueHanReservado(),
+      'categorias' => $this->gestorProduccion->getCategorias(),
+      'notas' => $notas,
+      'id_categoria_seleccionada' => $id_categoria,
+      'productos' => $productos_iniciales,
+      'success_message' => $success_message,
+      'error_message' => $error_message
     ]);
 
     $this->setTemplate('gestorproduccion.tpl');
-}
+  }
 
-//Funcion para manejar las duplicaciones delas notas
-public function eliminarDuplicadosNotas($notas)
-{
+  //Funcion para manejar las duplicaciones delas notas
+  public function eliminarDuplicadosNotas($notas)
+  {
     $notas_agrupadas = [];
-    
+
     foreach ($notas as $nota) {
-        $cliente_id = $nota['id_user'];  // Asegurarnos de que agrupamos por cliente
+      $cliente_id = $nota['id_user'];  // Asegurarnos de que agrupamos por cliente
 
-        if (!isset($notas_agrupadas[$cliente_id])) {
-            $notas_agrupadas[$cliente_id] = [
-                'id_user' => $nota['id_user'],
-                'cliente_nombre' => $nota['cliente_nombre'],
-                'cliente_apellido' => $nota['cliente_apellido'],
-                'comercial_nombre' => $nota['comercial_nombre'],
-                'comercial_apellido' => $nota['comercial_apellido'],
-                'notas' => []  // Creamos un array vacío para las notas
-            ];
-        }
-
-        // Añadimos la nota a la lista de notas para ese cliente
-        $notas_agrupadas[$cliente_id]['notas'][] = [
-            'id_nota' => $nota['id_nota'],
-            'nota' => $nota['notas']
+      if (!isset($notas_agrupadas[$cliente_id])) {
+        $notas_agrupadas[$cliente_id] = [
+          'id_user' => $nota['id_user'],
+          'cliente_nombre' => $nota['cliente_nombre'],
+          'cliente_apellido' => $nota['cliente_apellido'],
+          'comercial_nombre' => $nota['comercial_nombre'],
+          'comercial_apellido' => $nota['comercial_apellido'],
+          'notas' => []  // Creamos un array vacío para las notas
         ];
+      }
+
+      // Añadimos la nota a la lista de notas para ese cliente
+      $notas_agrupadas[$cliente_id]['notas'][] = [
+        'id_nota' => $nota['id_nota'],
+        'nota' => $nota['notas']
+      ];
     }
 
     return $notas_agrupadas;
-}
+  }
 
 
 
 
-public function postProcess()
-{
+  public function postProcess()
+  {
 
     if (
-        isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
-        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest' &&
-        Tools::getValue('action') == 'editarCantidadReserva'
+      isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+      strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest' &&
+      Tools::getValue('action') == 'editarCantidadReserva'
     ) {
-        return $this->processEditarCantidadReserva();
+      return $this->processEditarCantidadReserva();
     }
-    
+
 
     if (Tools::isSubmit('ajax') && Tools::getValue('action') == 'filterProducts') {
-        return $this->processFilterProducts();
+      return $this->processFilterProducts();
     }
 
     if ((int)Tools::getValue('delete_reservation')) {
-        return $this->processDeleteReservation();
+      return $this->processDeleteReservation();
     }
 
     if (Tools::isSubmit('submit')) {
-        return $this->processEnableProducts();
+      return $this->processEnableProducts();
     }
 
     if (Tools::getValue('deshabilitarProducto')) {
-        return $this->processDisableProduct();
+      return $this->processDisableProduct();
     }
 
     if (Tools::isSubmit('action')) {
-        return $this->processNotaActions();
+      return $this->processNotaActions();
     }
 
     if (Tools::isSubmit('cliente_nota')) {
-        return $this->processClienteNota();
+      return $this->processClienteNota();
     }
-    
-}
+  }
 
-protected function processEditarCantidadReserva()
-{
+  protected function processEditarCantidadReserva()
+  {
     // Validación de que es una petición AJAX
     if (!(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')) {
-        die(json_encode(['success' => false, 'message' => 'Acceso no autorizado']));
+      die(json_encode(['success' => false, 'message' => 'Acceso no autorizado']));
     }
 
     $idReservation = (int)Tools::getValue('id_reservation');
@@ -141,234 +140,232 @@ protected function processEditarCantidadReserva()
 
     // Validaciones
     if ($idReservation <= 0 || $nuevaCantidad < 0) {
-        die(json_encode(['success' => false, 'message' => 'Parámetros inválidos']));
+      die(json_encode(['success' => false, 'message' => 'Parámetros inválidos']));
     }
 
     try {
-        $resultado = $this->gestorProduccion->editarCantidadReserva($idReservation, $nuevaCantidad);
+      $resultado = $this->gestorProduccion->editarCantidadReserva($idReservation, $nuevaCantidad);
 
-        die(json_encode([
-            'success' => $resultado['success'],
-            'message' => $resultado['success'] ? 'Cantidad actualizada' : ($resultado['error_message'] ?? 'Error al actualizar')
-        ]));
+      die(json_encode([
+        'success' => $resultado['success'],
+        'message' => $resultado['success'] ? 'Cantidad actualizada' : ($resultado['error_message'] ?? 'Error al actualizar')
+      ]));
     } catch (Exception $e) {
-        die(json_encode([
-            'success' => false,
-            'message' => 'Error interno: ' . $e->getMessage()
-        ]));
+      die(json_encode([
+        'success' => false,
+        'message' => 'Error interno: ' . $e->getMessage()
+      ]));
     }
-}
+  }
 
-protected function processUpdateProductsWithoutStock()
-{
+  protected function processUpdateProductsWithoutStock()
+  {
     try {
-        $sinStock = $this->gestorProduccion->getProductosSinStockYFecha(true);
-        $conFecha = $this->gestorProduccion->getProductosConFecha(true);
+      $sinStock = $this->gestorProduccion->getProductosSinStockYFecha(true);
+      $conFecha = $this->gestorProduccion->getProductosConFecha(true);
 
-        return json_encode([
-            'success' => true,
-            'message' => 'Productos actualizados correctamente',
-            'count_sin_stock' => count($sinStock),
-            'count_con_fecha' => count($conFecha)
-        ]);
+      return json_encode([
+        'success' => true,
+        'message' => 'Productos actualizados correctamente',
+        'count_sin_stock' => count($sinStock),
+        'count_con_fecha' => count($conFecha)
+      ]);
     } catch (Exception $e) {
-        return json_encode([
-            'success' => false,
-            'error_message' => $e->getMessage()
-        ]);
+      return json_encode([
+        'success' => false,
+        'error_message' => $e->getMessage()
+      ]);
     }
-}
+  }
 
 
-protected function processFilterProducts()
-{
+  protected function processFilterProducts()
+  {
     $id_categoria = (int)Tools::getValue('id_categoria', 0);
     $productos = $this->gestorProduccion->getProductosPorCategoria($id_categoria);
-    
-    $this->context->smarty->assign([
-        'productos' => $productos
-    ]);
-    
-    $html = $this->context->smarty->fetch(
-        'module:gestorproduccion/views/templates/admin/_partials/productos.tpl'
-    );
-    
-    die(json_encode([
-        'success' => true,
-        'html' => $html
-    ]));
-}
 
-protected function processDeleteReservation()
-{
+    $this->context->smarty->assign([
+      'productos' => $productos
+    ]);
+
+    $html = $this->context->smarty->fetch(
+      'module:gestorproduccion/views/templates/admin/_partials/productos.tpl'
+    );
+
+    die(json_encode([
+      'success' => true,
+      'html' => $html
+    ]));
+  }
+
+  protected function processDeleteReservation()
+  {
     $id_reservation = (int)Tools::getValue('delete_reservation');
     try {
-        $this->gestorProduccion->borrarReserva($id_reservation);
-        exit(json_encode(['success' => true, 'message' => 'Reserva eliminada con éxito.']));
+      $this->gestorProduccion->borrarReserva($id_reservation);
+      exit(json_encode(['success' => true, 'message' => 'Reserva eliminada con éxito.']));
     } catch (Exception $e) {
-        exit(json_encode(['success' => false, 'error_message' => $e->getMessage()]));
+      exit(json_encode(['success' => false, 'error_message' => $e->getMessage()]));
     }
-}
+  }
 
-protected function processEnableProducts()
-{
+  protected function processEnableProducts()
+  {
     try {
-        $json_data = Tools::getValue('products');
-        if (!$json_data) {
-            throw new Exception("No se recibieron datos de productos.");
-        }
+      $json_data = Tools::getValue('products');
+      if (!$json_data) {
+        throw new Exception("No se recibieron datos de productos.");
+      }
 
-        $products = json_decode($json_data, true);
-        if (!is_array($products)) {
-            throw new Exception("Los datos del producto no son válidos.");
-        }
-        
-        foreach ($products as $product) {
-            $this->gestorProduccion->habilitarReservas(
-                (int)$product['id_product'],
-                (int)$product['id_product_attribute'],
-                pSQL($product['reference'])
-            );
-        }
+      $products = json_decode($json_data, true);
+      if (!is_array($products)) {
+        throw new Exception("Los datos del producto no son válidos.");
+      }
 
-        exit(json_encode(['success' => true, 'message' => 'Productos habilitados para reserva.']));
+      foreach ($products as $product) {
+        $this->gestorProduccion->habilitarReservas(
+          (int)$product['id_product'],
+          (int)$product['id_product_attribute'],
+          pSQL($product['reference'])
+        );
+      }
+
+      exit(json_encode(['success' => true, 'message' => 'Productos habilitados para reserva.']));
     } catch (Exception $e) {
-        exit(json_encode(['success' => false, 'error_message' => $e->getMessage()]));
+      exit(json_encode(['success' => false, 'error_message' => $e->getMessage()]));
     }
-}
+  }
 
-protected function processDisableProduct()
-{
+  protected function processDisableProduct()
+  {
     try {
-        $product_id = (int)Tools::getValue('deshabilitarProducto');
-        $product_attribute_id = (int)Tools::getValue('product_attribute_id', 0);
+      $product_id = (int)Tools::getValue('deshabilitarProducto');
+      $product_attribute_id = (int)Tools::getValue('product_attribute_id', 0);
 
-        // if ($this->gestorProduccion->tieneReservasActivas($product_id)) {
-        //     throw new Exception("No se puede deshabilitar el producto $product_id porque tiene reservas activas.");
-        // }
+      // if ($this->gestorProduccion->tieneReservasActivas($product_id)) {
+      //     throw new Exception("No se puede deshabilitar el producto $product_id porque tiene reservas activas.");
+      // }
 
-        $this->gestorProduccion->deshabilitarProducto($product_id, $product_attribute_id);
-        
-        exit(json_encode([
-            'success' => true, 
-            'message' => $product_attribute_id > 0 
-                ? 'Combinación deshabilitada con éxito.' 
-                : 'Producto deshabilitado con éxito.'
-        ]));
+      $this->gestorProduccion->deshabilitarProducto($product_id, $product_attribute_id);
+
+      exit(json_encode([
+        'success' => true,
+        'message' => $product_attribute_id > 0
+          ? 'Combinación deshabilitada con éxito.'
+          : 'Producto deshabilitado con éxito.'
+      ]));
     } catch (Exception $e) {
-        exit(json_encode([
-            'success' => false, 
-            'error_message' => $e->getMessage()
-        ]));
+      exit(json_encode([
+        'success' => false,
+        'error_message' => $e->getMessage()
+      ]));
     }
-}
+  }
 
-protected function processNotaActions()
-{
+  protected function processNotaActions()
+  {
     header('Content-Type: application/json');
-    
-    try {
-        $action = Tools::getValue('action');
-        
-        switch ($action) {
-            case 'update_nota_text':
-                return $this->processUpdateNota();
-            case 'delete_nota':
-                return $this->processDeleteNota();
-            default:
-                throw new Exception('Acción no reconocida.');
-        }
-    } catch (Exception $e) {
-        die(json_encode(['success' => false, 'message' => $e->getMessage()]));
-    }
-}
 
-protected function processUpdateNota()
-{
+    try {
+      $action = Tools::getValue('action');
+
+      switch ($action) {
+        case 'update_nota_text':
+          return $this->processUpdateNota();
+        case 'delete_nota':
+          return $this->processDeleteNota();
+        default:
+          throw new Exception('Acción no reconocida.');
+      }
+    } catch (Exception $e) {
+      die(json_encode(['success' => false, 'message' => $e->getMessage()]));
+    }
+  }
+
+  protected function processUpdateNota()
+  {
     $notaId = (int)Tools::getValue('nota_id');
     $comentario = trim(Tools::getValue('new_text'));
     $idUser = (int)Tools::getValue('id_user');
-    
+
     // Validaciones
     if (empty($comentario)) {
-        throw new Exception('El comentario no puede estar vacío.');
+      throw new Exception('El comentario no puede estar vacío.');
     } elseif (strlen($comentario) > 500) {
-        throw new Exception('El comentario es demasiado largo (máximo 500 caracteres).');
+      throw new Exception('El comentario es demasiado largo (máximo 500 caracteres).');
     }
-    
-    $comentario = strip_tags($comentario);
-    
-    if ($notaId > 0 && $this->gestorProduccion->existeNota($notaId)) {
-        $this->gestorProduccion->actualizarNota($notaId, $comentario);
-        die(json_encode(['success' => true, 'message' => 'Nota actualizada correctamente.']));
-    } else {
-        if (empty($idUser)) {
-            throw new Exception('Usuario no válido.');
-        }
-        $this->gestorProduccion->insertarNota($idUser, $comentario);
-        die(json_encode(['success' => true, 'message' => 'Nota añadida correctamente.']));
-    }
-}
 
-protected function processDeleteNota()
-{
-    $notaId = (int)Tools::getValue('nota_id');
-    
-    if ($notaId <= 0 || !$this->gestorProduccion->existeNota($notaId)) {
-        throw new Exception('La nota no existe o el ID es inválido.');
+    $comentario = strip_tags($comentario);
+
+    if ($notaId > 0 && $this->gestorProduccion->existeNota($notaId)) {
+      $this->gestorProduccion->actualizarNota($notaId, $comentario);
+      die(json_encode(['success' => true, 'message' => 'Nota actualizada correctamente.']));
+    } else {
+      if (empty($idUser)) {
+        throw new Exception('Usuario no válido.');
+      }
+      $this->gestorProduccion->insertarNota($idUser, $comentario);
+      die(json_encode(['success' => true, 'message' => 'Nota añadida correctamente.']));
     }
-    
+  }
+
+  protected function processDeleteNota()
+  {
+    $notaId = (int)Tools::getValue('nota_id');
+
+    if ($notaId <= 0 || !$this->gestorProduccion->existeNota($notaId)) {
+      throw new Exception('La nota no existe o el ID es inválido.');
+    }
+
     $this->gestorProduccion->deleteNota($notaId);
     die(json_encode(['success' => true, 'message' => 'Nota eliminada correctamente.']));
-}
+  }
 
-protected function processClienteNota()
-{
+  protected function processClienteNota()
+  {
     $idUser = (int)Tools::getValue('cliente_nota');
     $comentario = trim(Tools::getValue('comentario'));
-    
+
     // Validaciones
     if (empty($idUser)) {
-        $this->context->smarty->assign('error_message', 'Selecciona un cliente válido.');
+      $this->context->smarty->assign('error_message', 'Selecciona un cliente válido.');
     } elseif (empty($comentario)) {
-        $this->context->smarty->assign('error_message', 'El comentario no puede estar vacío.');
+      $this->context->smarty->assign('error_message', 'El comentario no puede estar vacío.');
     } elseif (strlen($comentario) > 500) {
-        $this->context->smarty->assign('error_message', 'El comentario es demasiado largo (máximo 500 caracteres).');
+      $this->context->smarty->assign('error_message', 'El comentario es demasiado largo (máximo 500 caracteres).');
     } else {
-        try {
-            $comentario = strip_tags($comentario);
-            $this->gestorProduccion->insertarNota($idUser, $comentario);
-            $this->context->smarty->assign('success_message', 'Nota añadida correctamente.');
-        } catch (Exception $e) {
-            $this->context->smarty->assign('error_message', 'Error al añadir la nota: ' . $e->getMessage());
-        }
+      try {
+        $comentario = strip_tags($comentario);
+        $this->gestorProduccion->insertarNota($idUser, $comentario);
+        $this->context->smarty->assign('success_message', 'Nota añadida correctamente.');
+      } catch (Exception $e) {
+        $this->context->smarty->assign('error_message', 'Error al añadir la nota: ' . $e->getMessage());
+      }
     }
-}
-        
+  }
 
-public function ajaxProcessLoadNotas()
-{
+
+  public function ajaxProcessLoadNotas()
+  {
     try {
-        $notas_con_reservas = $this->gestorProduccion->getNotasConReservas();
-        $notas = $this->eliminarDuplicadosNotas($notas_con_reservas);
-        
-        $this->context->smarty->assign('notas', $notas);
-        
-        $html = $this->context->smarty->fetch(
-            _PS_MODULE_DIR_.'gestorproduccion/views/templates/admin/_partials/notas_list.tpl'
-        );
-        
-        die(json_encode([
-            'success' => true,
-            'html' => $html
-        ]));
+      $notas_con_reservas = $this->gestorProduccion->getNotasConReservas();
+      $notas = $this->eliminarDuplicadosNotas($notas_con_reservas);
+
+      $this->context->smarty->assign('notas', $notas);
+
+      $html = $this->context->smarty->fetch(
+        _PS_MODULE_DIR_ . 'gestorproduccion/views/templates/admin/_partials/notas_list.tpl'
+      );
+
+      die(json_encode([
+        'success' => true,
+        'html' => $html
+      ]));
     } catch (Exception $e) {
-        die(json_encode([
-            'success' => false,
-            'message' => 'Error al cargar notas: ' . $e->getMessage()
-        ]));
+      die(json_encode([
+        'success' => false,
+        'message' => 'Error al cargar notas: ' . $e->getMessage()
+      ]));
     }
-}
-
-
+  }
 }
