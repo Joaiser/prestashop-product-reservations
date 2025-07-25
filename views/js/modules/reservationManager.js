@@ -24,7 +24,11 @@ export function init(ajaxUrl, csrfToken) {
       .then(data => {
         if (data.success) {
           showSuccess("✅ Reservas habilitadas correctamente");
-          window.location.reload();
+          products.forEach(id => {
+            const checkbox = document.querySelector(`input.producto-checkbox[value="${id}"]`);
+            if (checkbox) checkbox.checked = false;
+            //hay que comprobar si existe el checkbox funciona
+          });
         } else {
           showError("❌ Error al habilitar las reservas: " + (data.error_message || "Desconocido"));
         }
@@ -245,6 +249,11 @@ export function init(ajaxUrl, csrfToken) {
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       const button = this.querySelector('.btn-deshabilitar');
+      // console.log(button);
+      // if (!button) {
+      //   console.error("Botón de deshabilitar no encontrado en el formulario.");
+      //   return;
+      // }
       if (button) deshabilitarProducto(e, button);
     });
   });
