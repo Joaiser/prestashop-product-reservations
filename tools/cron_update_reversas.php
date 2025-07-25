@@ -1,12 +1,13 @@
 <?php
-require_once dirname(__FILE__) . '/../../config/config.inc.php';
-require_once dirname(__FILE__) . '/../../init.php';
-require_once dirname(__FILE__) . '/../classes/adminGestorProduccion.php';
+require_once dirname(__FILE__) . '/../../../config/config.inc.php';
 
+
+
+require_once dirname(__FILE__) . '/../classes/adminGestorProduccion.php';
+echo dirname(__FILE__);
 
 
 $modulo = new AdminGestorProduccion(Context::getContext());
-
 
 if (!$modulo) {
   echo "[❌] No se pudo cargar el módulo gestorproduccion\n";
@@ -24,3 +25,5 @@ try {
   echo "[❌] Error: " . $e->getMessage() . "\n";
   exit(1);
 }
+
+exit;
