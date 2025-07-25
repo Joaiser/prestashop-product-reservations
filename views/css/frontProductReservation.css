@@ -1,96 +1,118 @@
 <<<<<<< HEAD
+
 /* Contenedor principal */
 .product-reservation-widget {
-    margin: 20px 0;
+  margin: 20px 0;
 }
 
 /* Botón de toggle */
 .reservation-toggle {
-    margin-bottom: 10px;
+  margin-bottom: 10px;
 }
 
 /* Contenedor del formulario */
 .reservation-form {
+  padding: 20px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  display: none;
+}
+
+/* Formulario */
+.reservation-form-content {
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+/* Grupo de formulario */
+.form-group {
+  margin-bottom: 15px;
+}
+
+/* Etiqueta */
+.form-label {
+  font-weight: bold;
+  color: #333;
+}
+
+/* Input */
+.form-control {
+  width: 100%;
+}
+
+/* Botón de enviar */
+.btn-success {
+  background-color: black;
+  color: white;
+  =======
+
+  /* Contenedor principal */
+  .product-reservation-widget {
+    margin: 20px 0;
+  }
+
+  /* Botón de toggle */
+  .reservation-toggle {
+    margin-bottom: 10px;
+  }
+
+  /* Contenedor del formulario */
+  .reservation-form {
     padding: 20px;
     background-color: #f9f9f9;
     border: 1px solid #ddd;
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    display: none; 
-}
+    display: none;
+  }
 
-/* Formulario */
-.reservation-form-content {
+  /* Formulario */
+  .reservation-form-content {
     max-width: 300px;
     margin: 0 auto;
-}
+  }
 
-/* Grupo de formulario */
-.form-group {
+  /* Grupo de formulario */
+  .form-group {
     margin-bottom: 15px;
-}
+  }
 
-/* Etiqueta */
-.form-label {
+  /* Etiqueta */
+  .form-label {
     font-weight: bold;
     color: #333;
-}
+  }
 
-/* Input */
-.form-control {
+  /* Input */
+  .form-control {
     width: 100%;
-}
+  }
 
-/* Botón de enviar */
-.btn-success {
+  /* Botón de enviar */
+  .btn-success {
     background-color: black;
     color: white;
-=======
-/* Contenedor principal */
-.product-reservation-widget {
-    margin: 20px 0;
-}
+  }
 
-/* Botón de toggle */
-.reservation-toggle {
-    margin-bottom: 10px;
-}
+  /* Estilo para el botón de eliminación */
+  .remove_reservation {
+    background: none;
+    border: none;
+    color: #dc3545;
+    font-size: 20px;
+    line-height: 20px;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    cursor: pointer;
+  }
 
-/* Contenedor del formulario */
-.reservation-form {
-    padding: 20px;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    display: none; 
-}
+  .remove_reservation:hover {
+    color: #a71d2a;
+  }
 
-/* Formulario */
-.reservation-form-content {
-    max-width: 300px;
-    margin: 0 auto;
-}
-
-/* Grupo de formulario */
-.form-group {
-    margin-bottom: 15px;
-}
-
-/* Etiqueta */
-.form-label {
-    font-weight: bold;
-    color: #333;
-}
-
-/* Input */
-.form-control {
-    width: 100%;
-}
-
-/* Botón de enviar */
-.btn-success {
-    background-color: black;
-    color: white;
->>>>>>> ddc47cb87cfba50a7542ddcdbefcaff3a2d1e0a7
-}
+  .reservation_item {
+    position: relative;
+  }

@@ -7,7 +7,9 @@ La reserva fue realizada en la tienda {store_name}.
 =======
 Hola {comercial_name},
 
-Se ha reservado {reserved_quantity} unidades del producto {product_name} para {customer_name}.
+{customer_name} tiene una reserva.
+
+Detalles de la reserva:
+{products}
 
 La reserva fue realizada en la tienda {store_name}.
->>>>>>> ddc47cb87cfba50a7542ddcdbefcaff3a2d1e0a7
