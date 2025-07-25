@@ -1,6 +1,14 @@
+<<<<<<< HEAD
 FALTA:
 -> Buscar mejor opción que get, ver porque post no me funciona pudiendo usar query
 
 -> Implementación de correos para Carlos
 
+=======
+FALTA:
+-> Buscar mejor opción que get, ver porque post no me funciona pudiendo usar query
+
+-> Implementación de correos para Carlos
+
+>>>>>>> ddc47cb87cfba50a7542ddcdbefcaff3a2d1e0a7
 ->Lo que se me ocurra

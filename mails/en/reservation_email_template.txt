@@ -1,5 +1,13 @@
+<<<<<<< HEAD
 Hello {comercial_name},
 
 A reservation has been made with the following quantity: {reserved_quantity} units of the product {product_name} for {customer_name}.
 
 The reservation was made at {store_name} store.
+=======
+Hello {comercial_name},
+
+A reservation has been made with the following quantity: {reserved_quantity} units of the product {product_name} for {customer_name}.
+
+The reservation was made at {store_name} store.
+>>>>>>> ddc47cb87cfba50a7542ddcdbefcaff3a2d1e0a7
